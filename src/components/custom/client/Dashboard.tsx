@@ -1,16 +1,24 @@
 import React from 'react';
+import Sidebar from '@/components/custom/client/Sidebar'
+import GreetingSection from '@/components/custom/client/GreetingSection'
+import PortfolioSection from '@/components/custom/client/PortfolioSection'
 
-const Dashboard: React.FC = () => {
+const Dashboard = () => {
+  const walletAddress = "YourWalletAddressHere"; // Replace with real wallet data
+  const tokens = [
+    { name: 'Solana', balance: 10, symbol: 'SOL', change24h: 3.4 },
+    { name: 'USDC', balance: 500, symbol: 'USDC', change24h: -0.1 },
+  ]; // Replace with real token data
+
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-white dark:bg-black transition-colors duration-300 py-12">
-      {/* Top Label */}
-      <h1 className="text-4xl sm:text-5xl font-bold text-violet-600 dark:text-violet-400 mb-8">
-      Dashboard
-      </h1>
-
-      {/* Coming Soon Label */}
-      <div className="text-2xl sm:text-3xl font-semibold text-gray-800 dark:text-gray-300">
-        Coming Soon...
+    <div className="min-h-screen bg-gray-100 dark:bg-black text-gray-900 dark:text-white">
+      <div className="flex">
+        <Sidebar /> {/* Sidebar Navigation */}
+        <main className="flex-grow p-8">
+          <GreetingSection walletAddress={walletAddress} />
+          <PortfolioSection tokens={tokens} />
+          {/* Add other sections like RecentActivity, FavoriteTokens, and NFTGallery */}
+        </main>
       </div>
     </div>
   );

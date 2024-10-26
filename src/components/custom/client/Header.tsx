@@ -49,6 +49,7 @@ export default function Header() {
 
       {/* Action Buttons and Theme Toggle */}
       <div className="flex space-x-4 items-center">        
+        
         <div>
             <WalletConnectButton/>            
         </div>

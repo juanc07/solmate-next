@@ -2,10 +2,10 @@
 
 import React from "react";
 import Layout from "@/components/custom/server/Layout";
-import Dashboard from "@/components/custom/client/Dashboard";
 import { useWallet } from "@solana/wallet-adapter-react"; // Import wallet adapter
+import Portfolio from "@/components/custom/client/Portfolio";
 
-const DashboardPage = () => {
+const PorfolioPage = () => {
   const { publicKey, connected } = useWallet(); // Access wallet state
 
   // If the wallet is connected, use the wallet address; otherwise, use an empty string
@@ -13,9 +13,9 @@ const DashboardPage = () => {
 
   return (
     <Layout>
-      <Dashboard walletAddress={walletAddress} /> {/* Pass address as prop */}
+      <Portfolio walletAddress={walletAddress} /> {/* Pass address as prop */}
     </Layout>
   );
 };
 
-export default DashboardPage;
+export default PorfolioPage;

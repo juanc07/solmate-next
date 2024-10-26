@@ -12,7 +12,7 @@ const tokens = [
   { name: "Raydium", symbol: "RAY", balance: 100, change24h: -1.4 },
 ];
 
-const Dashboard = ({ walletAddress }: { walletAddress: string }) => {
+const Portfolio = ({ walletAddress }: { walletAddress: string }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   useEffect(() => {
@@ -32,12 +32,11 @@ const Dashboard = ({ walletAddress }: { walletAddress: string }) => {
     >
       <Sidebar isCollapsed={isCollapsed} />
 
-      <main className="p-8">
-        <GreetingSection walletAddress={walletAddress} />
+      <main className="p-8">        
         <PortfolioSection tokens={tokens} />
       </main>
     </div>
   );
 };
 
-export default Dashboard;
+export default Portfolio;

@@ -41,19 +41,19 @@ export default function Header() {
   const toggleMenu = () => setIsMenuOpen((prev) => !prev); // Toggle mobile menu
 
   return (
-    <header className="bg-gray-800 dark:bg-black text-white flex items-center h-16 w-full px-4 sm:px-6 lg:px-8 transition-colors duration-300">
+    <header className="bg-gray-800 dark:bg-black text-white flex items-center h-14 sm:h-16 w-full px-4 sm:px-6 lg:px-8 transition-colors duration-300">
       {/* Logo and Brand Name */}
       <div className="flex items-center">
         <Link href="/" className="flex items-center">
           <Image
             src="/images/logo/solmate-logo-solo.png"
             alt="Solmate Logo"
-            width={40}
-            height={40}
+            width={32}
+            height={32}
             priority
             className="h-8 w-8 sm:h-10 sm:w-10 object-contain"
           />
-          <span className="ml-3 text-lg sm:text-xl font-bold hidden sm:inline-block">
+          <span className="ml-2 text-base sm:text-lg md:text-xl font-bold hidden sm:inline-block">
             Solmate
           </span>
         </Link>
@@ -62,13 +62,13 @@ export default function Header() {
       {/* Hamburger Menu for Small Screens */}
       <div className="ml-auto sm:hidden">
         <button onClick={toggleMenu} aria-label="Toggle Menu">
-          <Bars3Icon className="h-8 w-8 text-white" />
+          <Bars3Icon className="h-6 w-6 text-white" />
         </button>
       </div>
 
       {/* Action Buttons and Theme Toggle */}
       <div
-        className={`flex-grow flex items-center justify-end space-x-4 ${
+        className={`flex-grow flex items-center justify-end space-x-2 sm:space-x-4 ${
           isMenuOpen ? "block" : "hidden"
         } sm:flex`}
       >
@@ -76,7 +76,7 @@ export default function Header() {
         {connected ? (
           <Link
             href="/dashboard"
-            className="text-white border border-violet-500 hover:bg-violet-600 hover:text-white dark:border-violet-400 dark:hover:bg-violet-500 transition-all duration-300 px-4 py-2 rounded"
+            className="text-white border border-violet-500 hover:bg-violet-600 hover:text-white dark:border-violet-400 dark:hover:bg-violet-500 transition-all duration-300 px-3 sm:px-4 py-1.5 sm:py-2 rounded text-sm sm:text-base"
           >
             Dashboard
           </Link>
@@ -92,14 +92,14 @@ export default function Header() {
         {/* Theme Toggle Button */}
         <Button
           variant="outline"
-          className="w-10 h-10 p-0 rounded-full border-gray-300 dark:border-gray-600 transition-colors duration-300"
+          className="w-8 h-8 sm:w-10 sm:h-10 p-0 rounded-full border-gray-300 dark:border-gray-600 transition-colors duration-300"
           onClick={toggleTheme}
           aria-label="Toggle Theme"
         >
           {isDark ? (
-            <SunIcon className="h-6 w-6 text-yellow-400" />
+            <SunIcon className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-400" />
           ) : (
-            <MoonIcon className="h-6 w-6 text-blue-300" />
+            <MoonIcon className="h-5 w-5 sm:h-6 sm:w-6 text-blue-300" />
           )}
         </Button>
       </div>

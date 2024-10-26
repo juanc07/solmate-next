@@ -10,32 +10,30 @@ const Navbar: React.FC = () => {
 
   // Function to dynamically assign classes based on active route
   const linkClass = (path: string) =>
-    `text-xs sm:text-sm ${
-      pathname === path ? 'bg-blue-500 text-white' : 'bg-transparent text-black'
-    } px-3 py-2 rounded-md transition-colors duration-300`;
+    `text-xs sm:text-sm px-3 py-2 rounded-md transition-colors duration-300 ${
+      pathname === path
+        ? 'bg-violet-600 text-white'
+        : 'bg-transparent text-gray-800 dark:text-gray-300'
+    } hover:bg-violet-400 hover:text-white`;
 
-  // Function to handle closing the menu when a link is clicked (useful for mobile)
+  // Handle menu toggle on mobile
   const handleLinkClick = () => {
-    if (isOpen) {
-      setIsOpen(false);
-    }
+    if (isOpen) setIsOpen(false);
   };
 
   return (
-    <nav className="bg-white shadow-md">
+    <nav className="bg-white dark:bg-gray-900 shadow-md transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          {/* Hamburger button for mobile */}
+          {/* Hamburger Menu Button for Mobile */}
           <div className="flex sm:hidden">
             <button
               onClick={() => setIsOpen(!isOpen)}
-              type="button"
-              className="text-gray-800 hover:text-gray-600 focus:outline-none focus:text-gray-600"
+              className="text-gray-800 dark:text-gray-200 hover:text-gray-600 dark:hover:text-gray-400 focus:outline-none"
               aria-controls="mobile-menu"
               aria-expanded={isOpen}
               aria-label="Toggle navigation menu"
             >
-              {/* Icon for hamburger menu */}
               <svg
                 className="h-6 w-6"
                 xmlns="http://www.w3.org/2000/svg"
@@ -44,7 +42,6 @@ const Navbar: React.FC = () => {
                 stroke="currentColor"
               >
                 {isOpen ? (
-                  // Icon for closing the menu
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -52,7 +49,6 @@ const Navbar: React.FC = () => {
                     d="M6 18L18 6M6 6l12 12"
                   />
                 ) : (
-                  // Icon for opening the menu
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -64,7 +60,7 @@ const Navbar: React.FC = () => {
             </button>
           </div>
 
-          {/* Navigation links */}
+          {/* Desktop Navigation Links */}
           <div className="hidden sm:flex sm:items-center sm:space-x-4">
             <Link href="/" onClick={handleLinkClick} className={linkClass('/')}>
               Home
@@ -94,7 +90,7 @@ const Navbar: React.FC = () => {
         </div>
       </div>
 
-      {/* Mobile menu, show/hide based on menu state */}
+      {/* Mobile Menu */}
       {isOpen && (
         <div className="sm:hidden" id="mobile-menu">
           <div className="px-2 pt-2 pb-3 space-y-1">

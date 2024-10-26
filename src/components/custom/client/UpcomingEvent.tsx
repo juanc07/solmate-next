@@ -16,56 +16,44 @@ const UpcomingEvent: React.FC = () => {
   useEffect(() => {
     const fetchImages = async () => {
       setLoading(true);
-      setError(null); // Reset error
+      setError(null);
       try {
-        // Fetch list of images from Supabase storage
         const { data, error } = await supabase.storage
-          .from('upcoming-event') // Ensure the bucket name is correct
-          .list(); // List all files in the bucket
+          .from('upcoming-event')
+          .list();
 
         if (error) {
-          console.error('UpcomingEvent Error fetching images:', error);
+          console.error('Error fetching images:', error);
           setError('Error fetching images from the bucket.');
           return;
         }
 
-        console.log('UpcomingEvent Fetched files from bucket:', data); // Log fetched files
-
-        // If no files are returned, log a message and stop
         if (!data || data.length === 0) {
-          console.warn('UpcomingEvent No images found in the bucket');
+          console.warn('No images found in the bucket');
           setError('No images found in the bucket.');
-          setLoading(false);
           return;
         }
 
-        // Filter out directories and only keep files with a .jpg or .png extension
         const validFiles = data.filter(
           (file) => file.name && (file.name.endsWith('.jpg') || file.name.endsWith('.png'))
         );
 
         if (validFiles.length === 0) {
-          console.warn('UpcomingEvent No valid image files found in the bucket');
-          setError('No valid image files found in the bucket.');
-          setLoading(false);
+          setError('No valid image files found.');
           return;
         }
 
-        // Shuffle the validFiles array to randomize
         const shuffledFiles = validFiles.sort(() => 0.5 - Math.random());
-
-        // Select the first 10 images or fewer if less are available
         const selectedFiles = shuffledFiles.slice(0, 10);
 
-        // Get public URLs for each selected file
-        const imageUrls = selectedFiles.map((file) => supabaseImageUtil.downloadImage(file.name));
+        const imageUrls = selectedFiles.map((file) =>
+          supabaseImageUtil.downloadImage(file.name)
+        );
 
-        const resolvedImageUrls = await Promise.all(imageUrls); // Resolve the URLs
-        console.log('UpcomingEvent Resolved image URLs:', resolvedImageUrls); // Log the resolved URLs
-
-        setImageFiles(resolvedImageUrls); // Set image URLs in state
+        const resolvedImageUrls = await Promise.all(imageUrls);
+        setImageFiles(resolvedImageUrls);
       } catch (error) {
-        console.error('UpcomingEvent Error loading images:', error);
+        console.error('Error loading images:', error);
         setError('Error loading images.');
       } finally {
         setLoading(false);
@@ -77,38 +65,41 @@ const UpcomingEvent: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="w-full p-6 sm:p-8 bg-white flex justify-center items-center">
-        <p className="text-gray-500">Loading images...</p>
+      <div className="w-full p-6 sm:p-8 bg-white dark:bg-gray-900 flex justify-center items-center transition-colors duration-300">
+        <p className="text-gray-500 dark:text-gray-400">Loading images...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="w-full p-6 sm:p-8 bg-white flex justify-center items-center">
-        <p className="text-red-500">{error}</p>
+      <div className="w-full p-6 sm:p-8 bg-white dark:bg-gray-900 flex justify-center items-center transition-colors duration-300">
+        <p className="text-red-500 dark:text-red-400">{error}</p>
       </div>
     );
   }
 
   return (
-    <div className="w-full p-6 sm:p-8 bg-white">
+    <div className="w-full p-6 sm:p-8 bg-white dark:bg-gray-900 transition-colors duration-300">
       {/* Top Label */}
-      <h1 className="text-4xl sm:text-3xl font-bold text-orange-600 text-center mb-10">
+      <h1 className="text-4xl sm:text-3xl font-bold text-orange-600 dark:text-orange-400 text-center mb-10">
         Upcoming Events
       </h1>
 
       {/* Cards Container */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {imageFiles.map((image, index) => (
-          <Card key={index} className="relative w-full h-64 sm:h-72 md:h-80 lg:h-96 overflow-hidden rounded-lg shadow-md">
+          <Card
+            key={index}
+            className="relative w-full h-64 sm:h-72 md:h-80 lg:h-96 overflow-hidden rounded-lg shadow-md bg-gray-100 dark:bg-gray-800 transition-colors duration-300"
+          >
             <Image
               src={image}
               alt={`event ${index + 1}`}
               layout="fill"
               objectFit="cover"
               className="transition-transform duration-300 ease-in-out transform hover:scale-105"
-              priority={index < 3} // Prioritize loading for the first few images
+              priority={index < 3}
             />
           </Card>
         ))}

@@ -94,9 +94,9 @@ const Carousel: React.FC = () => {
         <Loader2 className="animate-spin text-gray-500 dark:text-gray-400 w-12 h-12 mb-4" />
         <p className="text-gray-600 dark:text-gray-400 mb-4">Loading images...</p>
         <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2">
-          <Link href="/ourWork">
+          <Link href="/news">
             <Button variant="outline" className="bg-white dark:bg-gray-800 bg-opacity-50 dark:bg-opacity-75">
-              View our Work
+              View our News
             </Button>
           </Link>
         </div>
@@ -146,9 +146,9 @@ const Carousel: React.FC = () => {
 
         {/* Centered "View Our Work" Button */}
         <div className="absolute inset-0 flex justify-center items-center">
-          <Link href="/ourWork">
+          <Link href="/news">
             <Button variant="outline" className="bg-white dark:bg-gray-800 bg-opacity-50 dark:bg-opacity-75">
-              View our Work
+              View our News
             </Button>
           </Link>
         </div>

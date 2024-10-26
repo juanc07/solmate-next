@@ -111,9 +111,8 @@ const Carousel: React.FC = () => {
         {imageFiles.map((image, index) => (
           <div
             key={index}
-            className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
-              index === currentIndex ? 'opacity-100' : 'opacity-0'
-            }`}
+            className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${index === currentIndex ? 'opacity-100' : 'opacity-0'
+              }`}
           >
             <Image
               src={image}
@@ -129,7 +128,8 @@ const Carousel: React.FC = () => {
         <Button
           variant="outline"
           onClick={handlePrev}
-          className="absolute top-1/2 transform -translate-y-1/2 left-4 sm:left-8 md:left-12 bg-white dark:bg-gray-800 bg-opacity-50 dark:bg-opacity-75"
+          className="z-10 absolute top-1/2 transform -translate-y-1/2 left-4 sm:left-8 md:left-12 bg-white dark:bg-gray-800 bg-opacity-50 dark:bg-opacity-75"
+          style={{ minWidth: '40px', minHeight: '40px' }}
         >
           &#8249;
         </Button>
@@ -138,7 +138,8 @@ const Carousel: React.FC = () => {
         <Button
           variant="outline"
           onClick={handleNext}
-          className="absolute top-1/2 transform -translate-y-1/2 right-4 sm:right-8 md:right-12 bg-white dark:bg-gray-800 bg-opacity-50 dark:bg-opacity-75"
+          className="z-10 absolute top-1/2 transform -translate-y-1/2 right-4 sm:right-8 md:right-12 bg-white dark:bg-gray-800 bg-opacity-50 dark:bg-opacity-75"
+          style={{ minWidth: '40px', minHeight: '40px' }}
         >
           &#8250;
         </Button>

@@ -11,7 +11,7 @@ const Footer: React.FC = () => {
                 <div className="flex flex-col md:flex-row justify-between items-center">
                     {/* Brand/Company Name and Copyright */}
                     <div className="text-center md:text-left mb-4 md:mb-0">
-                        <h4 className="text-lg font-bold">Univent</h4>
+                        <h4 className="text-lg font-bold">Solmate</h4>
                         <p className="text-sm">&copy; {new Date().getFullYear()} Univent. All rights reserved.</p>
                     </div>
 

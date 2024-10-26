@@ -4,7 +4,7 @@ import "./globals.css";
 
 // react query integration
 import ReactQueryProvider from "@/components/custom/client/ReactQueryProvider";
-
+import { WalletContextProvider } from "./providers/WalletContext";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -24,8 +24,8 @@ export const metadata = {
   },
   description: 'Solmate is your go-to platform for everything Solana: buy, sell, swap, track market trends, follow top wallets, and explore trending Solana tokens.',
   keywords: [
-    'Solmate', 'Solana', 'Crypto Trading', 'Solana Tokens', 
-    'Meme Tokens', 'Swap Solana', 'Trending Tokens', 
+    'Solmate', 'Solana', 'Crypto Trading', 'Solana Tokens',
+    'Meme Tokens', 'Swap Solana', 'Trending Tokens',
     'Crypto Wallet Tracking', 'DeFi', 'Solana Market'
   ],
   openGraph: {
@@ -70,9 +70,11 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <ReactQueryProvider>
-        {children}
-        </ReactQueryProvider>
+        <WalletContextProvider>
+          <ReactQueryProvider>
+            {children}
+          </ReactQueryProvider>
+        </WalletContextProvider>
       </body>
     </html>
   );

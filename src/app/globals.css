@@ -117,4 +117,14 @@ html, body {
   body {
     @apply bg-background text-foreground;
   }
+
+  /* globals.css */
+  .z-header {
+    z-index: 50; /* Ensure header is above most UI elements */
+  }
+
+  .z-modal {
+    z-index: 40; /* Adjust wallet modal z-index if needed */
+  }
+
 }

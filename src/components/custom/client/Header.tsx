@@ -3,13 +3,12 @@
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-
-// Ensure the icons are from Heroicons (which Tailwind recommends)
-import { SunIcon, MoonIcon } from "@heroicons/react/24/solid"; 
+import { SunIcon, MoonIcon } from "@heroicons/react/24/solid";
+import { Button } from "@/components/ui/button"; // ShadCN UI Button
+import {WalletConnectButton} from '@/components/custom/client/WalletConnectButton'
 
 export default function Header() {
   const [isDark, setIsDark] = useState<boolean>(() => {
-    // Check local storage for the saved theme or fallback to system preference
     if (typeof window !== "undefined") {
       const storedTheme = localStorage.getItem("theme");
       if (storedTheme) return storedTheme === "dark";
@@ -49,24 +48,15 @@ export default function Header() {
       </div>
 
       {/* Action Buttons and Theme Toggle */}
-      <div className="flex space-x-2 sm:space-x-4 items-center">
-        <Link
-          href="/login"
-          className="px-3 py-2 text-sm sm:text-base bg-gray-700 hover:bg-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-gray-500 transition"
-        >
-          Login
-        </Link>
-        <Link
-          href="/signup"
-          className="px-3 py-2 text-sm sm:text-base bg-blue-600 hover:bg-blue-500 rounded focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
-        >
-          Sign Up
-        </Link>
-
+      <div className="flex space-x-4 items-center">        
+        <div>
+            <WalletConnectButton/>            
+        </div>
         {/* Theme Toggle Button */}
-        <button
+        <Button
+          variant="outline"
+          className="w-10 h-10 p-0 rounded-full"
           onClick={toggleTheme}
-          className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-700 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 transition"
           aria-label="Toggle Theme"
         >
           {isDark ? (
@@ -74,7 +64,7 @@ export default function Header() {
           ) : (
             <MoonIcon className="h-6 w-6 text-blue-300" />
           )}
-        </button>
+        </Button>
       </div>
     </header>
   );

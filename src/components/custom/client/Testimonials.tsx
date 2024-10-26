@@ -1,16 +1,16 @@
-"use client";
+'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { shuffleArray } from '@/lib/helper';  // Ensure the helper is correctly implemented
-import { supabase } from '@/supabaseClient';  // Import Supabase client
-import { SupabaseImageUtil } from '@/lib/SupabaseImageUtil';  // Import Supabase utility
-import Image from "next/image";
-import { ITitleProps } from "@/lib/interfaces";
+import { shuffleArray } from '@/lib/helper';
+import { supabase } from '@/supabaseClient';
+import { SupabaseImageUtil } from '@/lib/SupabaseImageUtil';
+import Image from 'next/image';
+import { ITitleProps } from '@/lib/interfaces';
 
-const supabaseImageUtil = new SupabaseImageUtil('testimonial-profile');  // Initialize with the correct bucket name
-const placeholderImage = 'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27100%27 height=%27100%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%239CA3AF%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27 class=%27feather feather-user%27%3E%3Cpath d=%27M20.8 21.8v-.8a8 8 0 0 0-8-8h-1.6a8 8 0 0 0-8 8v.8%27/%3E%3Ccircle cx=%2712%27 cy=%277%27 r=%274%27/%3E%3C/svg%3E';
+const supabaseImageUtil = new SupabaseImageUtil('testimonial-profile');
+const placeholderImage =
+  'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27100%27 height=%27100%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%239CA3AF%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27 class=%27feather feather-user%27%3E%3Cpath d=%27M20.8 21.8v-.8a8 8 0 0 0-8-8h-1.6a8 8 0 0 0-8 8v.8%27/%3E%3Ccircle cx=%2712%27 cy=%277%27 r=%274%27/%3E%3C/svg%3E';
 
-// Testimonials data
 const testimonials = [
     { id: 1, name: 'John Doe', role: 'CEO, Acme Corp', feedback: 'Working with this team was a fantastic experience. Highly recommend!', imageUrl: '' },
     { id: 2, name: 'Jane Smith', role: 'Marketing Manager, Widget Co', feedback: 'Their attention to detail and creativity is unmatched.', imageUrl: '' },
@@ -43,96 +43,90 @@ const testimonials = [
     { id: 29, name: 'George Turner', role: 'CEO, Visionary Leaders', feedback: 'Professional, creative, and an absolute pleasure to work with.', imageUrl: '' },
 ];
 
-// Helper function to shuffle and pick random testimonials
-const getRandomTestimonials = (count: number) => {
-    const shuffled = shuffleArray([...testimonials]);
-    return shuffled.slice(0, count);
-};
+const getRandomTestimonials = (count: number) => shuffleArray([...testimonials]).slice(0, count);
 
 const Testimonials: React.FC<ITitleProps> = ({ title }) => {
-    const [imageFiles, setImageFiles] = useState<string[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    const randomTestimonials = getRandomTestimonials(6);  // Select random 6 testimonials
+  const [imageFiles, setImageFiles] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const randomTestimonials = getRandomTestimonials(6);
 
-    useEffect(() => {
-        const fetchImages = async () => {
-            setLoading(true);
-            setError(null);
+  useEffect(() => {
+    const fetchImages = async () => {
+      setLoading(true);
+      setError(null);
 
-            try {
-                const { data, error } = await supabase.storage
-                    .from('testimonial-profile')  // Ensure bucket name is correct
-                    .list();  // List files
+      try {
+        const { data, error } = await supabase.storage.from('testimonial-profile').list();
+        if (error) {
+          setError('Error fetching images from Supabase.');
+          return;
+        }
 
-                if (error) {
-                    setError('Error fetching images from Supabase.');
-                    console.error('Supabase error:', error);
-                    return;
-                }
+        const imageUrls = data
+          .filter(file => file.name.endsWith('.jpg') || file.name.endsWith('.png'))
+          .map(file => supabaseImageUtil.downloadImage(file.name));
 
-                const imageUrls = data
-                    .filter(file => file.name.endsWith('.jpg') || file.name.endsWith('.png'))
-                    .map(file => supabaseImageUtil.downloadImage(file.name));
+        const resolvedImageUrls = await Promise.all(imageUrls);
+        setImageFiles(resolvedImageUrls);
+      } catch (err) {
+        setError('Error loading images.');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-                const resolvedImageUrls = await Promise.all(imageUrls);
-                setImageFiles(resolvedImageUrls);
-            } catch (err) {
-                setError('Error loading images.');
-                console.error('Error:', err);
-            } finally {
-                setLoading(false);
-            }
-        };
+    fetchImages();
+  }, []);
 
-        fetchImages();
-    }, []);
+  const selectedImages = useMemo(() => shuffleArray(imageFiles).slice(0, 10), [imageFiles]);
 
-    // Memoize shuffled images
-    const selectedImages = useMemo(() => shuffleArray(imageFiles).slice(0, 10), [imageFiles]);
+  const getRandomImage = () =>
+    selectedImages.length > 0
+      ? selectedImages[Math.floor(Math.random() * selectedImages.length)]
+      : placeholderImage;
 
-    // Helper to get a random image or use placeholder
-    const getRandomImage = () => (selectedImages.length > 0 ? selectedImages[Math.floor(Math.random() * selectedImages.length)] : placeholderImage);
+  if (loading) return <div className="text-center">Loading testimonials...</div>;
+  if (error) return <div className="text-center text-red-500">{error}</div>;
 
-    if (loading) return <div>Loading testimonials...</div>;
-    if (error) return <div>{error}</div>;
+  return (
+    <div className="w-full px-4 py-8 bg-white dark:bg-black transition-colors duration-300">
+      <h2 className="text-3xl md:text-4xl font-bold text-center text-violet-600 dark:text-violet-400 mb-8">
+        {title}
+      </h2>
 
-    return (
-        <div className="container mx-auto px-4 py-8">
-            {/* Title at the top center */}
-            <h2 className="text-3xl sm:text-4xl font-bold text-center mb-8">{title}</h2>
+      <div className="max-w-[1920px] mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+        {randomTestimonials.map(testimonial => {
+          const imageUrl = testimonial.imageUrl || getRandomImage();
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                {randomTestimonials.map(testimonial => {
-                    const imageUrl = testimonial.imageUrl || getRandomImage();  // Use provided imageUrl or random
-
-                    return (
-                        <div
-                            key={testimonial.id}
-                            className="bg-white rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow duration-300 ease-in-out"
-                        >
-                            <div className="flex items-center space-x-4">
-                                <Image
-                                    src={imageUrl}
-                                    onError={(e) => (e.currentTarget.src = placeholderImage)}  // Fallback on error
-                                    alt={testimonial.name}
-                                    width={120}
-                                    height={40}
-                                    className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border-2 border-gray-300"
-                                />
-                                <div className="text-left">
-                                    <h4 className="text-lg font-semibold text-gray-900">{testimonial.name}</h4>
-                                    <p className="text-sm text-gray-500">{testimonial.role}</p>
-                                </div>
-                            </div>
-                            <p className="mt-4 text-gray-700 italic">"{testimonial.feedback}"</p>
-                        </div>
-                    );
-                })}
+          return (
+            <div
+              key={testimonial.id}
+              className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow duration-300 ease-in-out"
+            >
+              <div className="flex items-center space-x-4">
+                <Image
+                  src={imageUrl}
+                  onError={(e) => (e.currentTarget.src = placeholderImage)}
+                  alt={testimonial.name}
+                  width={80}
+                  height={80}
+                  className="w-20 h-20 rounded-full object-cover border-2 border-gray-300 dark:border-gray-500"
+                />
+                <div className="text-left">
+                  <h4 className="text-lg font-semibold text-black dark:text-white">
+                    {testimonial.name}
+                  </h4>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">{testimonial.role}</p>
+                </div>
+              </div>
+              <p className="mt-4 text-gray-700 dark:text-gray-300 italic">"{testimonial.feedback}"</p>
             </div>
-        </div>
-    );
+          );
+        })}
+      </div>
+    </div>
+  );
 };
-
 
 export default Testimonials;

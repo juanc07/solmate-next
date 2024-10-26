@@ -19,20 +19,20 @@ const Dashboard = ({ walletAddress }: { walletAddress: string }) => {
     const handleResize = () => setIsCollapsed(window.innerWidth < 768);
     window.addEventListener("resize", handleResize);
     handleResize();
-
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   return (
     <div
-      className="min-h-screen grid"
+      className={`min-h-screen grid transition-colors duration-300 
+        bg-white text-black dark:bg-black dark:text-white`}
       style={{
         gridTemplateColumns: isCollapsed ? "5rem auto" : "15rem auto",
       }}
     >
       <Sidebar isCollapsed={isCollapsed} />
 
-      <main className="p-8">
+      <main className="p-8 space-y-8">
         <GreetingSection walletAddress={walletAddress} />
         <PortfolioSection tokens={tokens} />
       </main>

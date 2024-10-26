@@ -1,7 +1,6 @@
 "use client";
 
 import Sidebar from "@/components/custom/client/Sidebar";
-import GreetingSection from "@/components/custom/client/GreetingSection";
 import PortfolioSection from "@/components/custom/client/PortfolioSection";
 import { useState, useEffect } from "react";
 
@@ -25,14 +24,15 @@ const Portfolio = ({ walletAddress }: { walletAddress: string }) => {
 
   return (
     <div
-      className="min-h-screen grid"
+      className={`min-h-screen grid transition-colors duration-300 
+        bg-white text-black dark:bg-black dark:text-white`}
       style={{
         gridTemplateColumns: isCollapsed ? "5rem auto" : "15rem auto",
       }}
     >
       <Sidebar isCollapsed={isCollapsed} />
 
-      <main className="p-8">        
+      <main className="p-8 space-y-8">
         <PortfolioSection tokens={tokens} />
       </main>
     </div>

@@ -97,20 +97,20 @@ const Navbar: React.FC = () => {
             <Link href="/" onClick={handleLinkClick} className={linkClass('/')}>
               Home
             </Link>
-            <Link href="/ourWork" onClick={handleLinkClick} className={linkClass('/ourWork')}>
-              View our Work
+            <Link href="/swapToken" onClick={handleLinkClick} className={linkClass('/swapToken')}>
+              Swap Token
             </Link>
-            <Link href="/ourClient" onClick={handleLinkClick} className={linkClass('/ourClient')}>
-              Our Clients
+            <Link href="/tokens" onClick={handleLinkClick} className={linkClass('/tokens')}>
+              Tokens
             </Link>
-            <Link href="/upcomingEvent" onClick={handleLinkClick} className={linkClass('/upcomingEvent')}>
-              Upcoming Events
+            <Link href="/wallets" onClick={handleLinkClick} className={linkClass('/wallets')}>
+              Wallets
             </Link>
-            <Link href="/service" onClick={handleLinkClick} className={linkClass('/service')}>
-              Services
+            <Link href="/nft" onClick={handleLinkClick} className={linkClass('/nft')}>
+              NFT
             </Link>
-            <Link href="/blog" onClick={handleLinkClick} className={linkClass('/blog')}>
-              Blog
+            <Link href="/news" onClick={handleLinkClick} className={linkClass('/news')}>
+              News
             </Link>
             <Link href="/about" onClick={handleLinkClick} className={linkClass('/about')}>
               About Us

@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { SunIcon, MoonIcon, Bars3Icon } from "@heroicons/react/24/solid"; // Add hamburger menu for small screens
+import { SunIcon, MoonIcon, Bars3Icon } from "@heroicons/react/24/solid"; // Hamburger menu
 import { Button } from "@/components/ui/button"; // ShadCN UI Button
 import { WalletConnectButton } from "@/components/custom/client/WalletConnectButton";
 import { useWallet } from "@solana/wallet-adapter-react"; // Solana Wallet Adapter
@@ -13,12 +13,14 @@ export default function Header() {
   const [isDark, setIsDark] = useState<boolean>(() => {
     if (typeof window !== "undefined") {
       const storedTheme = localStorage.getItem("theme");
-      return storedTheme ? storedTheme === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
+      return storedTheme
+        ? storedTheme === "dark"
+        : window.matchMedia("(prefers-color-scheme: dark)").matches;
     }
     return false;
   });
 
-  const [isMenuOpen, setIsMenuOpen] = useState(false); // Control for mobile menu
+  const [isMenuOpen, setIsMenuOpen] = useState(false); // Mobile menu state
 
   useEffect(() => {
     const root = document.documentElement;
@@ -36,7 +38,7 @@ export default function Header() {
     setIsDark((prev) => !prev);
   };
 
-  const toggleMenu = () => setIsMenuOpen((prev) => !prev); // Toggle menu for small screens
+  const toggleMenu = () => setIsMenuOpen((prev) => !prev); // Toggle mobile menu
 
   return (
     <header className="bg-gray-800 dark:bg-black text-white flex items-center h-16 w-full px-4 sm:px-6 lg:px-8 transition-colors duration-300">
@@ -46,12 +48,14 @@ export default function Header() {
           <Image
             src="/images/logo/solmate-logo-solo.png"
             alt="Solmate Logo"
-            width={120}
+            width={40}
             height={40}
             priority
-            className="h-10 w-auto object-contain"
+            className="h-8 w-8 sm:h-10 sm:w-10 object-contain"
           />
-          <span className="ml-3 text-lg sm:text-xl font-bold">Solmate</span>
+          <span className="ml-3 text-lg sm:text-xl font-bold hidden sm:inline-block">
+            Solmate
+          </span>
         </Link>
       </div>
 
@@ -69,13 +73,15 @@ export default function Header() {
         } sm:flex`}
       >
         {/* Conditionally Render Dashboard Link */}
-        {connected && (
+        {connected ? (
           <Link
             href="/dashboard"
-            className="text-white border border-violet-500 hover:bg-violet-600 hover:text-white dark:border-violet-400 dark:hover:bg-violet-500 transition-all duration-300 px-4 py-2 rounded hidden sm:block"
+            className="text-white border border-violet-500 hover:bg-violet-600 hover:text-white dark:border-violet-400 dark:hover:bg-violet-500 transition-all duration-300 px-4 py-2 rounded"
           >
             Dashboard
           </Link>
+        ) : (
+          <span className="hidden sm:inline text-gray-400">Connect Wallet</span>
         )}
 
         {/* Wallet Connect Button */}

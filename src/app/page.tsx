@@ -68,8 +68,7 @@ export default function Home() {
     <Layout>      
       <Carousel/>
       <WhoWeAreCard/>
-      <ServiceStats/>
-      <UpcomingEvent/>
+      <ServiceStats/>      
       <Contact title="Contact Us"/>
       <HorizontalContactForm title="Message Us"/>
       {/*

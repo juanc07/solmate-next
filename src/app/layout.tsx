@@ -4,7 +4,7 @@ import "./globals.css";
 
 // react query integration
 import ReactQueryProvider from "@/components/custom/client/ReactQueryProvider";
-import { WalletContextProvider } from "./providers/WalletContext";
+import { WalletContextProvider } from "../providers/WalletContext";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",

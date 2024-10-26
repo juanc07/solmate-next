@@ -77,6 +77,9 @@ const Navbar: React.FC = () => {
             <Link href="/nft" onClick={handleLinkClick} className={linkClass('/nft')}>
               NFT
             </Link>
+            <Link href="/launchpad" onClick={handleLinkClick} className={linkClass('/launchpad')}>
+              Launchpad
+            </Link>
             <Link href="/news" onClick={handleLinkClick} className={linkClass('/news')}>
               News
             </Link>
@@ -108,6 +111,9 @@ const Navbar: React.FC = () => {
             </Link>
             <Link href="/nft" onClick={handleLinkClick} className={linkClass('/nft')}>
               NFT
+            </Link>
+            <Link href="/launchpad" onClick={handleLinkClick} className={linkClass('/launchpad')}>
+              Launchpad
             </Link>
             <Link href="/news" onClick={handleLinkClick} className={linkClass('/news')}>
               News

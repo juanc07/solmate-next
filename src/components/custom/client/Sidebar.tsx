@@ -23,7 +23,7 @@ const Sidebar = ({ isCollapsed }: { isCollapsed: boolean }) => (
         isCollapsed={isCollapsed}
       />
       <SidebarLink
-        href="/dashboard"
+        href="/followWallet"
         icon={<WalletIcon className="w-6 h-6" />}
         label="Wallets"
         isCollapsed={isCollapsed}

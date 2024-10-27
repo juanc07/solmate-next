@@ -6,19 +6,19 @@ import { Loader2 } from "lucide-react"; // ShadCN Loading Spinner
 
 // Example Dummy NFT Data
 const dummyNFTs = [
-  { id: "0", name: "Solana Monkey #0", image: "/images/nft/solmate-nft0.jpg" },
-  { id: "1", name: "Solana Monkey #1", image: "/images/nft/solmate-nft1.webp" },
-  { id: "2", name: "Solana Monkey #2", image: "/images/nft/solmate-nft2.webp" },
-  { id: "3", name: "Solana Monkey #3", image: "/images/nft/solmate-nft3.webp" },
-  { id: "4", name: "Solana Monkey #4", image: "/images/nft/solmate-nft4.webp" },
-  { id: "5", name: "Solana Monkey #5", image: "/images/nft/solmate-nft5.webp" },
-  { id: "6", name: "Solana Monkey #6", image: "/images/nft/solmate-nft6.webp" },
-  { id: "7", name: "Solana Monkey #7", image: "/images/nft/solmate-nft7.webp" },
-  { id: "8", name: "Solana Monkey #8", image: "/images/nft/solmate-nft8.webp" },
-  { id: "9", name: "Solana Monkey #9", image: "/images/nft/solmate-nft9.webp" },
-  { id: "10", name: "Solana Monkey #10", image: "/images/nft/solmate-nft10.webp" },
-  { id: "11", name: "Solana Monkey #11", image: "/images/nft/solmate-nft11.webp" },
-  { id: "12", name: "Solana Monkey #12", image: "/images/nft/solmate-nft12.webp" },
+  { id: "0", name: "Solmate NFT Collection #0", image: "/images/nft/solmate-nft0.jpg" },
+  { id: "1", name: "Solmate NFT Collection #1", image: "/images/nft/solmate-nft1.webp" },
+  { id: "2", name: "Solmate NFT Collection #2", image: "/images/nft/solmate-nft2.webp" },
+  { id: "3", name: "Solmate NFT Collection #3", image: "/images/nft/solmate-nft3.webp" },
+  { id: "4", name: "Solmate NFT Collection #4", image: "/images/nft/solmate-nft4.webp" },
+  { id: "5", name: "Solmate NFT Collection #5", image: "/images/nft/solmate-nft5.webp" },
+  { id: "6", name: "Solmate NFT Collection #6", image: "/images/nft/solmate-nft6.webp" },
+  { id: "7", name: "Solmate NFT Collection #7", image: "/images/nft/solmate-nft7.webp" },
+  { id: "8", name: "Solmate NFT Collection #8", image: "/images/nft/solmate-nft8.webp" },
+  { id: "9", name: "Solmate NFT Collection #9", image: "/images/nft/solmate-nft9.webp" },
+  { id: "10", name: "Solmate NFT Collection #10", image: "/images/nft/solmate-nft10.webp" },
+  { id: "11", name: "Solmate NFT Collection #11", image: "/images/nft/solmate-nft11.webp" },
+  { id: "12", name: "Solmate NFT Collection #12", image: "/images/nft/solmate-nft12.webp" },
 ];
 
 const NFTCollectionSection = () => {

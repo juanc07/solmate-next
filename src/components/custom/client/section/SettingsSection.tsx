@@ -9,7 +9,7 @@ import {
   ToastTitle,
   ToastDescription,
   ToastViewport,
-} from "@/components/ui/toast"; // Import ShadCN Toast components
+} from "@/components/ui/toast"; // ShadCN Toast components
 
 const SettingsSection = () => {
   // LocalStorage hooks for retrieving and saving values
@@ -98,8 +98,12 @@ const SettingsSection = () => {
       </div>
 
       {/* Toast Notification */}
-      <Toast open={showToast} onOpenChange={setShowToast}>
-        <ToastTitle>Settings Saved!</ToastTitle>
+      <Toast
+        open={showToast}
+        onOpenChange={setShowToast}
+        className="bg-white dark:bg-gray-800 text-black dark:text-white shadow-lg rounded-lg"
+      >
+        <ToastTitle className="font-bold">Settings Saved!</ToastTitle>
         <ToastDescription>
           Your settings have been successfully saved.
         </ToastDescription>

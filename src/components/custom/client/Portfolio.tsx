@@ -1,8 +1,11 @@
 "use client";
 
+import { useRouter } from "next/navigation"; // Client-side routing
+import WalletInfoSection from "@/components/custom/client/WalletInfoSection";
 import Sidebar from "@/components/custom/client/Sidebar";
 import PortfolioSection from "@/components/custom/client/PortfolioSection";
 import { useState, useEffect } from "react";
+import { useWallet } from "@solana/wallet-adapter-react"; // Solana Wallet Adapter
 
 // Dummy token data
 const tokens = [
@@ -11,28 +14,70 @@ const tokens = [
   { name: "Raydium", symbol: "RAY", balance: 100, change24h: -1.4 },
 ];
 
-const Portfolio = ({ walletAddress }: { walletAddress: string }) => {
+const Portfolio = ({
+  walletAddress,
+  solBalance,
+  usdEquivalent,
+}: {
+  walletAddress: string;
+  solBalance: number | null;
+  usdEquivalent: number | null;
+}) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const { connected, wallet } = useWallet(); // Check connection status
+  const router = useRouter(); // Initialize router for navigation
 
+  // Redirect to home if wallet is not connected
+  useEffect(() => {
+    if (!connected) {
+      console.log("Wallet not connected. Redirecting to home...");
+      router.replace("/"); // Redirect to home page
+    }
+  }, [connected, router]);
+
+  // Register the disconnect event listener
+  useEffect(() => {
+    const handleDisconnect = () => {
+      console.log("Wallet disconnected. Redirecting to home...");
+      router.replace("/"); // Redirect to home page
+    };
+
+    if (wallet?.adapter) {
+      wallet.adapter.on("disconnect", handleDisconnect);
+    }
+
+    // Cleanup listener on component unmount
+    return () => {
+      if (wallet?.adapter) {
+        wallet.adapter.off("disconnect", handleDisconnect);
+      }
+    };
+  }, [wallet, router]);
+
+  // Handle sidebar collapse on window resize
   useEffect(() => {
     const handleResize = () => setIsCollapsed(window.innerWidth < 768);
     window.addEventListener("resize", handleResize);
     handleResize();
-
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  return (
-    <div
-      className={`min-h-screen grid transition-colors duration-300 
-        bg-white text-black dark:bg-black dark:text-white`}
-      style={{
-        gridTemplateColumns: isCollapsed ? "5rem auto" : "15rem auto",
-      }}
-    >
-      <Sidebar isCollapsed={isCollapsed} />
+  
+  if (!connected) {
+    return null; // Prevent rendering until redirect completes
+  }
 
-      <main className="p-8 space-y-8">
+  return (
+    <div className="min-h-screen flex transition-colors duration-300 bg-white text-black dark:bg-black dark:text-white">
+      <aside className={`transition-all duration-300 ${isCollapsed ? "w-20" : "w-60"}`}>
+        <Sidebar isCollapsed={isCollapsed} />
+      </aside>
+      <main className="flex-1 p-6 sm:p-8 md:p-10 lg:p-12 space-y-8">
+        <WalletInfoSection
+          walletAddress={walletAddress}
+          solBalance={solBalance}
+          usdEquivalent={0}
+        />
         <PortfolioSection tokens={tokens} />
       </main>
     </div>

@@ -1,14 +1,18 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import Layout from "@/components/custom/server/Layout";
-import { useWallet } from "@solana/wallet-adapter-react"; // Import wallet adapter
 import Portfolio from "@/components/custom/client/Portfolio";
+import { useWallet } from "@solana/wallet-adapter-react"; // Import wallet adapter
 import { useRouter } from "next/navigation"; // Import router for navigation
+import { Connection, clusterApiUrl, PublicKey } from "@solana/web3.js";
+
+const SOL_TO_USD_RATE = 22.5; // Placeholder: You can replace this with a real-time exchange rate API
 
 const PortfolioPage = () => {
   const { publicKey, connected, wallet } = useWallet(); // Access wallet state
-  const router = useRouter(); // Initialize router for client-side navigation
+  const [solBalance, setSolBalance] = useState<number | null>(null);
+  const router = useRouter(); // Initialize router for navigation
 
   // Redirect to home if the wallet is not connected
   useEffect(() => {
@@ -37,17 +41,38 @@ const PortfolioPage = () => {
     };
   }, [wallet, router]);
 
-  // If the wallet is connected, use the wallet address; otherwise, use an empty string
-  const walletAddress = connected && publicKey ? publicKey.toString() : "";
+  // Fetch SOL balance on wallet connect
+  useEffect(() => {
+    const fetchBalance = async () => {
+      if (publicKey) {
+        try {
+          const connection = new Connection(clusterApiUrl("mainnet-beta")); // Mainnet connection
+          const balance = await connection.getBalance(new PublicKey(publicKey));
+          setSolBalance(balance / 1e9); // Convert lamports to SOL
+        } catch (error) {
+          console.error("Failed to fetch SOL balance:", error);
+        }
+      }
+    };
 
-  // Prevent rendering the page if the wallet is not connected (during redirect)
-  if (!connected) {
-    return null;
-  }
+    if (connected) {
+      fetchBalance();
+    }
+  }, [connected, publicKey]);
+
+  // Compute the USD equivalent
+  const usdEquivalent = solBalance ? solBalance * SOL_TO_USD_RATE : 0;
+
+  // Prevent rendering if not connected (during redirect)
+  if (!connected) return null;
 
   return (
     <Layout>
-      <Portfolio walletAddress={walletAddress} /> {/* Pass address as prop */}
+      <Portfolio 
+        walletAddress={publicKey?.toString() || ""} 
+        solBalance={solBalance} 
+        usdEquivalent={usdEquivalent} 
+      />
     </Layout>
   );
 };

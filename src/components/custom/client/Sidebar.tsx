@@ -23,13 +23,13 @@ const Sidebar = ({ isCollapsed }: { isCollapsed: boolean }) => (
         isCollapsed={isCollapsed}
       />
       <SidebarLink
-        href="/wallets"
+        href="/dashboard"
         icon={<WalletIcon className="w-6 h-6" />}
         label="Wallets"
         isCollapsed={isCollapsed}
       />
       <SidebarLink
-        href="/nfts"
+        href="/dashboard"
         icon={<SparklesIcon className="w-6 h-6" />}
         label="NFTs"
         isCollapsed={isCollapsed}

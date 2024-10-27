@@ -17,7 +17,7 @@ const SettingsPage = () => {
     const fetchBalance = async () => {
       if (publicKey) {
         try {
-          const connection = new Connection(clusterApiUrl("mainnet-beta")); // Mainnet connection
+          const connection = new Connection(clusterApiUrl("devnet")); // Mainnet connection
           const balance = await connection.getBalance(new PublicKey(publicKey));
           setSolBalance(balance / 1e9); // Convert lamports to SOL
         } catch (error) {

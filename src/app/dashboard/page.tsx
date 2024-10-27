@@ -15,7 +15,7 @@ const DashboardPage = () => {
 
   useEffect(() => {
     if (connected && publicKey) {
-      const connection = new Connection(clusterApiUrl("mainnet-beta"));
+      const connection = new Connection(clusterApiUrl("devnet"));
       const fetchBalance = async () => {
         try {
           const balance = await connection.getBalance(new PublicKey(publicKey));

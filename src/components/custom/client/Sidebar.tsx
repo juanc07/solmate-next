@@ -8,6 +8,7 @@ import {
   SparklesIcon,
   CogIcon,
 } from "@heroicons/react/24/solid";
+import { DropletIcon } from "lucide-react";
 
 const Sidebar = ({ isCollapsed }: { isCollapsed: boolean }) => (
   <aside
@@ -42,7 +43,7 @@ const Sidebar = ({ isCollapsed }: { isCollapsed: boolean }) => (
       />
       <SidebarLink
         href="/solFaucet"
-        icon={<SparklesIcon className="w-6 h-6" />}
+        icon={<DropletIcon className="w-6 h-6" />}
         label="SolFaucet"
         isCollapsed={isCollapsed}
       />

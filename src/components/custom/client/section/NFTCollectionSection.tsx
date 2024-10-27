@@ -1,24 +1,24 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button"; // ShadCN Button
 import { Loader2 } from "lucide-react"; // ShadCN Loading Spinner
+import NFTCard from "@/components/custom/client/NFTCard"; // Import the NFTCard component
 
 // Example Dummy NFT Data
 const dummyNFTs = [
-  { id: "0", name: "Solmate NFT Collection #0", image: "/images/nft/solmate-nft0.jpg" },
-  { id: "1", name: "Solmate NFT Collection #1", image: "/images/nft/solmate-nft1.webp" },
-  { id: "2", name: "Solmate NFT Collection #2", image: "/images/nft/solmate-nft2.webp" },
-  { id: "3", name: "Solmate NFT Collection #3", image: "/images/nft/solmate-nft3.webp" },
-  { id: "4", name: "Solmate NFT Collection #4", image: "/images/nft/solmate-nft4.webp" },
-  { id: "5", name: "Solmate NFT Collection #5", image: "/images/nft/solmate-nft5.webp" },
-  { id: "6", name: "Solmate NFT Collection #6", image: "/images/nft/solmate-nft6.webp" },
-  { id: "7", name: "Solmate NFT Collection #7", image: "/images/nft/solmate-nft7.webp" },
-  { id: "8", name: "Solmate NFT Collection #8", image: "/images/nft/solmate-nft8.webp" },
-  { id: "9", name: "Solmate NFT Collection #9", image: "/images/nft/solmate-nft9.webp" },
-  { id: "10", name: "Solmate NFT Collection #10", image: "/images/nft/solmate-nft10.webp" },
-  { id: "11", name: "Solmate NFT Collection #11", image: "/images/nft/solmate-nft11.webp" },
-  { id: "12", name: "Solmate NFT Collection #12", image: "/images/nft/solmate-nft12.webp" },
+  { id: "0", name: "Solmate Collection #0", image: "/images/nft/solmate-nft0.jpg" },
+  { id: "1", name: "Solmate Collection #1", image: "/images/nft/solmate-nft1.webp" },
+  { id: "2", name: "Solmate Collection #2", image: "/images/nft/solmate-nft2.webp" },
+  { id: "3", name: "Solmate Collection #3", image: "/images/nft/solmate-nft3.webp" },
+  { id: "4", name: "Solmate Collection #4", image: "/images/nft/solmate-nft4.webp" },
+  { id: "5", name: "Solmate Collection #5", image: "/images/nft/solmate-nft5.webp" },
+  { id: "6", name: "Solmate Collection #6", image: "/images/nft/solmate-nft6.webp" },
+  { id: "7", name: "Solmate Collection #7", image: "/images/nft/solmate-nft7.jpg" },
+  { id: "8", name: "Solmate Collection #8", image: "/images/nft/solmate-nft8.webp" },
+  { id: "9", name: "Solmate Collection #9", image: "/images/nft/solmate-nft9.webp" },
+  { id: "10", name: "Solmate Collection #10", image: "/images/nft/solmate-nft10.webp" },
+  { id: "11", name: "Solmate Collection #11", image: "/images/nft/solmate-nft11.webp" },
+  { id: "12", name: "Solmate Collection #12", image: "/images/nft/solmate-nft12.webp" },
 ];
 
 const NFTCollectionSection = () => {
@@ -51,30 +51,7 @@ const NFTCollectionSection = () => {
       {nfts.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {nfts.map((nft) => (
-            <div
-              key={nft.id}
-              className="p-4 bg-gray-100 dark:bg-gray-800 rounded-lg shadow-md flex flex-col items-center"
-            >
-              <div className="w-full aspect-square overflow-hidden rounded-md">
-                <img
-                  src={nft.image}
-                  alt={nft.name}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <h3
-                className="mt-3 text-center font-medium text-lg sm:text-base md:text-lg lg:text-xl"
-              >
-                {nft.name}
-              </h3>
-              <p className="text-sm text-gray-500">Token ID: {nft.id}</p>
-              <Button
-                className="mt-3 w-full text-sm sm:text-xs md:text-sm lg:text-base"
-                variant="default"
-              >
-                View Details
-              </Button>
-            </div>
+            <NFTCard key={nft.id} id={nft.id} name={nft.name} image={nft.image} />
           ))}
         </div>
       ) : (

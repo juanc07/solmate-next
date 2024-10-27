@@ -1,9 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation"; // Client-side routing
-import GreetingSection from "@/components/custom/client/GreetingSection";
+import GreetingSection from "@/components/custom/client/section/GreetingSection";
 import Sidebar from "@/components/custom/client/Sidebar";
-import PortfolioSection from "@/components/custom/client/PortfolioSection";
+import PortfolioSection from "@/components/custom/client/section/PortfolioSection";
 import { useState, useEffect } from "react";
 import { useWallet } from "@solana/wallet-adapter-react"; // Solana Wallet Adapter
 

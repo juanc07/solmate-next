@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Sidebar from "@/components/custom/client/Sidebar";
-import SettingsSection from "@/components/custom/client/SettingsSection";
+import SettingsSection from "@/components/custom/client/section/SettingsSection";
 import { useWallet } from "@solana/wallet-adapter-react"; // Solana Wallet Adapter
 
 const Settings = () => {

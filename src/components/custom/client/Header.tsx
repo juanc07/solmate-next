@@ -90,7 +90,8 @@ export default function Header() {
             priority
             className="h-10 w-10 object-contain"
           />
-          <span className="text-xl font-bold">Solmate</span>
+          {/* Show the label only on medium screens and larger */}
+          <span className="text-xl font-bold hidden sm:inline">Solmate</span>
         </Link>
       </div>
 

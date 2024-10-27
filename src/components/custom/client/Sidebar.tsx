@@ -1,15 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { HomeIcon, WalletIcon, ChartBarIcon, SparklesIcon, CogIcon } from "@heroicons/react/24/solid";
+import {
+  HomeIcon,
+  WalletIcon,
+  ChartBarIcon,
+  SparklesIcon,
+  CogIcon,
+} from "@heroicons/react/24/solid";
 
 const Sidebar = ({ isCollapsed }: { isCollapsed: boolean }) => (
   <aside
-    className={`h-screen bg-black dark:bg-gray-800 text-white shadow-lg transition-all duration-300 z-20 ${
+    className={`flex flex-col min-h-screen bg-black dark:bg-gray-800 text-white shadow-lg transition-all duration-300 z-20 ${
       isCollapsed ? "w-20" : "w-60"
     }`}
   >
-    <nav className="space-y-6 py-7 px-2">
+    <nav className="flex-grow space-y-6 py-7 px-2 overflow-auto">
       <SidebarLink
         href="/dashboard"
         icon={<HomeIcon className="w-6 h-6" />}

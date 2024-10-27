@@ -17,16 +17,25 @@ const NftCollection = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Prevent rendering if wallet is not connected
+  // Prevent rendering if the wallet is not connected
   if (!connected) return null;
 
   return (
     <div className="min-h-screen flex transition-colors duration-300 bg-white text-black dark:bg-black dark:text-white">
-      <aside className={`transition-all duration-300 ${isCollapsed ? "w-20" : "w-60"}`}>
+      {/* Sidebar */}
+      <aside
+        className={`transition-all duration-300 flex-shrink-0 ${
+          isCollapsed ? "w-20" : "w-60"
+        } bg-black dark:bg-gray-800`}
+      >
         <Sidebar isCollapsed={isCollapsed} />
       </aside>
-      <main className="flex-1 p-6 sm:p-8 md:p-10 lg:p-12 space-y-8">
-        <NFTCollectionSection />
+
+      {/* Main Content */}
+      <main className="flex-1 overflow-hidden">
+        <div className="h-full overflow-auto p-6 sm:p-8 md:p-10 lg:p-12">
+          <NFTCollectionSection />
+        </div>
       </main>
     </div>
   );

@@ -6,6 +6,11 @@ import { Button } from "@/components/ui/button"; // ShadCN Button
 // Example Dummy NFT Data
 const dummyNFTs = [
   {
+    id: "0",
+    name: "Solana Monkey #0",
+    image: "/images/nft/solmate-nft0.jpg",
+  },
+  {
     id: "1",
     name: "Solana Monkey #1",
     image: "/images/nft/solmate-nft1.webp",

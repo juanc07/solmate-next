@@ -7,9 +7,11 @@ import { SunIcon, MoonIcon, Bars3Icon } from "@heroicons/react/24/solid"; // Ham
 import { Button } from "@/components/ui/button"; // ShadCN UI Button
 import { WalletConnectButton } from "@/components/custom/client/WalletConnectButton";
 import { useWallet } from "@solana/wallet-adapter-react"; // Solana Wallet Adapter
+import { useRouter } from "next/navigation";
 
 export default function Header() {
-  const { connected } = useWallet(); // Track wallet connection status
+  const router = useRouter();
+  const { connected, wallet, publicKey } = useWallet(); // Extract wallet object
   const [isDark, setIsDark] = useState<boolean>(() => {
     if (typeof window !== "undefined") {
       const storedTheme = localStorage.getItem("theme");
@@ -21,6 +23,25 @@ export default function Header() {
   });
 
   const [isMenuOpen, setIsMenuOpen] = useState(false); // Mobile menu state
+
+  // Register the disconnect event listener
+  useEffect(() => {
+    const handleDisconnect = () => {
+      console.log("disconnected from wallet");            
+      router.replace("/");      
+    };
+
+    if (wallet?.adapter) {
+      wallet.adapter.on("disconnect", handleDisconnect);
+    }
+
+    // Cleanup on component unmount
+    return () => {
+      if (wallet?.adapter) {
+        wallet.adapter.off("disconnect", handleDisconnect);
+      }
+    };
+  }, [wallet]);
 
   useEffect(() => {
     const root = document.documentElement;

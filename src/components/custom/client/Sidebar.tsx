@@ -41,6 +41,12 @@ const Sidebar = ({ isCollapsed }: { isCollapsed: boolean }) => (
         isCollapsed={isCollapsed}
       />
       <SidebarLink
+        href="/solFaucet"
+        icon={<SparklesIcon className="w-6 h-6" />}
+        label="SolFaucet"
+        isCollapsed={isCollapsed}
+      />
+      <SidebarLink
         href="/settings"
         icon={<CogIcon className="w-6 h-6" />}
         label="Settings"

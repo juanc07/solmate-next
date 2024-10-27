@@ -64,10 +64,7 @@ const Navbar: React.FC = () => {
                 </Link>
                 <Link href="/news" onClick={handleLinkClick} className={linkClass("/news")}>
                   News
-                </Link>
-                <Link href="/solFaucet" onClick={handleLinkClick} className={linkClass("/solFaucet")}>
-                  Sol Faucet
-                </Link>
+                </Link>                
                 <Link href="/about" onClick={handleLinkClick} className={linkClass("/about")}>
                   About Us
                 </Link>
@@ -129,10 +126,7 @@ const Navbar: React.FC = () => {
               </Link>
               <Link href="/news" onClick={handleLinkClick} className={linkClass("/news")}>
                 <NewspaperIcon className="h-6 w-6 mr-2" /> News
-              </Link>
-              <Link href="/solFaucet" onClick={handleLinkClick} className={linkClass("/solFaucet")}>
-                <NewspaperIcon className="h-6 w-6 mr-2" /> Sol Faucet
-              </Link>
+              </Link>              
               <Link href="/about" onClick={handleLinkClick} className={linkClass("/about")}>
                 <InformationCircleIcon className="h-6 w-6 mr-2" /> About Us
               </Link>

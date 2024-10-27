@@ -4,10 +4,12 @@ import { useState, useEffect } from "react";
 import Sidebar from "@/components/custom/client/Sidebar";
 import { useWallet } from "@solana/wallet-adapter-react"; // Solana Wallet Adapter
 import NFTCollectionSection from "./section/NFTCollectionSection";
+import { useRouter } from "next/navigation"; // Next.js router
 
 const NftCollection = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { connected } = useWallet(); // Check connection status
+  const router = useRouter(); // Initialize router
 
   // Handle sidebar collapse on window resize
   useEffect(() => {
@@ -16,6 +18,13 @@ const NftCollection = () => {
     handleResize();
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  // Redirect to home if the wallet is not connected
+  useEffect(() => {
+    if (!connected) {
+      router.replace("/"); // Redirect to home page
+    }
+  }, [connected, router]);
 
   // Prevent rendering if the wallet is not connected
   if (!connected) return null;

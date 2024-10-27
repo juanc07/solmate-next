@@ -27,19 +27,35 @@ const Portfolio = ({
   const { connected, wallet } = useWallet();
   const router = useRouter();
 
-  // Redirect to home if wallet is not connected
+  // Redirect to home if wallet is not connected on load or on back navigation
   useEffect(() => {
-    if (!connected) {
-      console.log("Wallet not connected. Redirecting to home...");
-      router.replace("/");
-    }
+    const checkConnection = () => {
+      if (!connected) {
+        console.log("Wallet not connected. Redirecting to home...");
+        router.replace("/"); // Redirect to home page
+      }
+    };
+
+    checkConnection(); // Check on component mount
+
+    // Handle back/forward browser navigation
+    const handlePopState = () => {
+      console.log("Navigated back. Checking wallet connection...");
+      checkConnection();
+    };
+
+    window.addEventListener("popstate", handlePopState);
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
   }, [connected, router]);
 
   // Register the disconnect event listener
   useEffect(() => {
     const handleDisconnect = () => {
       console.log("Wallet disconnected. Redirecting to home...");
-      router.replace("/");
+      router.replace("/"); // Redirect to home page
     };
 
     if (wallet?.adapter) {
@@ -61,6 +77,7 @@ const Portfolio = ({
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // Prevent rendering if the wallet is not connected
   if (!connected) return null;
 
   return (

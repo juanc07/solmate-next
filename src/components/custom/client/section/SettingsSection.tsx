@@ -7,7 +7,7 @@ import useLocalStorage from "@/lib/useLocalStorage"; // Custom hook
 const SettingsSection = () => {
   // LocalStorage hooks for retrieving and saving values
   const [getDarkMode, setDarkModeStorage] = useLocalStorage<boolean>(
-    "dark-mode",
+    "dark",
     false
   );
   const [getNotificationsEnabled, setNotificationsStorage] =
@@ -23,7 +23,8 @@ const SettingsSection = () => {
   const handleSaveSettings = () => {
     setDarkModeStorage(isDarkMode);
     setNotificationsStorage(notificationsEnabled);
-    alert("Settings saved!"); // Optional feedback for the user
+    console.log("save isDarkMode: ", isDarkMode);
+    alert("Settings saved! isDarkMode: "); // Optional feedback for the user
   };
 
   const handleThemeToggle = () => setIsDarkMode((prev) => !prev);

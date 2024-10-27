@@ -4,25 +4,35 @@ import { useEffect, useCallback } from "react";
 function useLocalStorage<T>(
   key: string,
   initialValue: T
-): [() => T | null, (newValue: T | null) => void] {
+): [() => T, (newValue: T | null) => void] {
   // Write to localStorage only if the key doesn't exist already
   useEffect(() => {
     const storedValue = localStorage.getItem(key);
-    if (storedValue === null && initialValue !== undefined && initialValue !== null) {
-      localStorage.setItem(key, JSON.stringify(initialValue));
+    if (storedValue === null) {
+      const valueToStore =
+        typeof initialValue === "string" ? initialValue : JSON.stringify(initialValue);
+      localStorage.setItem(key, valueToStore);
     }
   }, [key, initialValue]);
 
   // Getter function for retrieving the stored value
-  const getStoredValue = useCallback((): T | null => {
+  const getStoredValue = useCallback((): T => {
     const storedValue = localStorage.getItem(key);
-    return storedValue ? (JSON.parse(storedValue) as T) : null;
-  }, [key]);
+
+    // Try parsing JSON, but return raw value if parsing fails
+    try {
+      return storedValue !== null ? (JSON.parse(storedValue) as T) : initialValue;
+    } catch {
+      return storedValue as T;
+    }
+  }, [key, initialValue]);
 
   // Setter function for updating localStorage
   const updateLocalStorage = useCallback((newValue: T | null): void => {
-    if (newValue !== undefined && newValue !== null) {
-      localStorage.setItem(key, JSON.stringify(newValue));
+    if (newValue !== null) {
+      const valueToStore =
+        typeof newValue === "string" ? newValue : JSON.stringify(newValue);
+      localStorage.setItem(key, valueToStore);
     } else {
       localStorage.removeItem(key);
     }

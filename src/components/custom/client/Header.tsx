@@ -7,29 +7,55 @@ import {
   SunIcon, 
   MoonIcon, 
   ArrowRightOnRectangleIcon, 
-  Squares2X2Icon // Icon for dashboard on small screens 
-} from "@heroicons/react/24/solid"; 
+  Squares2X2Icon 
+} from "@heroicons/react/24/solid";
 import { Button } from "@/components/ui/button"; 
 import { WalletConnectButton } from "@/components/custom/client/WalletConnectButton";
 import { useWallet } from "@solana/wallet-adapter-react"; 
 import { useRouter } from "next/navigation";
+import useLocalStorage from "@/lib/useLocalStorage"; // Custom hook
 
 export default function Header() {
   const router = useRouter();
   const { connected, wallet } = useWallet();
-  const [isDark, setIsDark] = useState(() => {
-    if (typeof window !== "undefined") {
-      const storedTheme = localStorage.getItem("theme");
-      return storedTheme
-        ? storedTheme === "dark"
-        : window.matchMedia("(prefers-color-scheme: dark)").matches;
-    }
-    return false;
-  });
 
+  // Use `useLocalStorage` to manage theme state
+  const [getDarkMode, setDarkModeStorage] = useLocalStorage<boolean>(
+    "dark",
+    false // Default to light mode (false)
+  );
+
+  // Initialize state from localStorage
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => getDarkMode() ?? false);
+
+  // Apply the selected theme on every state change
+  const applyTheme = (darkMode: boolean) => {
+    const root = document.documentElement;
+    if (darkMode) {
+      root.classList.add("dark");
+    } else {
+      root.classList.remove("dark");
+    }
+  };
+
+  // Apply the theme when the component mounts or when toggled
+  useEffect(() => {
+    applyTheme(isDarkMode); // Apply theme based on current state
+  }, [isDarkMode]);
+
+  // Load saved theme settings ONLY when the wallet connects
+  useEffect(() => {
+    if (connected) {
+      const savedTheme = getDarkMode(); // Fetch saved theme from localStorage
+      console.log("Loaded saved theme:", savedTheme);
+      setIsDarkMode(savedTheme); // Update state with saved theme
+    }
+  }, [connected, getDarkMode]);
+
+  // Handle wallet disconnect and redirect
   useEffect(() => {
     const handleDisconnect = () => {
-      console.log("disconnected from wallet");
+      console.log("Disconnected from wallet");
       router.replace("/");
     };
 
@@ -44,20 +70,11 @@ export default function Header() {
     };
   }, [wallet, router]);
 
-  useEffect(() => {
-    const root = document.documentElement;
-    if (isDark) {
-      root.classList.add("dark");
-      localStorage.setItem("theme", "dark");
-    } else {
-      root.classList.remove("dark");
-      localStorage.setItem("theme", "light");
-    }
-  }, [isDark]);
-
+  // Toggle theme and save to localStorage
   const toggleTheme = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    setIsDark((prev) => !prev);
+    const newDarkMode = !isDarkMode; // Toggle dark mode state
+    setIsDarkMode(newDarkMode); // Update local state    
   };
 
   return (
@@ -116,7 +133,7 @@ export default function Header() {
           onClick={toggleTheme}
           aria-label="Toggle Theme"
         >
-          {isDark ? (
+          {isDarkMode ? (
             <SunIcon className="h-6 w-6 text-yellow-400" />
           ) : (
             <MoonIcon className="h-6 w-6 text-blue-300" />

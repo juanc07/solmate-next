@@ -2,16 +2,15 @@
 
 import { useState, useEffect } from "react";
 import Sidebar from "@/components/custom/client/Sidebar";
-import { useWallet } from "@solana/wallet-adapter-react"; // Solana Wallet Adapter
+import { useWallet } from "@solana/wallet-adapter-react";
 import NFTCollectionSection from "./section/NFTCollectionSection";
-import { useRouter } from "next/navigation"; // Next.js router
+import { useRouter } from "next/navigation"; 
 
 const NftCollection = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const { connected } = useWallet(); // Check connection status
-  const router = useRouter(); // Initialize router
+  const { connected } = useWallet();
+  const router = useRouter();
 
-  // Handle sidebar collapse on window resize
   useEffect(() => {
     const handleResize = () => setIsCollapsed(window.innerWidth < 768);
     window.addEventListener("resize", handleResize);
@@ -19,14 +18,12 @@ const NftCollection = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Redirect to home if the wallet is not connected
   useEffect(() => {
     if (!connected) {
-      router.replace("/"); // Redirect to home page
+      router.replace("/");
     }
   }, [connected, router]);
 
-  // Prevent rendering if the wallet is not connected
   if (!connected) return null;
 
   return (
@@ -42,7 +39,8 @@ const NftCollection = () => {
 
       {/* Main Content */}
       <main className="flex-1 overflow-hidden">
-        <div className="h-full overflow-auto p-6 sm:p-8 md:p-10 lg:p-12">
+        {/* 5% padding on left and right */}
+        <div className="h-full overflow-auto px-[5%] py-6">
           <NFTCollectionSection />
         </div>
       </main>

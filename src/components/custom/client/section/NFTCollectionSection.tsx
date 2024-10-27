@@ -55,14 +55,23 @@ const NFTCollectionSection = () => {
               key={nft.id}
               className="p-4 bg-gray-100 dark:bg-gray-800 rounded-lg shadow-md flex flex-col items-center"
             >
-              <img
-                src={nft.image}
-                alt={nft.name}
-                className="w-full h-48 object-cover rounded-md"
-              />
-              <h3 className="text-lg font-medium mt-3 text-center">{nft.name}</h3>
+              <div className="w-full aspect-square overflow-hidden rounded-md">
+                <img
+                  src={nft.image}
+                  alt={nft.name}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <h3
+                className="mt-3 text-center font-medium text-lg sm:text-base md:text-lg lg:text-xl"
+              >
+                {nft.name}
+              </h3>
               <p className="text-sm text-gray-500">Token ID: {nft.id}</p>
-              <Button className="mt-3 w-full" variant="default">
+              <Button
+                className="mt-3 w-full text-sm sm:text-xs md:text-sm lg:text-base"
+                variant="default"
+              >
                 View Details
               </Button>
             </div>

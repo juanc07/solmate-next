@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button"; // ShadCN Button
+import { Loader2 } from "lucide-react"; // ShadCN Loading Spinner
 
 // Example Dummy NFT Data
 const dummyNFTs = [
@@ -36,7 +37,11 @@ const NFTCollectionSection = () => {
   }, []);
 
   if (loading) {
-    return <p className="text-center text-lg">Loading NFTs...</p>;
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Loader2 className="animate-spin text-violet-600 w-16 h-16" />
+      </div>
+    );
   }
 
   return (

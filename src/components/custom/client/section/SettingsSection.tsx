@@ -1,11 +1,30 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button"; // ShadCN Button
+import useLocalStorage from "@/lib/useLocalStorage"; // Custom hook
 
 const SettingsSection = () => {
-  const [isDarkMode, setIsDarkMode] = useState(false);
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  // LocalStorage hooks for retrieving and saving values
+  const [getDarkMode, setDarkModeStorage] = useLocalStorage<boolean>(
+    "dark-mode",
+    false
+  );
+  const [getNotificationsEnabled, setNotificationsStorage] =
+    useLocalStorage<boolean>("notifications-enabled", true);
+
+  // Initialize state from localStorage
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => getDarkMode() ?? false);
+  const [notificationsEnabled, setNotificationsEnabled] = useState<boolean>(
+    () => getNotificationsEnabled() ?? true
+  );
+
+  // Save settings to localStorage on button click
+  const handleSaveSettings = () => {
+    setDarkModeStorage(isDarkMode);
+    setNotificationsStorage(notificationsEnabled);
+    alert("Settings saved!"); // Optional feedback for the user
+  };
 
   const handleThemeToggle = () => setIsDarkMode((prev) => !prev);
   const handleNotificationsToggle = () =>
@@ -51,7 +70,11 @@ const SettingsSection = () => {
         </div>
 
         {/* Save Settings Button */}
-        <Button className="w-full mt-4" variant="default">
+        <Button
+          className="w-full mt-4"
+          variant="default"
+          onClick={handleSaveSettings}
+        >
           Save Settings
         </Button>
       </div>

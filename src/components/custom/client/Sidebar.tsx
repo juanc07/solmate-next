@@ -29,7 +29,7 @@ const Sidebar = ({ isCollapsed }: { isCollapsed: boolean }) => (
         isCollapsed={isCollapsed}
       />
       <SidebarLink
-        href="/dashboard"
+        href="/nftCollection"
         icon={<SparklesIcon className="w-6 h-6" />}
         label="NFTs"
         isCollapsed={isCollapsed}

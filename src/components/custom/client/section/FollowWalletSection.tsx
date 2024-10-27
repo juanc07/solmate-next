@@ -20,10 +20,12 @@ const FollowWalletSection = () => {
   };
 
   return (
-    <div className="p-6 md:p-8 lg:p-10 bg-white dark:bg-gray-900 text-black dark:text-white shadow-lg rounded-lg max-w-3xl mx-auto">
-      <h2 className="text-2xl font-bold mb-6">Follow Wallets</h2>
+    <div className="flex flex-col h-full p-4 sm:p-6 md:p-8 lg:p-10 bg-white dark:bg-gray-900 text-black dark:text-white shadow-lg rounded-lg max-w-5xl mx-auto">
+      <h2 className="text-2xl font-bold mb-6 text-center sm:text-left">
+        Follow Wallets
+      </h2>
 
-      <div className="space-y-4">
+      <div className="space-y-4 flex-1 overflow-auto">
         {/* Input to Add Wallet */}
         <div className="flex space-x-2">
           <Input
@@ -57,7 +59,9 @@ const FollowWalletSection = () => {
             ))}
           </div>
         ) : (
-          <p className="text-sm text-gray-500">No wallets followed yet.</p>
+          <p className="text-sm text-gray-500 text-center">
+            No wallets followed yet.
+          </p>
         )}
       </div>
     </div>

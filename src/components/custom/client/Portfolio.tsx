@@ -24,14 +24,14 @@ const Portfolio = ({
   usdEquivalent: number | null;
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const { connected, wallet } = useWallet(); // Check connection status
-  const router = useRouter(); // Initialize router for navigation
+  const { connected, wallet } = useWallet();
+  const router = useRouter();
 
   // Redirect to home if wallet is not connected
   useEffect(() => {
     if (!connected) {
       console.log("Wallet not connected. Redirecting to home...");
-      router.replace("/"); // Redirect to home page
+      router.replace("/");
     }
   }, [connected, router]);
 
@@ -39,14 +39,13 @@ const Portfolio = ({
   useEffect(() => {
     const handleDisconnect = () => {
       console.log("Wallet disconnected. Redirecting to home...");
-      router.replace("/"); // Redirect to home page
+      router.replace("/");
     };
 
     if (wallet?.adapter) {
       wallet.adapter.on("disconnect", handleDisconnect);
     }
 
-    // Cleanup listener on component unmount
     return () => {
       if (wallet?.adapter) {
         wallet.adapter.off("disconnect", handleDisconnect);
@@ -62,23 +61,29 @@ const Portfolio = ({
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  
-  if (!connected) {
-    return null; // Prevent rendering until redirect completes
-  }
+  if (!connected) return null;
 
   return (
-    <div className="min-h-screen flex transition-colors duration-300 bg-white text-black dark:bg-black dark:text-white">
-      <aside className={`transition-all duration-300 ${isCollapsed ? "w-20" : "w-60"}`}>
+    <div className="h-screen flex transition-colors duration-300 bg-white text-black dark:bg-black dark:text-white">
+      {/* Sidebar */}
+      <aside
+        className={`flex-shrink-0 transition-all duration-300 ${
+          isCollapsed ? "w-20" : "w-60"
+        } bg-gray-800 dark:bg-gray-900`}
+      >
         <Sidebar isCollapsed={isCollapsed} />
       </aside>
-      <main className="flex-1 p-6 sm:p-8 md:p-10 lg:p-12 space-y-8">
-        <WalletInfoSection
-          walletAddress={walletAddress}
-          solBalance={solBalance}
-          usdEquivalent={0}
-        />
-        <PortfolioSection tokens={tokens} />
+
+      {/* Main Content */}
+      <main className="flex-1 flex flex-col">
+        <div className="flex-1 overflow-auto p-6 sm:p-8 md:p-10 lg:p-12 space-y-8">
+          <WalletInfoSection
+            walletAddress={walletAddress}
+            solBalance={solBalance}
+            usdEquivalent={usdEquivalent}
+          />
+          <PortfolioSection tokens={tokens} />
+        </div>
       </main>
     </div>
   );

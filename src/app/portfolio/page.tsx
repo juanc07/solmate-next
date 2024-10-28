@@ -6,12 +6,12 @@ import Portfolio from "@/components/custom/client/Portfolio";
 import { useWallet } from "@solana/wallet-adapter-react"; // Import wallet adapter
 import { useRouter } from "next/navigation"; // Import router for navigation
 import { Connection, clusterApiUrl, PublicKey } from "@solana/web3.js";
-
-const SOL_TO_USD_RATE = 22.5; // Placeholder: You can replace this with a real-time exchange rate API
+import { SolanaPriceHelper } from "@/lib/SolanaPriceHelper"; // Import the helper class
 
 const PortfolioPage = () => {
   const { publicKey, connected, wallet } = useWallet(); // Access wallet state
   const [solBalance, setSolBalance] = useState<number | null>(null);
+  const [solPrice, setSolPrice] = useState<number>(0);
   const router = useRouter(); // Initialize router for navigation
 
   // Redirect to home if the wallet is not connected
@@ -41,12 +41,21 @@ const PortfolioPage = () => {
     };
   }, [wallet, router]);
 
-  // Fetch SOL balance on wallet connect
+  // Fetch SOL price and balance on wallet connect
   useEffect(() => {
+    const fetchSolPrice = async () => {
+      try {
+        const price = await SolanaPriceHelper.getTokenPriceInUSD("SOL");
+        setSolPrice(price);
+      } catch (error) {
+        console.error("Error fetching SOL price:", error);
+      }
+    };
+
     const fetchBalance = async () => {
       if (publicKey) {
         try {
-          const connection = new Connection(clusterApiUrl("devnet")); // Mainnet connection
+          const connection = new Connection(clusterApiUrl("devnet"));
           const balance = await connection.getBalance(new PublicKey(publicKey));
           setSolBalance(balance / 1e9); // Convert lamports to SOL
         } catch (error) {
@@ -56,22 +65,23 @@ const PortfolioPage = () => {
     };
 
     if (connected) {
+      fetchSolPrice();
       fetchBalance();
     }
   }, [connected, publicKey]);
 
-  // Compute the USD equivalent
-  const usdEquivalent = solBalance ? solBalance * SOL_TO_USD_RATE : 0;
+  // Compute the USD equivalent using the helper class
+  const usdEquivalent = solBalance ? solBalance * solPrice : 0;
 
   // Prevent rendering if not connected (during redirect)
   if (!connected) return null;
 
   return (
     <Layout>
-      <Portfolio 
-        walletAddress={publicKey?.toString() || ""} 
-        solBalance={solBalance} 
-        usdEquivalent={usdEquivalent} 
+      <Portfolio
+        walletAddress={publicKey?.toString() || ""}
+        solBalance={solBalance}
+        usdEquivalent={usdEquivalent}
       />
     </Layout>
   );

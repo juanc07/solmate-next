@@ -7,17 +7,26 @@ import { useRouter } from "next/navigation"; // Next.js router
 import SolFaucetContent from "@/components/custom/client/section/SolFaucetContent";
 import { useWallet } from "@solana/wallet-adapter-react"; // Solana Wallet Adapter
 import { Connection, clusterApiUrl, PublicKey } from "@solana/web3.js";
-
-const SOL_TO_USD_RATE = 22.5; // Placeholder rate
+import { SolanaPriceHelper } from "@/lib/SolanaPriceHelper"; // Import the helper
 
 const SolFaucet = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);  
   const router = useRouter(); // Initialize router
   const { publicKey, connected } = useWallet(); // Access wallet state
   const [solBalance, setSolBalance] = useState<number | null>(null);
+  const [solPrice, setSolPrice] = useState<number>(0);
 
-  // Fetch SOL balance when the wallet connects
+  // Fetch SOL balance and price when the wallet connects
   useEffect(() => {
+    const fetchSolPrice = async () => {
+      try {
+        const price = await SolanaPriceHelper.getTokenPriceInUSD("SOL");
+        setSolPrice(price);
+      } catch (error) {
+        console.error("Error fetching SOL price:", error);
+      }
+    };
+
     const fetchBalance = async () => {
       if (publicKey) {
         try {
@@ -30,11 +39,14 @@ const SolFaucet = () => {
       }
     };
 
-    if (connected) fetchBalance();
+    if (connected) {
+      fetchSolPrice();
+      fetchBalance();
+    }
   }, [connected, publicKey]);
 
-  // Calculate USD equivalent of SOL balance
-  const usdEquivalent = solBalance ? solBalance * SOL_TO_USD_RATE : 0;
+  // Calculate USD equivalent using fetched SOL price
+  const usdEquivalent = solBalance ? solBalance * solPrice : 0;
 
   // Handle sidebar collapse on window resize
   useEffect(() => {
@@ -69,10 +81,10 @@ const SolFaucet = () => {
       {/* Main Content */}
       <main className="flex-1 flex flex-col h-screen overflow-hidden">
         <div className="flex-1 overflow-auto p-6 sm:p-8 md:p-10 lg:p-12">
-        <SolFaucetContent 
+          <SolFaucetContent 
             solBalance={solBalance} 
             usdEquivalent={usdEquivalent} 
-        />
+          />
         </div>
       </main>
     </div>

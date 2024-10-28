@@ -4,13 +4,25 @@ import React, { useEffect, useState } from "react";
 import Layout from "@/components/custom/server/Layout";
 import Dashboard from "@/components/custom/client/Dashboard";
 import { useWallet } from "@solana/wallet-adapter-react";
-import { Connection, clusterApiUrl, PublicKey } from "@solana/web3.js";
-
-const SOL_TO_USD_RATE = 170.36;
+import { Connection, clusterApiUrl } from "@solana/web3.js";
+import { SolanaPriceHelper } from "@/lib/SolanaPriceHelper";
 
 const DashboardPage = () => {
   const { publicKey, connected } = useWallet();
   const [solBalance, setSolBalance] = useState<number | null>(null);
+  const [solPrice, setSolPrice] = useState<number>(0);
+
+  useEffect(() => {
+    const fetchSolPrice = async () => {
+      try {
+        const price = await SolanaPriceHelper.getTokenPriceInUSD("SOL");
+        setSolPrice(price);
+      } catch (error) {
+        console.error("Error fetching SOL price:", error);
+      }
+    };
+    fetchSolPrice();
+  }, []);
 
   useEffect(() => {
     if (connected && publicKey) {
@@ -18,15 +30,15 @@ const DashboardPage = () => {
       const fetchBalance = async () => {
         try {
           const balance = await connection.getBalance(publicKey);
-          setSolBalance(balance / 1e9);
+          setSolBalance(balance / 1e9); // Convert lamports to SOL
         } catch (error) {
           console.error("Error fetching SOL balance:", error);
-          setSolBalance(0); // Default to 0 on failure
+          setSolBalance(0);
         }
       };
       fetchBalance();
     } else {
-      setSolBalance(0); // Set to 0 if wallet not connected
+      setSolBalance(0);
     }
   }, [connected, publicKey]);
 
@@ -34,10 +46,10 @@ const DashboardPage = () => {
 
   return (
     <Layout>
-      <Dashboard 
-        walletAddress={walletAddress} 
-        solBalance={solBalance} 
-        usdEquivalent={solBalance ? solBalance * SOL_TO_USD_RATE : 0} 
+      <Dashboard
+        walletAddress={walletAddress}
+        solBalance={solBalance}
+        usdEquivalent={solBalance ? solBalance * solPrice : 0}
       />
     </Layout>
   );

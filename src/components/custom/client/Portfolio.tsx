@@ -9,6 +9,7 @@ import { Connection, PublicKey } from "@solana/web3.js";
 import { obfuscatePublicKey, sanitizeImageUrl } from "@/lib/helper";
 import Image from "next/image";
 import { setSolanaEnvironment, getSolanaEndpoint, SolanaEnvironment } from "@/lib/config";
+import { SolanaPriceHelper } from "@/lib/SolanaPriceHelper";
 
 interface Token {
   mint: string;
@@ -16,10 +17,18 @@ interface Token {
   icon: string;
   name: string;
   symbol: string;
+  usdValue: number;
 }
 
-// Throttling: Introduce a delay between API requests
+// Utility: Throttling with a delay between API requests
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// Utility: Format large numbers into 'M' (Million) or 'B' (Billion)
+const formatLargeNumber = (num: number): string => {
+  if (num >= 1_000_000_000) return `${(num / 1_000_000_000).toFixed(1)}B`;
+  if (num >= 1_000_000) return `${(num / 1_000_000).toFixed(1)}M`;
+  return num.toFixed(2);
+};
 
 // Caching: Fetch token data with caching logic
 const fetchTokenDataWithCache = async (mint: string): Promise<Token | null> => {
@@ -36,13 +45,13 @@ const fetchTokenDataWithCache = async (mint: string): Promise<Token | null> => {
 
     const token: Token = {
       mint: tokenData.address,
-      balance: 0, // Balance will be updated later
+      balance: 0,
       icon: tokenData.logoURI,
       name: tokenData.name,
       symbol: tokenData.symbol,
+      usdValue: 0, // Will be updated later
     };
 
-    // Cache the token data
     localStorage.setItem(mint, JSON.stringify(token));
     return token;
   } catch (error) {
@@ -61,31 +70,37 @@ const fetchTokens = async (
       { programId: new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA") }
     );
 
-    const tokens = [];
+    const tokens: Token[] = [];
 
     for (const { account } of tokenAccounts.value) {
       const info = account.data.parsed.info;
       const mintAddress = info.mint;
       const tokenBalance = info.tokenAmount.uiAmount || 0;
 
-      // Skip tokens with balance < 0.1
       if (tokenBalance < 0.1) {
         console.log(`Skipping token ${mintAddress} with balance ${tokenBalance}`);
         continue;
       }
 
-      await delay(5000); // Introduce a 1-second delay to avoid rate limits
+      await delay(5000); // Introduce delay to avoid rate limits
       const tokenData = await fetchTokenDataWithCache(mintAddress);
 
       if (tokenData) {
+        const usdValue = await SolanaPriceHelper.convertTokenToUSDC(
+          tokenData.symbol,
+          tokenBalance
+        );
+
         tokens.push({
           ...tokenData,
           balance: tokenBalance,
+          usdValue,
         });
       }
     }
 
-    return tokens;
+    // Sort tokens by USD value in descending order
+    return tokens.sort((a, b) => b.usdValue - a.usdValue);
   } catch (error) {
     console.error("Failed to fetch tokens:", error);
     return [];
@@ -190,7 +205,7 @@ const Portfolio = ({
                     {token.name} ({token.symbol})
                   </h3>
                   <p className="text-sm text-gray-500">
-                    {token.balance.toFixed(2)}
+                    {token.balance.toFixed(2)} - ${formatLargeNumber(token.usdValue)}
                   </p>
                 </div>
               </div>

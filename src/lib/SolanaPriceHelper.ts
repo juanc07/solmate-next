@@ -1,11 +1,25 @@
 export class SolanaPriceHelper {
+  private static LOCAL_API_URL = "/api/price"; // Proxy route for external API calls
   private static JUPITER_API_URL = "https://price.jup.ag/v6/price";
-  private static COINGECKO_API_URL = "https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd";
-  private static WSOL_ID = "So11111111111111111111111111111111111111112"; // Wrapped SOL ID for Jupiter
+  private static COINGECKO_API_URL = "https://api.coingecko.com/api/v3/simple/price";
+  private static WSOL_ID = "So11111111111111111111111111111111111111112"; // Wrapped SOL ID
 
-  // Helper function to log detailed errors
+  // Log detailed errors
   private static logError(error: any, tokenId: string) {
     console.error(`Error fetching ${tokenId} price:`, error);
+  }
+
+  // Fetch from the local API proxy
+  private static async fetchFromLocalApi(tokenId: string): Promise<number | null> {
+    try {
+      console.log(`Fetching price for ${tokenId} from local API route`);
+      const response = await fetch(`${this.LOCAL_API_URL}/${tokenId}`);
+      const data = await response.json();
+      return data[tokenId]?.usd || null;
+    } catch (error) {
+      this.logError(error, tokenId);
+      return null;
+    }
   }
 
   // Fetch price from Jupiter API
@@ -21,24 +35,30 @@ export class SolanaPriceHelper {
     }
   }
 
-  // Fetch price from CoinGecko API as fallback
-  private static async fetchFromCoinGecko(): Promise<number | null> {
+  // Fetch price from CoinGecko API
+  private static async fetchFromCoinGecko(tokenId: string): Promise<number | null> {
     try {
-      console.log(`Fetching SOL price from CoinGecko API`);
-      const response = await fetch(this.COINGECKO_API_URL);
+      console.log(`Fetching price for ${tokenId} from CoinGecko API`);
+      const response = await fetch(
+        `${this.COINGECKO_API_URL}?ids=${tokenId.toLowerCase()}&vs_currencies=usd`
+      );
       const data = await response.json();
-      return data?.solana?.usd || null;
+      return data[tokenId.toLowerCase()]?.usd || null;
     } catch (error) {
-      this.logError(error, "solana");
+      this.logError(error, tokenId);
       return null;
     }
   }
 
   // Smart function to get token price with fallback logic
   public static async getTokenPriceInUSD(tokenId: string): Promise<number> {
-    let price = await this.fetchFromJupiter(tokenId);
+    let price = await this.fetchFromLocalApi(tokenId); // Attempt local API proxy first
 
-    // If Jupiter fails, try WSOL or fallback to CoinGecko
+    if (price === null) {
+      console.warn(`Local API failed for ${tokenId}. Falling back to Jupiter.`);
+      price = await this.fetchFromJupiter(tokenId);
+    }
+
     if (price === null && tokenId === "SOL") {
       console.warn(`Jupiter API failed for ${tokenId}. Trying WSOL ID...`);
       price = await this.fetchFromJupiter(this.WSOL_ID);
@@ -46,7 +66,7 @@ export class SolanaPriceHelper {
 
     if (price === null) {
       console.warn(`Jupiter API failed. Falling back to CoinGecko.`);
-      price = await this.fetchFromCoinGecko();
+      price = await this.fetchFromCoinGecko(tokenId);
     }
 
     if (price === null) {
@@ -58,7 +78,7 @@ export class SolanaPriceHelper {
     return price;
   }
 
-  // Convert token amount to its USDC equivalent
+  // Convert token amount to its USD equivalent
   public static async convertTokenToUSDC(
     tokenId: string,
     tokenAmount: number

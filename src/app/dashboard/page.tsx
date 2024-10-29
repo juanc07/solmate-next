@@ -1,55 +1,84 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import Layout from "@/components/custom/server/Layout";
 import Dashboard from "@/components/custom/client/Dashboard";
 import { useWallet } from "@solana/wallet-adapter-react";
-import { Connection, clusterApiUrl } from "@solana/web3.js";
+import { Connection } from "@solana/web3.js";
 import { SolanaPriceHelper } from "@/lib/SolanaPriceHelper";
+import {obfuscatePublicKey,sanitizeUrl} from '@/lib/helper'
+import {
+  setSolanaEnvironment,
+  getSolanaEndpoint,
+  SolanaEnvironment,
+} from "@/lib/config";
 
 const DashboardPage = () => {
   const { publicKey, connected } = useWallet();
   const [solBalance, setSolBalance] = useState<number | null>(null);
-  const [solPrice, setSolPrice] = useState<number>(0);
+  const [solPrice, setSolPrice] = useState<number | null>(null);
+  const [usdEquivalent, setUsdEquivalent] = useState<number>(0);
+  const hasFetchedData = useRef(false); // Track if data is already fetched
 
+  // Set Solana environment on component mount
   useEffect(() => {
-    const fetchSolPrice = async () => {
-      try {
-        const price = await SolanaPriceHelper.getTokenPriceInUSD("SOL");
-        setSolPrice(price);
-      } catch (error) {
-        console.error("Error fetching SOL price:", error);
-      }
-    };
-    fetchSolPrice();
+    const env = process.env.NEXT_PUBLIC_SOLANA_ENV || "devnet";
+    setSolanaEnvironment(env as SolanaEnvironment);
+    console.log(`Using Solana environment: ${env}`);
   }, []);
 
-  useEffect(() => {
-    if (connected && publicKey) {
-      const connection = new Connection(clusterApiUrl("devnet"));
-      const fetchBalance = async () => {
-        try {
-          const balance = await connection.getBalance(publicKey);
-          setSolBalance(balance / 1e9); // Convert lamports to SOL
-        } catch (error) {
-          console.error("Error fetching SOL balance:", error);
-          setSolBalance(0);
-        }
-      };
-      fetchBalance();
-    } else {
+  // Fetch SOL balance and price only if not fetched before
+  const fetchSolBalanceAndPrice = useCallback(async () => {
+    if (!connected || !publicKey || hasFetchedData.current) return;
+
+    // Example usage with public key obfuscation
+    console.log(`Fetching data for Public Key: ${obfuscatePublicKey(publicKey.toString())}`);    
+
+    try {
+      const connection = new Connection(getSolanaEndpoint());
+      console.log(`Connecting to RPC endpoint: ${sanitizeUrl(getSolanaEndpoint())}`);      
+
+      // Fetch SOL balance
+      const balance = await connection.getBalance(publicKey);
+      const solBalanceValue = balance / 1e9; // Convert lamports to SOL
+      console.log(`Fetched SOL balance: ${solBalanceValue} SOL`);
+      setSolBalance(solBalanceValue);
+
+      // Fetch SOL price
+      const price = await SolanaPriceHelper.getTokenPriceInUSD("SOL");
+      console.log(`Fetched SOL price: $${price}`);
+      setSolPrice(price);
+
+      // Calculate and set USD equivalent
+      const usdValue = solBalanceValue * price;
+      console.log(`USD Equivalent: $${usdValue}`);
+      setUsdEquivalent(usdValue);
+
+      // Mark data as fetched for this session
+      hasFetchedData.current = true;
+    } catch (error) {
+      console.error("Error fetching SOL balance or price:", error);
       setSolBalance(0);
+      setUsdEquivalent(0);
     }
   }, [connected, publicKey]);
 
+  // Trigger fetch on wallet connection or public key change
+  useEffect(() => {
+    fetchSolBalanceAndPrice();
+  }, [fetchSolBalanceAndPrice]);
+
   const walletAddress = publicKey?.toString() || "";
+
+  // Prevent rendering if wallet is not connected
+  if (!connected) return null;
 
   return (
     <Layout>
       <Dashboard
         walletAddress={walletAddress}
         solBalance={solBalance}
-        usdEquivalent={solBalance ? solBalance * solPrice : 0}
+        usdEquivalent={usdEquivalent}
       />
     </Layout>
   );

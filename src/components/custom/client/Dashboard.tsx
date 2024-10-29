@@ -1,11 +1,11 @@
 "use client";
 
-import { useRouter } from "next/navigation"; // Client-side routing
+import { useRouter } from "next/navigation";
 import GreetingSection from "@/components/custom/client/section/GreetingSection";
 import Sidebar from "@/components/custom/client/Sidebar";
 import PortfolioSection from "@/components/custom/client/section/PortfolioSection";
 import { useState, useEffect } from "react";
-import { useWallet } from "@solana/wallet-adapter-react"; // Solana Wallet Adapter
+import { useWallet } from "@solana/wallet-adapter-react";
 
 // Dummy token data
 const tokens = [
@@ -61,7 +61,10 @@ const Dashboard = ({
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  if (!connected) return null;
+  // Safely display USD equivalent even if `null`
+  const displayUsdEquivalent = usdEquivalent !== null ? usdEquivalent : 0;
+
+  if (!connected) return null; // Prevent rendering if not connected
 
   return (
     <div className="flex h-screen transition-colors duration-300 bg-white text-black dark:bg-black dark:text-white">
@@ -80,7 +83,7 @@ const Dashboard = ({
           <GreetingSection
             walletAddress={walletAddress}
             solBalance={solBalance}
-            usdEquivalent={usdEquivalent}
+            usdEquivalent={displayUsdEquivalent} // Use safe display value
           />
           <PortfolioSection tokens={tokens} />
         </main>

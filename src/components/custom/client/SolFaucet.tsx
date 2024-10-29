@@ -2,19 +2,27 @@
 
 import { useState, useEffect } from "react";
 import Sidebar from "@/components/custom/client/Sidebar";
-import SettingsSection from "@/components/custom/client/section/SettingsSection";
 import { useRouter } from "next/navigation"; // Next.js router
 import SolFaucetContent from "@/components/custom/client/section/SolFaucetContent";
 import { useWallet } from "@solana/wallet-adapter-react"; // Solana Wallet Adapter
-import { Connection, clusterApiUrl, PublicKey } from "@solana/web3.js";
+import { Connection, PublicKey } from "@solana/web3.js";
 import { SolanaPriceHelper } from "@/lib/SolanaPriceHelper"; // Import the helper
 
+// Import config helpers for Solana environment management
+import { setSolanaEnvironment, getSolanaEndpoint, SolanaEnvironment } from "@/lib/config";
+
 const SolFaucet = () => {
-  const [isCollapsed, setIsCollapsed] = useState(false);  
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const router = useRouter(); // Initialize router
   const { publicKey, connected } = useWallet(); // Access wallet state
   const [solBalance, setSolBalance] = useState<number | null>(null);
   const [solPrice, setSolPrice] = useState<number>(0);
+
+  // Force the Solana environment to use "devnet"
+  useEffect(() => {
+    setSolanaEnvironment("devnet" as SolanaEnvironment); // Force to devnet
+    console.log(`Forcing Solana environment: devnet`);
+  }, []);
 
   // Fetch SOL balance and price when the wallet connects
   useEffect(() => {
@@ -30,7 +38,7 @@ const SolFaucet = () => {
     const fetchBalance = async () => {
       if (publicKey) {
         try {
-          const connection = new Connection(clusterApiUrl("devnet")); // Devnet connection
+          const connection = new Connection(getSolanaEndpoint()); // Use forced devnet endpoint
           const balance = await connection.getBalance(new PublicKey(publicKey));
           setSolBalance(balance / 1e9); // Convert lamports to SOL
         } catch (error) {

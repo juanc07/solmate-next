@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation"; // Client-side routing
 import WalletInfoSection from "@/components/custom/client/section/WalletInfoSection";
 import Sidebar from "@/components/custom/client/Sidebar";
 import PortfolioSection from "@/components/custom/client/section/PortfolioSection";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useWallet } from "@solana/wallet-adapter-react"; // Solana Wallet Adapter
 
 // Dummy token data
@@ -27,35 +27,34 @@ const Portfolio = ({
   const { connected, wallet } = useWallet();
   const router = useRouter();
 
-  // Redirect to home if wallet is not connected on load or on back navigation
+  // Memoized function to handle redirection
+  const redirectToHome = useCallback(() => {
+    console.log("Wallet not connected. Redirecting to home...");
+    router.replace("/"); // Redirect to home page
+  }, [router]);
+
+  // Handle wallet connection status and back navigation
   useEffect(() => {
-    const checkConnection = () => {
+    if (!connected) {
+      redirectToHome();
+    }
+
+    const handlePopState = () => {
+      console.log("Navigated back. Checking wallet connection...");
       if (!connected) {
-        console.log("Wallet not connected. Redirecting to home...");
-        router.replace("/"); // Redirect to home page
+        redirectToHome();
       }
     };
 
-    checkConnection(); // Check on component mount
-
-    // Handle back/forward browser navigation
-    const handlePopState = () => {
-      console.log("Navigated back. Checking wallet connection...");
-      checkConnection();
-    };
-
     window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [connected, redirectToHome]);
 
-    return () => {
-      window.removeEventListener("popstate", handlePopState);
-    };
-  }, [connected, router]);
-
-  // Register the disconnect event listener
+  // Register wallet disconnect event listener
   useEffect(() => {
     const handleDisconnect = () => {
       console.log("Wallet disconnected. Redirecting to home...");
-      router.replace("/"); // Redirect to home page
+      redirectToHome();
     };
 
     if (wallet?.adapter) {
@@ -67,7 +66,7 @@ const Portfolio = ({
         wallet.adapter.off("disconnect", handleDisconnect);
       }
     };
-  }, [wallet, router]);
+  }, [wallet, redirectToHome]);
 
   // Handle sidebar collapse on window resize
   useEffect(() => {
@@ -77,7 +76,10 @@ const Portfolio = ({
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Prevent rendering if the wallet is not connected
+  // Safely display USD equivalent even if `null`
+  const displayUsdEquivalent = usdEquivalent ?? 0;
+
+  // Prevent rendering if wallet is not connected
   if (!connected) return null;
 
   return (
@@ -97,7 +99,7 @@ const Portfolio = ({
           <WalletInfoSection
             walletAddress={walletAddress}
             solBalance={solBalance}
-            usdEquivalent={usdEquivalent}
+            usdEquivalent={displayUsdEquivalent} // Use safe value
           />
           <PortfolioSection tokens={tokens} />
         </div>

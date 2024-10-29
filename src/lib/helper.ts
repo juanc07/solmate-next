@@ -41,3 +41,26 @@ export const sanitizeImageUrl = (url:string) => {
       return "/images/token/default-token.png"; // Fallback image path
     }
   };
+
+  // Utility: Format large numbers into 'M' (Million) or 'B' (Billion)
+  export const formatLargeNumber = (num: number | string): string => {
+    const parsedNum = typeof num === 'string' ? parseFloat(num) : num;
+  
+    if (isNaN(parsedNum) || parsedNum < 0) {
+      return '0.00'; // Handle non-numeric or negative cases
+    }
+  
+    if (parsedNum >= 1_000_000_000_000_000_000) {
+      return `${(parsedNum / 1_000_000_000_000_000_000).toFixed(1)}Q`; // Quintillion
+    } else if (parsedNum >= 1_000_000_000_000) {
+      return `${(parsedNum / 1_000_000_000_000).toFixed(1)}T`; // Trillion
+    } else if (parsedNum >= 1_000_000_000) {
+      return `${(parsedNum / 1_000_000_000).toFixed(1)}B`; // Billion
+    } else if (parsedNum >= 1_000_000) {
+      return `${(parsedNum / 1_000_000).toFixed(1)}M`; // Million
+    } else if (parsedNum >= 1_000) {
+      return `${(parsedNum / 1_000).toFixed(1)}K`; // Thousand
+    }
+  
+    return parsedNum.toFixed(2); // Default formatting for smaller numbers
+  };

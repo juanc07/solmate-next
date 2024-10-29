@@ -6,9 +6,8 @@ import Sidebar from "@/components/custom/client/Sidebar";
 import { useState, useEffect, useCallback } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { Connection, PublicKey } from "@solana/web3.js";
-import { obfuscatePublicKey, sanitizeImageUrl } from "@/lib/helper";
-import Image from "next/image";
 import { setSolanaEnvironment, getSolanaEndpoint, SolanaEnvironment } from "@/lib/config";
+import TokenItem from "@/components/custom/client/TokenItem"; // Import the new TokenItem component
 import { SolanaPriceHelper } from "@/lib/SolanaPriceHelper";
 
 interface Token {
@@ -20,33 +19,8 @@ interface Token {
   usdValue: number;
 }
 
-// Utility: Throttling with a delay between API requests
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-// Utility: Format large numbers into 'M' (Million) or 'B' (Billion)
-const formatLargeNumber = (num: number | string): string => {
-  const parsedNum = typeof num === 'string' ? parseFloat(num) : num;
-
-  if (isNaN(parsedNum) || parsedNum < 0) {
-    return '0.00'; // Handle non-numeric or negative cases
-  }
-
-  if (parsedNum >= 1_000_000_000_000_000_000) {
-    return `${(parsedNum / 1_000_000_000_000_000_000).toFixed(1)}Q`; // Quintillion
-  } else if (parsedNum >= 1_000_000_000_000) {
-    return `${(parsedNum / 1_000_000_000_000).toFixed(1)}T`; // Trillion
-  } else if (parsedNum >= 1_000_000_000) {
-    return `${(parsedNum / 1_000_000_000).toFixed(1)}B`; // Billion
-  } else if (parsedNum >= 1_000_000) {
-    return `${(parsedNum / 1_000_000).toFixed(1)}M`; // Million
-  } else if (parsedNum >= 1_000) {
-    return `${(parsedNum / 1_000).toFixed(1)}K`; // Thousand
-  }
-
-  return parsedNum.toFixed(2); // Default formatting for smaller numbers
-};
-
-// Caching: Fetch token data with caching logic
 const fetchTokenDataWithCache = async (mint: string): Promise<Token | null> => {
   const cachedToken = localStorage.getItem(mint);
   if (cachedToken) {
@@ -65,7 +39,7 @@ const fetchTokenDataWithCache = async (mint: string): Promise<Token | null> => {
       icon: tokenData.logoURI,
       name: tokenData.name,
       symbol: tokenData.symbol,
-      usdValue: 0, // Will be updated later
+      usdValue: 0,
     };
 
     localStorage.setItem(mint, JSON.stringify(token));
@@ -98,7 +72,7 @@ const fetchTokens = async (
         continue;
       }
 
-      await delay(5000); // Introduce delay to avoid rate limits
+      await delay(5000);
       const tokenData = await fetchTokenDataWithCache(mintAddress);
 
       if (tokenData) {
@@ -115,7 +89,6 @@ const fetchTokens = async (
       }
     }
 
-    // Sort tokens by USD value in descending order
     return tokens.sort((a, b) => b.usdValue - a.usdValue);
   } catch (error) {
     console.error("Failed to fetch tokens:", error);
@@ -198,33 +171,14 @@ const Portfolio = ({
           />
           <div className="space-y-4">
             {tokens.map((token) => (
-              <div
+              <TokenItem
                 key={token.mint}
-                className="flex items-center p-4 bg-gray-100 dark:bg-gray-800 rounded-md shadow-md"
-              >
-                <div className="relative w-10 h-10 mr-4">
-                  <Image
-                    src={sanitizeImageUrl(token.icon)}
-                    alt={token.name}
-                    fill
-                    sizes="(max-width: 768px) 50px, 100px"
-                    className="rounded-full object-cover"
-                    onError={({ currentTarget }) => {
-                      currentTarget.onerror = null;
-                      currentTarget.src = "/images/token/default-token.png";
-                    }}
-                    unoptimized
-                  />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-medium">
-                    {token.name} ({token.symbol})
-                  </h3>
-                  <p className="text-sm text-gray-500">
-                  {formatLargeNumber(token.balance)} - ${token.usdValue?.toFixed(2) ?? '0.00'}
-                  </p>
-                </div>
-              </div>
+                icon={token.icon}
+                name={token.name}
+                symbol={token.symbol}
+                balance={token.balance}
+                usdValue={token.usdValue}
+              />
             ))}
           </div>
         </div>

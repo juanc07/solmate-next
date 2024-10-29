@@ -32,3 +32,12 @@ export const sanitizeUrl = (url: string): string => {
         return url;
     }
 };
+
+export const sanitizeImageUrl = (url:string) => {
+    try {
+      return new URL(url).toString();
+    } catch (error) {
+      console.error("Invalid URL provided:", url);
+      return "/images/token/default-token.png"; // Fallback image path
+    }
+  };

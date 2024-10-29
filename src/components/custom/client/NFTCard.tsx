@@ -27,10 +27,13 @@ const NFTCard: React.FC<NFTCardProps> = ({ id, name, image }) => {
           src={image}
           alt={name}
           fill
+          sizes="(max-width: 768px) 100vw, 
+                 (max-width: 1200px) 50vw, 
+                 33vw" // Responsive sizes for various screen widths
           className={`object-cover transition-opacity duration-500 ${
             isLoading ? "opacity-0" : "opacity-100"
           }`}
-          onLoadingComplete={() => setIsLoading(false)} // Remove loader once loaded
+          onLoad={() => setIsLoading(false)} // Use onLoad to manage loading state
         />
       </div>
 

@@ -12,6 +12,7 @@ const nextConfig = {
     env: {
       NEXT_PUBLIC_RPC_URL: process.env.NEXT_PUBLIC_RPC_URL || 'https://api.mainnet-beta.solana.com',
       NEXT_PUBLIC_SOLANA_ENV: process.env.NEXT_PUBLIC_SOLANA_ENV || 'devnet',
+      NEXT_PUBLIC_DEBUG_ON: process.env.NEXT_PUBLIC_DEBUG_ON || false
     },
   };
   

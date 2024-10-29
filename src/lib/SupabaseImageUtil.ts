@@ -41,8 +41,10 @@ export class SupabaseImageUtil implements IImageService {
       .from(this.bucketName)
       .getPublicUrl(filePath).data;
 
-    // Log the generated public URL
-    console.log(`Public URL for ${filePath}: ${publicUrl}`);
+    if (process.env.NEXT_PUBLIC_DEBUG_ON === "true") {
+      // Log the generated public URL    
+      console.log(`Public URL for ${filePath}: ${publicUrl}`);
+    }
 
     if (!publicUrl) {
       throw new Error('Failed to retrieve image');

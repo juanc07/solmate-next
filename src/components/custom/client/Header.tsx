@@ -64,8 +64,8 @@ export default function Header() {
   return (
     <header className="bg-gray-800 dark:bg-black text-white flex items-center justify-between h-16 w-full px-6 lg:px-8 transition-colors duration-300">
       {/* Logo and Brand Name */}
-      <div className="flex items-center space-x-4">
-        <Link href="/" className="flex items-center">
+      <Link href="/" className="flex items-center space-x-4">
+        <div className="flex-shrink-0">
           <Image
             src="/images/logo/solmate-logo-solo.png"
             alt="Solmate Logo"
@@ -74,9 +74,10 @@ export default function Header() {
             priority
             className="h-10 w-10 object-contain"
           />
-          <span className="text-xl font-bold hidden sm:inline">Solmate</span>
-        </Link>
-      </div>
+        </div>
+        <span className="text-xl font-bold hidden sm:inline whitespace-nowrap">Solmate</span>
+      </Link>
+
 
       {/* Action Buttons */}
       <div className="flex items-center space-x-6">

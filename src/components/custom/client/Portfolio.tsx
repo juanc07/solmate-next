@@ -24,10 +24,26 @@ interface Token {
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // Utility: Format large numbers into 'M' (Million) or 'B' (Billion)
-const formatLargeNumber = (num: number): string => {
-  if (num >= 1_000_000_000) return `${(num / 1_000_000_000).toFixed(1)}B`;
-  if (num >= 1_000_000) return `${(num / 1_000_000).toFixed(1)}M`;
-  return num.toFixed(2);
+const formatLargeNumber = (num: number | string): string => {
+  const parsedNum = typeof num === 'string' ? parseFloat(num) : num;
+
+  if (isNaN(parsedNum) || parsedNum < 0) {
+    return '0.00'; // Handle non-numeric or negative cases
+  }
+
+  if (parsedNum >= 1_000_000_000_000_000_000) {
+    return `${(parsedNum / 1_000_000_000_000_000_000).toFixed(1)}Q`; // Quintillion
+  } else if (parsedNum >= 1_000_000_000_000) {
+    return `${(parsedNum / 1_000_000_000_000).toFixed(1)}T`; // Trillion
+  } else if (parsedNum >= 1_000_000_000) {
+    return `${(parsedNum / 1_000_000_000).toFixed(1)}B`; // Billion
+  } else if (parsedNum >= 1_000_000) {
+    return `${(parsedNum / 1_000_000).toFixed(1)}M`; // Million
+  } else if (parsedNum >= 1_000) {
+    return `${(parsedNum / 1_000).toFixed(1)}K`; // Thousand
+  }
+
+  return parsedNum.toFixed(2); // Default formatting for smaller numbers
 };
 
 // Caching: Fetch token data with caching logic
@@ -205,7 +221,7 @@ const Portfolio = ({
                     {token.name} ({token.symbol})
                   </h3>
                   <p className="text-sm text-gray-500">
-                    {token.balance.toFixed(2)} - ${formatLargeNumber(token.usdValue)}
+                  {formatLargeNumber(token.balance)} - ${token.usdValue?.toFixed(2) ?? '0.00'}
                   </p>
                 </div>
               </div>

@@ -58,13 +58,14 @@ const fetchTokenDataWithCache = async (
 const fetchTokens = async (
   publicKey: string,
   signal: AbortSignal,
-  setFetchedCount: (count: number) => void
+  setProgress: (progress: number) => void
 ): Promise<Token[]> => {
   try {
     const response = await fetch(`/api/solana-data?publicKey=${publicKey}`, { signal });
     if (!response.ok) throw new Error("Failed to fetch token accounts");
 
     const { tokens: tokenAccounts } = await response.json();
+    const totalTokens = tokenAccounts.length;
     const tokens: Token[] = [];
 
     for (const [index, { mint, balance }] of tokenAccounts.entries()) {
@@ -84,7 +85,8 @@ const fetchTokens = async (
       }
 
       // Update the fetched count to reflect progress
-      setFetchedCount(index + 1);
+      const progress = Math.round(((index + 1) / totalTokens) * 100);
+      setProgress(progress); // Update progress percentage
 
       if (signal.aborted) {
         console.log("Fetch operation aborted mid-process");
@@ -120,7 +122,7 @@ const Portfolio = ({
   const [tokens, setTokens] = useState<Token[]>([]);
   const [loadingTokens, setLoadingTokens] = useState(true);
   const [loadingInfo, setLoadingInfo] = useState(true);
-  const [fetchedCount, setFetchedCount] = useState(0); // Track fetched token count
+  const [progress, setProgress] = useState(0); // Track progress as percentage
   const [totalTokens, setTotalTokens] = useState(0); // Total number of tokens to fetch
 
   const redirectToHome = useCallback(() => {
@@ -174,13 +176,10 @@ const Portfolio = ({
       const { signal } = controller;
 
       setLoadingTokens(true);
-      setFetchedCount(0); // Reset progress
+      setProgress(0); // Reset progress
 
-      fetchTokens(publicKey.toString(), signal, setFetchedCount)
-        .then((fetchedTokens) => {
-          setTokens(fetchedTokens);
-          setTotalTokens(fetchedTokens.length);
-        })
+      fetchTokens(publicKey.toString(), signal, setProgress)
+        .then(setTokens)
         .finally(() => setLoadingTokens(false));
 
       return () => controller.abort();
@@ -218,7 +217,7 @@ const Portfolio = ({
             <div className="flex items-center justify-center h-full">
               <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500"></div>
               <p className="ml-4 text-xl text-gray-500">
-                Loading tokens... {fetchedCount}/{totalTokens}
+                Loading tokens... {progress}%
               </p>
             </div>
           ) : (

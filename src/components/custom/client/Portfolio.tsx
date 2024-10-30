@@ -17,10 +17,11 @@ interface Token {
   usdValue: number;
 }
 
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
-// Keep fetchTokenDataWithCache logic intact
-const fetchTokenDataWithCache = async (mint: string): Promise<Token | null> => {
+// Helper to safely fetch token data with AbortController support
+const fetchTokenDataWithCache = async (
+  mint: string,
+  signal: AbortSignal
+): Promise<Token | null> => {
   const cachedToken = localStorage.getItem(mint);
   if (cachedToken) {
     console.log(`Using cached data for ${mint}`);
@@ -28,10 +29,10 @@ const fetchTokenDataWithCache = async (mint: string): Promise<Token | null> => {
   }
 
   try {
-    const response = await fetch(`/api/token/${mint}`);
+    const response = await fetch(`/api/token/${mint}`, { signal });
     if (!response.ok) throw new Error("Failed to fetch token data");
-    const tokenData = await response.json();
 
+    const tokenData = await response.json();
     const token: Token = {
       mint: tokenData.address,
       balance: 0,
@@ -43,16 +44,23 @@ const fetchTokenDataWithCache = async (mint: string): Promise<Token | null> => {
 
     localStorage.setItem(mint, JSON.stringify(token));
     return token;
-  } catch (error) {
-    console.error(`Error fetching data for mint ${mint}:`, error);
+  } catch (error: unknown) {
+    if (error instanceof Error && error.name === "AbortError") {
+      console.log("Token fetch aborted");
+    } else {
+      console.error(`Error fetching data for mint ${mint}:`, error);
+    }
     return null;
   }
 };
 
-// Fetch tokens from /api/solana-data route
-const fetchTokens = async (publicKey: string): Promise<Token[]> => {
+// Fetch tokens from API with proper cancellation handling
+const fetchTokens = async (
+  publicKey: string,
+  signal: AbortSignal
+): Promise<Token[]> => {
   try {
-    const response = await fetch(`/api/solana-data?publicKey=${publicKey}`);
+    const response = await fetch(`/api/solana-data?publicKey=${publicKey}`, { signal });
     if (!response.ok) throw new Error("Failed to fetch token accounts");
 
     const { tokens: tokenAccounts } = await response.json();
@@ -64,9 +72,7 @@ const fetchTokens = async (publicKey: string): Promise<Token[]> => {
         continue;
       }
 
-      await delay(5000); // Simulate delay for fetching token data
-
-      const tokenData = await fetchTokenDataWithCache(mint);
+      const tokenData = await fetchTokenDataWithCache(mint, signal);
       if (tokenData) {
         const usdValue = await SolanaPriceHelper.convertTokenToUSDC(
           tokenData.symbol,
@@ -79,11 +85,20 @@ const fetchTokens = async (publicKey: string): Promise<Token[]> => {
           usdValue,
         });
       }
+
+      if (signal.aborted) {
+        console.log("Fetch operation aborted mid-process");
+        break;
+      }
     }
 
     return tokens.sort((a, b) => b.usdValue - a.usdValue);
-  } catch (error) {
-    console.error("Failed to fetch tokens:", error);
+  } catch (error: unknown) {
+    if (error instanceof Error && error.name === "AbortError") {
+      console.log("Token fetching aborted");
+    } else {
+      console.error("Failed to fetch tokens:", error);
+    }
     return [];
   }
 };
@@ -118,13 +133,13 @@ const Portfolio = ({
   // Handle wallet disconnect
   useEffect(() => {
     const adapter = wallet?.adapter;
-    if (!adapter) return; // Guard clause to ensure adapter exists
+    if (!adapter) return;
 
     const handleDisconnect = () => redirectToHome();
 
-    adapter.on("disconnect", handleDisconnect); // Attach listener
+    adapter.on("disconnect", handleDisconnect);
     return () => {
-      adapter.off("disconnect", handleDisconnect); // Cleanup listener
+      adapter.off("disconnect", handleDisconnect);
     };
   }, [wallet, redirectToHome]);
 
@@ -136,10 +151,16 @@ const Portfolio = ({
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Fetch tokens when connected and publicKey is available
+  // Fetch tokens with AbortController
   useEffect(() => {
     if (connected && publicKey) {
-      fetchTokens(publicKey.toString()).then(setTokens);
+      const controller = new AbortController();
+      const { signal } = controller;
+
+      fetchTokens(publicKey.toString(), signal).then(setTokens);
+
+      // Cleanup: Abort fetch if component unmounts or route changes
+      return () => controller.abort();
     }
   }, [connected, publicKey]);
 
@@ -147,7 +168,6 @@ const Portfolio = ({
 
   return (
     <div className="h-screen flex transition-colors duration-300 bg-white text-black dark:bg-black dark:text-white">
-      {/* Sidebar */}
       <aside
         className={`flex-shrink-0 transition-all duration-300 ${
           isCollapsed ? "w-20" : "w-60"
@@ -156,7 +176,6 @@ const Portfolio = ({
         <Sidebar isCollapsed={isCollapsed} />
       </aside>
 
-      {/* Main Content */}
       <main className="flex-1 flex flex-col">
         <div className="flex-1 overflow-auto p-6 sm:p-8 md:p-10 lg:p-12 space-y-8">
           <WalletInfoSection

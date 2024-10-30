@@ -17,7 +17,7 @@ interface Token {
   usdValue: number;
 }
 
-// Helper to safely fetch token data with AbortController support
+// Fetch token data with caching and AbortController support
 const fetchTokenDataWithCache = async (
   mint: string,
   signal: AbortSignal
@@ -54,10 +54,11 @@ const fetchTokenDataWithCache = async (
   }
 };
 
-// Fetch tokens from API with proper cancellation handling
+// Fetch tokens sequentially with loading progress
 const fetchTokens = async (
   publicKey: string,
-  signal: AbortSignal
+  signal: AbortSignal,
+  setFetchedCount: (count: number) => void
 ): Promise<Token[]> => {
   try {
     const response = await fetch(`/api/solana-data?publicKey=${publicKey}`, { signal });
@@ -66,7 +67,7 @@ const fetchTokens = async (
     const { tokens: tokenAccounts } = await response.json();
     const tokens: Token[] = [];
 
-    for (const { mint, balance } of tokenAccounts) {
+    for (const [index, { mint, balance }] of tokenAccounts.entries()) {
       if (balance < 0.1) {
         console.log(`Skipping token ${mint} with balance ${balance}`);
         continue;
@@ -79,12 +80,11 @@ const fetchTokens = async (
           balance
         );
 
-        tokens.push({
-          ...tokenData,
-          balance,
-          usdValue,
-        });
+        tokens.push({ ...tokenData, balance, usdValue });
       }
+
+      // Update the fetched count to reflect progress
+      setFetchedCount(index + 1);
 
       if (signal.aborted) {
         console.log("Fetch operation aborted mid-process");
@@ -118,6 +118,10 @@ const Portfolio = ({
   const { connected, publicKey, wallet } = useWallet();
   const router = useRouter();
   const [tokens, setTokens] = useState<Token[]>([]);
+  const [loadingTokens, setLoadingTokens] = useState(true);
+  const [loadingInfo, setLoadingInfo] = useState(true);
+  const [fetchedCount, setFetchedCount] = useState(0); // Track fetched token count
+  const [totalTokens, setTotalTokens] = useState(0); // Total number of tokens to fetch
 
   const redirectToHome = useCallback(() => {
     router.replace("/");
@@ -125,23 +129,27 @@ const Portfolio = ({
 
   // Redirect to home if wallet is not connected
   useEffect(() => {
-    if (!connected) {
-      redirectToHome();
-    }
+    if (!connected) redirectToHome();
   }, [connected, redirectToHome]);
 
   // Handle wallet disconnect
   useEffect(() => {
-    const adapter = wallet?.adapter;
-    if (!adapter) return;
-
-    const handleDisconnect = () => redirectToHome();
-
-    adapter.on("disconnect", handleDisconnect);
+    if (!wallet || !wallet.adapter) return; // Ensure wallet and adapter exist
+  
+    const { adapter } = wallet; // Destructure for cleaner code
+  
+    const handleDisconnect = () => {
+      console.log("Wallet disconnected. Redirecting to home...");
+      redirectToHome();
+    };
+  
+    adapter.on("disconnect", handleDisconnect); // Attach listener
+  
     return () => {
-      adapter.off("disconnect", handleDisconnect);
+      adapter.off("disconnect", handleDisconnect); // Cleanup listener on unmount
     };
   }, [wallet, redirectToHome]);
+  
 
   // Handle sidebar collapse on window resize
   useEffect(() => {
@@ -151,15 +159,30 @@ const Portfolio = ({
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Fetch tokens with AbortController
+  // Fetch wallet info (solBalance and usdEquivalent)
+  useEffect(() => {
+    if (connected && publicKey) {
+      setLoadingInfo(true);
+      setTimeout(() => setLoadingInfo(false), 500);
+    }
+  }, [connected, publicKey]);
+
+  // Fetch tokens with AbortController and loading progress
   useEffect(() => {
     if (connected && publicKey) {
       const controller = new AbortController();
       const { signal } = controller;
 
-      fetchTokens(publicKey.toString(), signal).then(setTokens);
+      setLoadingTokens(true);
+      setFetchedCount(0); // Reset progress
 
-      // Cleanup: Abort fetch if component unmounts or route changes
+      fetchTokens(publicKey.toString(), signal, setFetchedCount)
+        .then((fetchedTokens) => {
+          setTokens(fetchedTokens);
+          setTotalTokens(fetchedTokens.length);
+        })
+        .finally(() => setLoadingTokens(false));
+
       return () => controller.abort();
     }
   }, [connected, publicKey]);
@@ -178,23 +201,40 @@ const Portfolio = ({
 
       <main className="flex-1 flex flex-col">
         <div className="flex-1 overflow-auto p-6 sm:p-8 md:p-10 lg:p-12 space-y-8">
-          <WalletInfoSection
-            walletAddress={walletAddress}
-            solBalance={solBalance}
-            usdEquivalent={usdEquivalent ?? 0}
-          />
-          <div className="space-y-4">
-            {tokens.map((token) => (
-              <TokenItem
-                key={token.mint}
-                icon={token.icon}
-                name={token.name}
-                symbol={token.symbol}
-                balance={token.balance}
-                usdValue={token.usdValue}
-              />
-            ))}
-          </div>
+          {loadingInfo ? (
+            <div className="flex items-center justify-center h-full">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500"></div>
+              <p className="ml-4 text-xl text-gray-500">Loading wallet info...</p>
+            </div>
+          ) : (
+            <WalletInfoSection
+              walletAddress={walletAddress}
+              solBalance={solBalance}
+              usdEquivalent={usdEquivalent ?? 0}
+            />
+          )}
+
+          {loadingTokens ? (
+            <div className="flex items-center justify-center h-full">
+              <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500"></div>
+              <p className="ml-4 text-xl text-gray-500">
+                Loading tokens... {fetchedCount}/{totalTokens}
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {tokens.map((token) => (
+                <TokenItem
+                  key={token.mint}
+                  icon={token.icon}
+                  name={token.name}
+                  symbol={token.symbol}
+                  balance={token.balance}
+                  usdValue={token.usdValue}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </main>
     </div>

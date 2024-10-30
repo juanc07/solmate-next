@@ -5,9 +5,7 @@ import WalletInfoSection from "@/components/custom/client/section/WalletInfoSect
 import Sidebar from "@/components/custom/client/Sidebar";
 import { useState, useEffect, useCallback } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
-import { Connection, PublicKey } from "@solana/web3.js";
-import { setSolanaEnvironment, getSolanaEndpoint, SolanaEnvironment } from "@/lib/config";
-import TokenItem from "@/components/custom/client/TokenItem"; // Import the new TokenItem component
+import TokenItem from "@/components/custom/client/TokenItem";
 import { SolanaPriceHelper } from "@/lib/SolanaPriceHelper";
 
 interface Token {
@@ -21,6 +19,7 @@ interface Token {
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+// Keep fetchTokenDataWithCache logic intact
 const fetchTokenDataWithCache = async (mint: string): Promise<Token | null> => {
   const cachedToken = localStorage.getItem(mint);
   if (cachedToken) {
@@ -50,40 +49,33 @@ const fetchTokenDataWithCache = async (mint: string): Promise<Token | null> => {
   }
 };
 
-const fetchTokens = async (
-  connection: Connection,
-  publicKey: PublicKey
-): Promise<Token[]> => {
+// Fetch tokens from /api/solana-data route
+const fetchTokens = async (publicKey: string): Promise<Token[]> => {
   try {
-    const tokenAccounts = await connection.getParsedTokenAccountsByOwner(
-      publicKey,
-      { programId: new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA") }
-    );
+    const response = await fetch(`/api/solana-data?publicKey=${publicKey}`);
+    if (!response.ok) throw new Error("Failed to fetch token accounts");
 
+    const { tokens: tokenAccounts } = await response.json();
     const tokens: Token[] = [];
 
-    for (const { account } of tokenAccounts.value) {
-      const info = account.data.parsed.info;
-      const mintAddress = info.mint;
-      const tokenBalance = info.tokenAmount.uiAmount || 0;
-
-      if (tokenBalance < 0.1) {
-        console.log(`Skipping token ${mintAddress} with balance ${tokenBalance}`);
+    for (const { mint, balance } of tokenAccounts) {
+      if (balance < 0.1) {
+        console.log(`Skipping token ${mint} with balance ${balance}`);
         continue;
       }
 
-      await delay(5000);
-      const tokenData = await fetchTokenDataWithCache(mintAddress);
+      await delay(5000); // Simulate delay for fetching token data
 
+      const tokenData = await fetchTokenDataWithCache(mint);
       if (tokenData) {
         const usdValue = await SolanaPriceHelper.convertTokenToUSDC(
           tokenData.symbol,
-          tokenBalance
+          balance
         );
 
         tokens.push({
           ...tokenData,
-          balance: tokenBalance,
+          balance,
           usdValue,
         });
       }
@@ -100,10 +92,12 @@ const Portfolio = ({
   walletAddress,
   solBalance,
   usdEquivalent,
+  loading,
 }: {
   walletAddress: string;
   solBalance: number | null;
   usdEquivalent: number | null;
+  loading: boolean;
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { connected, publicKey, wallet } = useWallet();
@@ -114,23 +108,27 @@ const Portfolio = ({
     router.replace("/");
   }, [router]);
 
+  // Redirect to home if wallet is not connected
   useEffect(() => {
     if (!connected) {
       redirectToHome();
     }
   }, [connected, redirectToHome]);
 
+  // Handle wallet disconnect
   useEffect(() => {
-    const handleDisconnect = () => {
-      redirectToHome();
-    };
+    const adapter = wallet?.adapter;
+    if (!adapter) return; // Guard clause to ensure adapter exists
 
-    wallet?.adapter?.on("disconnect", handleDisconnect);
+    const handleDisconnect = () => redirectToHome();
+
+    adapter.on("disconnect", handleDisconnect); // Attach listener
     return () => {
-      wallet?.adapter?.off("disconnect", handleDisconnect);
+      adapter.off("disconnect", handleDisconnect); // Cleanup listener
     };
   }, [wallet, redirectToHome]);
 
+  // Handle sidebar collapse on window resize
   useEffect(() => {
     const handleResize = () => setIsCollapsed(window.innerWidth < 768);
     window.addEventListener("resize", handleResize);
@@ -138,16 +136,10 @@ const Portfolio = ({
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  useEffect(() => {
-    const env = process.env.NEXT_PUBLIC_SOLANA_ENV || "devnet";
-    setSolanaEnvironment(env as SolanaEnvironment);
-    console.log(`Using Solana environment: ${env}`);
-  }, []);
-
+  // Fetch tokens when connected and publicKey is available
   useEffect(() => {
     if (connected && publicKey) {
-      const connection = new Connection(getSolanaEndpoint());
-      fetchTokens(connection, publicKey).then(setTokens);
+      fetchTokens(publicKey.toString()).then(setTokens);
     }
   }, [connected, publicKey]);
 
@@ -155,6 +147,7 @@ const Portfolio = ({
 
   return (
     <div className="h-screen flex transition-colors duration-300 bg-white text-black dark:bg-black dark:text-white">
+      {/* Sidebar */}
       <aside
         className={`flex-shrink-0 transition-all duration-300 ${
           isCollapsed ? "w-20" : "w-60"
@@ -162,6 +155,8 @@ const Portfolio = ({
       >
         <Sidebar isCollapsed={isCollapsed} />
       </aside>
+
+      {/* Main Content */}
       <main className="flex-1 flex flex-col">
         <div className="flex-1 overflow-auto p-6 sm:p-8 md:p-10 lg:p-12 space-y-8">
           <WalletInfoSection

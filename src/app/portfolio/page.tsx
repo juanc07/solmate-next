@@ -1,23 +1,24 @@
 "use client";
 
 import React, { useEffect, useState, useCallback, useRef } from "react";
-import { useRouter } from "next/navigation"; // Router for navigation
+import { useRouter } from "next/navigation";
 import Layout from "@/components/custom/server/Layout";
 import Portfolio from "@/components/custom/client/Portfolio";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { SolanaPriceHelper } from "@/lib/SolanaPriceHelper";
 import { obfuscatePublicKey } from "@/lib/helper";
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const PortfolioPage = () => {
   const { publicKey, connected, wallet } = useWallet();
   const [solBalance, setSolBalance] = useState<number | null>(null);
   const [solPrice, setSolPrice] = useState<number | null>(null);
   const [usdEquivalent, setUsdEquivalent] = useState<number>(0);
-  const [loading, setLoading] = useState(false); // Track loading state
+  const [loading, setLoading] = useState(false);
+  const [showDialog, setShowDialog] = useState(false); // Track dialog visibility
   const hasFetchedData = useRef(false);
   const router = useRouter();
 
-  // Fetch SOL balance and price from the API route
   const fetchSolBalanceAndPrice = useCallback(async () => {
     if (!connected || !publicKey || hasFetchedData.current) return;
 
@@ -35,50 +36,41 @@ const PortfolioPage = () => {
       setSolPrice(price);
       setUsdEquivalent(usdValue);
 
-      hasFetchedData.current = true; // Mark data as fetched
+      hasFetchedData.current = true;
     } catch (error) {
       console.error("Error fetching SOL balance or price:", error);
       setSolBalance(0);
       setUsdEquivalent(0);
     } finally {
-      setLoading(false); // Stop loading
+      setLoading(false);
     }
   }, [connected, publicKey]);
 
-  // Redirect to home if wallet is not connected
+  // Redirect if the wallet is not connected
   const handleRedirect = useCallback(() => {
-    console.log("Wallet not connected. Redirecting to home...");
     router.replace("/");
   }, [router]);
 
-  // Fetch data or redirect based on connection status
   useEffect(() => {
     if (connected && publicKey) {
       fetchSolBalanceAndPrice();
     } else {
-      handleRedirect();
+      setShowDialog(true); // Show dialog if not connected
     }
-  }, [connected, publicKey, fetchSolBalanceAndPrice, handleRedirect]);
+  }, [connected, publicKey, fetchSolBalanceAndPrice]);
 
-  // Register a disconnect event listener
   useEffect(() => {
-    const handleDisconnect = () => {
-      console.log("Wallet disconnected. Redirecting to home...");
-      handleRedirect();
-    };
+    const handleDisconnect = () => handleRedirect();
 
     if (wallet?.adapter) {
       wallet.adapter.on("disconnect", handleDisconnect);
     }
 
     return () => {
-      if (wallet?.adapter) {
-        wallet.adapter.off("disconnect", handleDisconnect);
-      }
+      wallet?.adapter?.off("disconnect", handleDisconnect);
     };
   }, [wallet, handleRedirect]);
 
-  // Reset state on wallet disconnect
   useEffect(() => {
     if (!connected) {
       setSolBalance(null);
@@ -87,17 +79,35 @@ const PortfolioPage = () => {
     }
   }, [connected]);
 
-  if (!connected) return <div>Please connect your wallet</div>;
-
   return (
-    <Layout>
-      <Portfolio
-        walletAddress={publicKey?.toString() || ""}
-        solBalance={solBalance}
-        usdEquivalent={usdEquivalent}
-        loading={loading} // Pass loading state to Portfolio
-      />
-    </Layout>
+    <>
+      {/* Wallet Connection Dialog */}
+      <Dialog open={showDialog} onOpenChange={setShowDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Wallet Not Connected</DialogTitle>
+          </DialogHeader>
+          <p>Please connect your wallet to proceed.</p>
+          <DialogTrigger asChild>
+            <button
+              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded"
+              onClick={() => setShowDialog(false)}
+            >
+              Okay
+            </button>
+          </DialogTrigger>
+        </DialogContent>
+      </Dialog>
+
+      <Layout>
+        <Portfolio
+          walletAddress={publicKey?.toString() || ""}
+          solBalance={solBalance}
+          usdEquivalent={usdEquivalent}
+          loading={loading}
+        />
+      </Layout>
+    </>
   );
 };
 

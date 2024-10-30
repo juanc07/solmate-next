@@ -6,6 +6,7 @@ import Dashboard from "@/components/custom/client/Dashboard";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { SolanaPriceHelper } from "@/lib/SolanaPriceHelper";
 import { obfuscatePublicKey } from "@/lib/helper";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"; // Use a UI component for notification
 
 const DashboardPage = () => {
   const { publicKey, connected } = useWallet();
@@ -20,7 +21,9 @@ const DashboardPage = () => {
     setLoading(true); // Start loading
 
     try {
-      const response = await fetch(`/api/solana-data?publicKey=${publicKey.toString()}`);
+      const response = await fetch(
+        `/api/solana-data?publicKey=${publicKey.toString()}`
+      );
       if (!response.ok) throw new Error("Failed to fetch SOL balance");
 
       const { solBalance } = await response.json();
@@ -53,16 +56,23 @@ const DashboardPage = () => {
     }
   }, [connected]);
 
-  if (!connected) return <div>Please connect your wallet</div>;
-
   return (
     <Layout>
-      <Dashboard
-        walletAddress={publicKey?.toString() || ""}
-        solBalance={solBalance}
-        usdEquivalent={usdEquivalent}
-        loading={loading} // Pass loading state to Dashboard
-      />
+      {!connected ? (
+        <div className="absolute top-10 left-1/2 transform -translate-x-1/2 w-full max-w-lg">
+          <Alert className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-900 p-4 rounded-md shadow-md">
+            <AlertTitle className="font-semibold">Wallet Not Connected</AlertTitle>
+            <AlertDescription>Please connect your wallet to continue.</AlertDescription>
+          </Alert>
+        </div>
+      ) : (
+        <Dashboard
+          walletAddress={publicKey?.toString() || ""}
+          solBalance={solBalance}
+          usdEquivalent={usdEquivalent}
+          loading={loading} // Pass loading state to Dashboard
+        />
+      )}
     </Layout>
   );
 };

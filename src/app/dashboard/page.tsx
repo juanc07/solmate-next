@@ -4,14 +4,8 @@ import React, { useEffect, useState, useCallback, useRef } from "react";
 import Layout from "@/components/custom/server/Layout";
 import Dashboard from "@/components/custom/client/Dashboard";
 import { useWallet } from "@solana/wallet-adapter-react";
-import { Connection } from "@solana/web3.js";
 import { SolanaPriceHelper } from "@/lib/SolanaPriceHelper";
-import {obfuscatePublicKey,sanitizeUrl} from '@/lib/helper'
-import {
-  setSolanaEnvironment,
-  getSolanaEndpoint,
-  SolanaEnvironment,
-} from "@/lib/config";
+import { obfuscatePublicKey } from "@/lib/helper"; // No need for sanitizeUrl anymore
 
 const DashboardPage = () => {
   const { publicKey, connected } = useWallet();
@@ -20,31 +14,26 @@ const DashboardPage = () => {
   const [usdEquivalent, setUsdEquivalent] = useState<number>(0);
   const hasFetchedData = useRef(false); // Track if data is already fetched
 
-  // Set Solana environment on component mount
-  useEffect(() => {
-    const env = process.env.NEXT_PUBLIC_SOLANA_ENV || "devnet";
-    setSolanaEnvironment(env as SolanaEnvironment);
-    console.log(`Using Solana environment: ${env}`);
-  }, []);
-
   // Fetch SOL balance and price only if not fetched before
   const fetchSolBalanceAndPrice = useCallback(async () => {
     if (!connected || !publicKey || hasFetchedData.current) return;
 
-    // Example usage with public key obfuscation
-    console.log(`Fetching data for Public Key: ${obfuscatePublicKey(publicKey.toString())}`);    
+    console.log(`Fetching data for Public Key: ${obfuscatePublicKey(publicKey.toString())}`);
 
     try {
-      const connection = new Connection(getSolanaEndpoint());
-      console.log(`Connecting to RPC endpoint: ${sanitizeUrl(getSolanaEndpoint())}`);      
+      // Fetch the SOL balance from the API route
+      const response = await fetch(`/api/solana-data?publicKey=${publicKey.toString()}`);
+      const data = await response.json();
 
-      // Fetch SOL balance
-      const balance = await connection.getBalance(publicKey);
-      const solBalanceValue = balance / 1e9; // Convert lamports to SOL
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to fetch SOL balance");
+      }
+
+      const solBalanceValue = data.solBalance;
       console.log(`Fetched SOL balance: ${solBalanceValue} SOL`);
       setSolBalance(solBalanceValue);
 
-      // Fetch SOL price
+      // Fetch the SOL price
       const price = await SolanaPriceHelper.getTokenPriceInUSD("SOL");
       console.log(`Fetched SOL price: $${price}`);
       setSolPrice(price);

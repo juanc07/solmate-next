@@ -22,7 +22,7 @@ interface Config {
 }
 
 // Get Helius API key from environment variables
-const HELIUS_API_KEY = process.env.NEXT_PUBLIC_HELIUS_API_KEY || '';
+const HELIUS_API_KEY = process.env.HELIUS_API_KEY || '';
 
 // Solana configuration options, including Helius RPC
 const SOLANA_CONFIGS: Record<SolanaEnvironment, SolanaConfig> = {

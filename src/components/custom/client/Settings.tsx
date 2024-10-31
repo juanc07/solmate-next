@@ -32,14 +32,7 @@ const Settings = () => {
   return (
     <div className="min-h-screen flex transition-colors duration-300 bg-white text-black dark:bg-black dark:text-white">
       {/* Sidebar */}
-      <aside
-        className={`transition-all duration-300 flex-shrink-0 ${
-          isCollapsed ? "w-20" : "w-60"
-        } bg-gray-800 dark:bg-gray-900`}
-        style={{ height: "100vh" }} // Sidebar takes full height
-      >
-        <Sidebar isCollapsed={isCollapsed} />
-      </aside>
+      <Sidebar/>
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col h-screen overflow-hidden">

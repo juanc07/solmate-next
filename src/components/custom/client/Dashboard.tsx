@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import GreetingSection from "@/components/custom/client/section/GreetingSection";
 import Sidebar from "@/components/custom/client/Sidebar";
 import PortfolioSection from "@/components/custom/client/section/PortfolioSection";
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
 
 const tokens = [
@@ -24,7 +24,6 @@ const Dashboard = ({
   usdEquivalent: number | null;
   loading: boolean;
 }) => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
   const { connected, wallet } = useWallet();
   const router = useRouter();
 
@@ -52,13 +51,6 @@ const Dashboard = ({
     };
   }, [wallet, router]);
 
-  useEffect(() => {
-    const handleResize = () => setIsCollapsed(window.innerWidth < 768);
-    window.addEventListener("resize", handleResize);
-    handleResize();
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
   const displayUsdEquivalent = usdEquivalent !== null ? usdEquivalent : 0;
 
   if (!connected) return null;
@@ -66,13 +58,7 @@ const Dashboard = ({
   return (
     <div className="flex h-screen transition-colors duration-300 bg-white text-black dark:bg-black dark:text-white">
       {/* Sidebar */}
-      <aside
-        className={`flex-shrink-0 transition-all duration-300 ${
-          isCollapsed ? "w-20" : "w-60"
-        } bg-gray-800 dark:bg-gray-900 h-full`}
-      >
-        <Sidebar isCollapsed={isCollapsed} />
-      </aside>
+      <Sidebar />
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden relative">

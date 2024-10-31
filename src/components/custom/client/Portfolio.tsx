@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import WalletInfoSection from "@/components/custom/client/section/WalletInfoSection";
 import Sidebar from "@/components/custom/client/Sidebar";
-import { useState, useEffect, useCallback } from "react";
+import { useEffect, useCallback, useState } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import TokenItem from "@/components/custom/client/TokenItem";
 import { SolanaPriceHelper } from "@/lib/SolanaPriceHelper";
@@ -116,14 +116,12 @@ const Portfolio = ({
   usdEquivalent: number | null;
   loading: boolean;
 }) => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
   const { connected, publicKey, wallet } = useWallet();
   const router = useRouter();
   const [tokens, setTokens] = useState<Token[]>([]);
   const [loadingTokens, setLoadingTokens] = useState(true);
   const [loadingInfo, setLoadingInfo] = useState(true);
   const [progress, setProgress] = useState(0); // Track progress as percentage
-  const [totalTokens, setTotalTokens] = useState(0); // Total number of tokens to fetch
 
   const redirectToHome = useCallback(() => {
     router.replace("/");
@@ -152,14 +150,6 @@ const Portfolio = ({
     };
   }, [wallet, redirectToHome]);
   
-
-  // Handle sidebar collapse on window resize
-  useEffect(() => {
-    const handleResize = () => setIsCollapsed(window.innerWidth < 768);
-    window.addEventListener("resize", handleResize);
-    handleResize();
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
 
   // Fetch wallet info (solBalance and usdEquivalent)
   useEffect(() => {
@@ -190,14 +180,10 @@ const Portfolio = ({
 
   return (
     <div className="h-screen flex transition-colors duration-300 bg-white text-black dark:bg-black dark:text-white">
-      <aside
-        className={`flex-shrink-0 transition-all duration-300 ${
-          isCollapsed ? "w-20" : "w-60"
-        } bg-gray-800 dark:bg-gray-900`}
-      >
-        <Sidebar isCollapsed={isCollapsed} />
-      </aside>
+      {/* Sidebar */}
+      <Sidebar />
 
+      {/* Main Content Area */}
       <main className="flex-1 flex flex-col">
         <div className="flex-1 overflow-auto p-6 sm:p-8 md:p-10 lg:p-12 space-y-8">
           {loadingInfo ? (

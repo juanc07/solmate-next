@@ -1,4 +1,4 @@
-"use client"; // Ensures compatibility with Next.js App Router
+"use client";
 
 import { createContext, useContext, useMemo } from "react";
 import {
@@ -16,7 +16,7 @@ const networkEnv = process.env.NEXT_PUBLIC_SOLANA_ENV || "mainnet-beta";
 const WalletContext = createContext({});
 
 export const WalletContextProvider = ({ children }: { children: React.ReactNode }) => {
-  // Set network based on .env setting
+  // Set network based on .env setting without dependencies
   const network = useMemo(() => {
     switch (networkEnv) {
       case "mainnet-beta":
@@ -26,9 +26,9 @@ export const WalletContextProvider = ({ children }: { children: React.ReactNode 
       case "devnet":
         return WalletAdapterNetwork.Devnet;
       default:
-        return WalletAdapterNetwork.Mainnet; // Fallback to Mainnet if none specified
+        return WalletAdapterNetwork.Mainnet;
     }
-  }, [networkEnv]);
+  }, []); // Removed dependency array
 
   const endpoint = clusterApiUrl(network);
 

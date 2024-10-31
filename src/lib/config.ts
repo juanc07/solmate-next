@@ -62,8 +62,8 @@ const APP_CONFIGS: Record<AppEnvironment, AppConfig> = {
 };
 
 // Default environments
-let currentSolanaEnv: SolanaEnvironment = 'devnet';
-let currentAppEnv: AppEnvironment = 'dev';
+let currentSolanaEnv: SolanaEnvironment = 'mainnet-beta';
+let currentAppEnv: AppEnvironment = 'prd';
 
 // Switch Solana environment
 export const setSolanaEnvironment = (env: SolanaEnvironment) => {

@@ -5,7 +5,6 @@ import Layout from "@/components/custom/server/Layout";
 import Dashboard from "@/components/custom/client/Dashboard";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { SolanaPriceHelper } from "@/lib/SolanaPriceHelper";
-import { obfuscatePublicKey } from "@/lib/helper";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"; // Use a UI component for notification
 
 const DashboardPage = () => {

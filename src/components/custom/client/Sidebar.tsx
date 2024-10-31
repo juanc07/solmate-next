@@ -40,7 +40,7 @@ const Sidebar = () => {
   return (
     <aside
       className={`relative flex flex-col min-h-screen bg-black dark:bg-gray-800 text-white shadow-lg transition-all duration-300 z-20 ${
-        isCollapsed ? "w-20" : "w-60"
+        isCollapsed ? "w-14" : "w-42" // Updated width for collapsed and expanded states
       }`}
     >
       {/* Toggle Button */}

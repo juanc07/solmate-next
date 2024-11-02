@@ -7,12 +7,6 @@ import PortfolioSection from "@/components/custom/client/section/PortfolioSectio
 import { useEffect } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
 
-const tokens = [
-  { name: "Solana", symbol: "SOL", balance: 10.5, change24h: 2.3 },
-  { name: "USDC", symbol: "USDC", balance: 250.0, change24h: 0.1 },
-  { name: "Raydium", symbol: "RAY", balance: 100, change24h: -1.4 },
-];
-
 const Dashboard = ({
   walletAddress,
   solBalance,
@@ -75,7 +69,7 @@ const Dashboard = ({
               solBalance={solBalance}
               usdEquivalent={displayUsdEquivalent}
             />
-            <PortfolioSection tokens={tokens} />
+            <PortfolioSection/>
           </main>
         )}
       </div>

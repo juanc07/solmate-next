@@ -27,12 +27,18 @@ const WalletInfoSection = ({
       
       {/* Wallet Address Card */}
       <div
-        className="p-4 flex items-center justify-between rounded-lg shadow-lg bg-gradient-to-r from-violet-600 to-violet-900 
+        className="relative p-4 flex items-center justify-between rounded-lg shadow-lg bg-gradient-to-r from-violet-600 to-violet-900 
                    text-white dark:from-violet-700 dark:to-violet-950"
       >
+        {/* "Connected as" Label */}
+        <span className="absolute top-1 left-2 text-[10px] text-gray-400 dark:text-gray-500">
+          Connected as
+        </span>
+        
         <div className="flex-1 truncate text-center font-mono text-sm sm:text-base md:text-lg">
           {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
         </div>
+        
         <button
           onClick={handleCopy}
           className="ml-4 text-xs sm:text-sm bg-violet-500 hover:bg-violet-400 text-white px-2 py-1 rounded-md"

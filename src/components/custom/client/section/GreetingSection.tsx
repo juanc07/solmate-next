@@ -1,6 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
+
+const SOL_ICON_URL = "/images/token/solana-token_128.png"; // Static URL for SOL icon
 
 const GreetingSection = ({ 
   walletAddress, 
@@ -44,9 +47,10 @@ const GreetingSection = ({
 
       {/* Balance and USD Equivalent */}
       <div className="flex justify-between items-center mt-2">
-        <div className="text-left">          
+        <div className="flex items-center space-x-1">
+          <Image src={SOL_ICON_URL} alt="Solana logo" width={16} height={16} className="rounded-full" />
           <p className="text-sm font-semibold">
-            SOL: {solBalance !== null ? solBalance.toFixed(2) : "Loading..."}
+            {solBalance !== null ? `${solBalance.toFixed(2)} SOL` : "Loading..."}
           </p>
         </div>
         <div className="text-right">          

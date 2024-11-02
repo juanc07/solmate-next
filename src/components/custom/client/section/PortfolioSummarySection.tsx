@@ -6,7 +6,7 @@ import {
   CardHeader,
   CardTitle,
   CardContent,
-} from "@/components/ui/card"; // ShadCN UI Card
+} from "@/components/ui/card";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { SolanaPriceHelper } from "@/lib/SolanaPriceHelper";
 import Image from "next/image";
@@ -53,68 +53,88 @@ const fetchTokenDataWithCache = async (
   }
 };
 
+const fetchTokens = async (
+  publicKey: string,
+  signal: AbortSignal,
+  setProgress: (progress: number) => void
+): Promise<Token[]> => {
+  try {
+    const response = await fetch(`/api/solana-data?publicKey=${publicKey}`, { signal });
+    if (!response.ok) throw new Error("Failed to fetch token accounts");
+
+    const { tokens: tokenAccounts } = await response.json();
+    const totalTokens = tokenAccounts.length;
+    const tokens: Token[] = [];
+
+    for (const [index, { mint, balance }] of tokenAccounts.entries()) {
+      if (balance < 0.1) continue;
+
+      const tokenData = await fetchTokenDataWithCache(mint, signal);
+      if (tokenData) {
+        const usdValue = await SolanaPriceHelper.convertTokenToUSDC(tokenData.symbol, balance);
+        tokens.push({ ...tokenData, balance, usdValue });
+      }
+
+      setProgress(Math.round(((index + 1) / totalTokens) * 100));
+      if (signal.aborted) break;
+    }
+
+    return tokens.sort((a, b) => b.usdValue - a.usdValue);
+  } catch (error) {
+    if (error instanceof Error && error.name !== "AbortError") {
+      console.error("Failed to fetch tokens:", error);
+    }
+    return [];
+  }
+};
+
 const PortfolioSummarySection = () => {
   const { publicKey } = useWallet();
   const [tokens, setTokens] = useState<Token[]>([]);
   const [loading, setLoading] = useState(true);
+  const [progress, setProgress] = useState(0);
 
-  // Fetch tokens, sort by usdValue, and exclude SOL
   useEffect(() => {
     if (!publicKey) return;
 
+    const controller = new AbortController();
+    const { signal } = controller;
+
     const fetchTopTokens = async () => {
-      const controller = new AbortController();
-      const signal = controller.signal;
+      setLoading(true);
+      setProgress(0);
 
-      try {
-        setLoading(true);
-        const response = await fetch(`/api/solana-data?publicKey=${publicKey.toString()}`, { signal });
-        if (!response.ok) throw new Error("Failed to fetch token accounts");
-
-        const { tokens: tokenAccounts } = await response.json();
-        const allTokens: Token[] = [];
-
-        for (const { mint, balance } of tokenAccounts) {
-          if (balance < 0.1 || mint === "So11111111111111111111111111111111111111112") continue; // Skip SOL
-
-          const tokenData = await fetchTokenDataWithCache(mint, signal);
-          if (tokenData) {
-            const usdValue = await SolanaPriceHelper.convertTokenToUSDC(
-              tokenData.symbol,
-              balance
-            );
-
-            allTokens.push({ ...tokenData, balance, usdValue });
+      fetchTokens(publicKey.toString(), signal, setProgress)
+        .then((fetchedTokens) => {
+          if (!signal.aborted) {
+            setTokens(fetchedTokens.slice(0, 10)); // Take top 10 tokens by USD value
           }
-        }
-
-        // Sort by USD value, exclude SOL, and take top 10
-        const topTokens = allTokens
-          .sort((a, b) => b.usdValue - a.usdValue)
-          .slice(0, 10);
-
-        setTokens(topTokens);
-      } catch (error) {
-        console.error("Error fetching top tokens:", error);
-      } finally {
-        setLoading(false);
-      }
+        })
+        .finally(() => {
+          if (!signal.aborted) setLoading(false);
+        });
     };
 
     fetchTopTokens();
+
+    return () => {
+      controller.abort();
+      console.log("Aborting fetch on unmount");
+    };
   }, [publicKey]);
 
   return (
     <div className="mt-6">
-      <h2 className="text-2xl font-bold mb-6 text-violet-600 dark:text-violet-400">
+      <h2 className="text-2xl font-bold mb-6 text-violet-600 dark:text-violet-400 text-center">
         Your Top 10 Tokens
       </h2>
 
       {loading ? (
         <div className="flex justify-center items-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500"></div>
+          <p className="mt-4 text-xl text-gray-500">Loading tokens... {progress}%</p>
         </div>
-      ) : (
+      ) : tokens.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {tokens.map((token) => (
             <Card
@@ -149,6 +169,8 @@ const PortfolioSummarySection = () => {
             </Card>
           ))}
         </div>
+      ) : (
+        <p className="text-center text-gray-500">No tokens found.</p>
       )}
     </div>
   );

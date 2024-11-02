@@ -1,15 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-} from "@/components/ui/card"; // ShadCN UI Card
-import { useWallet } from "@solana/wallet-adapter-react";
+import TokenItem from "@/components/custom/client/TokenItem";
 import { SolanaPriceHelper } from "@/lib/SolanaPriceHelper";
-import Image from "next/image";
 
 interface Token {
   mint: string;
@@ -25,7 +18,9 @@ const fetchTokenDataWithCache = async (
   signal: AbortSignal
 ): Promise<Token | null> => {
   const cachedToken = localStorage.getItem(mint);
-  if (cachedToken) return JSON.parse(cachedToken);
+  if (cachedToken) {
+    return JSON.parse(cachedToken);
+  }
 
   try {
     const response = await fetch(`/api/token/${mint}`, { signal });
@@ -45,7 +40,7 @@ const fetchTokenDataWithCache = async (
     return token;
   } catch (error) {
     if (error instanceof Error && error.name === "AbortError") {
-      console.log("Token fetch aborted");
+      console.log(`Fetch aborted for mint: ${mint}`);
     } else {
       console.error(`Error fetching data for mint ${mint}:`, error);
     }
@@ -53,100 +48,91 @@ const fetchTokenDataWithCache = async (
   }
 };
 
-const PortfolioSection = () => {
-  const { publicKey } = useWallet();
+const fetchTokens = async (
+  publicKey: string,
+  signal: AbortSignal,
+  setProgress: (progress: number) => void
+): Promise<Token[]> => {
+  try {
+    const response = await fetch(`/api/solana-data?publicKey=${publicKey}`, { signal });
+    if (!response.ok) throw new Error("Failed to fetch token accounts");
+
+    const { tokens: tokenAccounts } = await response.json();
+    const totalTokens = tokenAccounts.length;
+    const tokens: Token[] = [];
+
+    for (const [index, { mint, balance }] of tokenAccounts.entries()) {
+      if (balance < 0.1) continue;
+
+      const tokenData = await fetchTokenDataWithCache(mint, signal);
+      if (tokenData) {
+        const usdValue = await SolanaPriceHelper.convertTokenToUSDC(tokenData.symbol, balance);
+        tokens.push({ ...tokenData, balance, usdValue });
+      }
+
+      setProgress(Math.round(((index + 1) / totalTokens) * 100));
+      if (signal.aborted) break;
+    }
+
+    return tokens.sort((a, b) => b.usdValue - a.usdValue);
+  } catch (error) {
+    if (error instanceof Error && error.name !== "AbortError") {
+      console.error("Failed to fetch tokens:", error);
+    }
+    return [];
+  }
+};
+
+const PortfolioSection = ({ publicKey }: { publicKey: string }) => {
   const [tokens, setTokens] = useState<Token[]>([]);
   const [loading, setLoading] = useState(true);
+  const [progress, setProgress] = useState(0);
 
-  // Fetch tokens, sort by usdValue, and exclude SOL
   useEffect(() => {
-    if (!publicKey) return;
+    const controller = new AbortController();
+    const { signal } = controller;
 
-    const fetchTopTokens = async () => {
-      const controller = new AbortController();
-      const signal = controller.signal;
+    setLoading(true);
+    setProgress(0);
 
-      try {
-        setLoading(true);
-        const response = await fetch(`/api/solana-data?publicKey=${publicKey.toString()}`, { signal });
-        if (!response.ok) throw new Error("Failed to fetch token accounts");
+    fetchTokens(publicKey, signal, setProgress)
+      .then((fetchedTokens) => {
+        if (!signal.aborted) setTokens(fetchedTokens);
+      })
+      .finally(() => {
+        if (!signal.aborted) setLoading(false);
+      });
 
-        const { tokens: tokenAccounts } = await response.json();
-        const allTokens: Token[] = [];
-
-        for (const { mint, balance } of tokenAccounts) {
-          if (balance < 0.1 || mint === "So11111111111111111111111111111111111111112") continue; // Skip SOL
-
-          const tokenData = await fetchTokenDataWithCache(mint, signal);
-          if (tokenData) {
-            const usdValue = await SolanaPriceHelper.convertTokenToUSDC(
-              tokenData.symbol,
-              balance
-            );
-
-            allTokens.push({ ...tokenData, balance, usdValue });
-          }
-        }
-
-        // Sort by USD value, exclude SOL, and take top 10
-        const topTokens = allTokens
-          .sort((a, b) => b.usdValue - a.usdValue)
-          .slice(0, 10);
-
-        setTokens(topTokens);
-      } catch (error) {
-        console.error("Error fetching top tokens:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchTopTokens();
+    return () => controller.abort();
   }, [publicKey]);
 
   return (
-    <div className="mt-6">
-      <h2 className="text-2xl font-bold mb-6 text-violet-600 dark:text-violet-400">
-        Your Portfolio
+    <div className="flex flex-col items-center justify-center">
+      <h2 className="text-2xl font-semibold text-violet-600 dark:text-violet-400 mb-6 text-center">
+        Your Tokens
       </h2>
-
       {loading ? (
-        <p className="text-gray-500 dark:text-gray-300">Loading tokens...</p>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="flex flex-col items-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500"></div>
+          <p className="mt-4 text-xl text-gray-500 text-center">
+            Loading tokens... {progress}%
+          </p>
+        </div>
+      ) : tokens.length > 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-y-6 gap-x-6">
           {tokens.map((token) => (
-            <Card
-              key={token.symbol}
-              className="hover:scale-105 transition-transform border border-violet-500 bg-white dark:bg-gray-800"
-            >
-              <CardHeader className="flex items-center space-x-3">
-                {token.icon && (
-                  <Image
-                    src={token.icon}
-                    alt={`${token.name} logo`}
-                    width={32}
-                    height={32}
-                    className="rounded-full"
-                    unoptimized
-                  />
-                )}
-                <div className="flex-1">
-                  <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white">
-                    {token.name} ({token.symbol})
-                  </CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="flex justify-between items-center text-gray-800 dark:text-gray-300">
-                  <span className="font-medium">
-                    {token.balance.toFixed(2)} {token.symbol}
-                  </span>
-                  <span className="font-semibold">${token.usdValue.toFixed(2)}</span>
-                </div>
-              </CardContent>
-            </Card>
+            <TokenItem
+              key={token.mint}
+              icon={token.icon}
+              name={token.name}
+              symbol={token.symbol}
+              balance={token.balance}
+              usdValue={token.usdValue}
+            />
           ))}
         </div>
+      ) : (
+        <p className="text-center text-gray-500 mt-6">No tokens found.</p>
       )}
     </div>
   );

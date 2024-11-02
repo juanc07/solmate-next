@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 const GreetingSection = ({ 
   walletAddress, 
   solBalance, 
@@ -8,46 +10,56 @@ const GreetingSection = ({
   walletAddress: string; 
   solBalance: number | null; 
   usdEquivalent: number | null; 
-}) => (
-  <div
-    className="p-4 sm:p-6 md:p-8 lg:p-10 xl:p-12 rounded-lg shadow-lg 
-               bg-gradient-to-r from-violet-600 to-violet-900 
-               text-white dark:from-violet-700 dark:to-violet-950
-               max-w-[90%] sm:max-w-md md:max-w-lg lg:max-w-xl xl:max-w-2xl mx-auto"
-  >
-    <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-4 text-center sm:text-left">
-      Welcome back, adventurer!
-    </h2>
+}) => {
+  const [copySuccess, setCopySuccess] = useState(false);
 
-    <div className="mb-4">
-      <h3 className="text-sm sm:text-base md:text-lg lg:text-xl font-medium mb-1">
-        Wallet Address
-      </h3>
-      <p className="font-mono break-all text-xs sm:text-sm md:text-base lg:text-lg">
-        {walletAddress}
-      </p>
-    </div>
+  const handleCopy = () => {
+    navigator.clipboard.writeText(walletAddress);
+    setCopySuccess(true);
+    setTimeout(() => setCopySuccess(false), 2000);
+  };
 
-    <div className="flex justify-between items-center">
-      <div className="flex-1">
-        <h3 className="text-sm sm:text-base md:text-lg lg:text-xl font-medium">
-          SOL Balance
-        </h3>
-        <p className="font-bold text-xs sm:text-sm md:text-base lg:text-lg">
-          {solBalance !== null ? `${solBalance} SOL` : "Loading..."}
-        </p>
+  return (
+    <div
+      className="p-6 sm:p-8 md:p-10 lg:p-12 rounded-xl shadow-xl 
+                 bg-gradient-to-r from-violet-600 to-violet-900 
+                 text-white dark:from-violet-700 dark:to-violet-950
+                 max-w-lg w-full mx-auto space-y-6"
+    >
+      {/* Greeting Header */}
+      <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center mb-6">
+        Welcome back, adventurer!
+      </h2>
+
+      {/* Wallet Address Section */}
+      <div className="p-4 bg-violet-700 bg-opacity-30 rounded-lg flex items-center justify-between text-xs sm:text-sm md:text-base">
+        <span className="truncate font-mono">{walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}</span>
+        <button
+          onClick={handleCopy}
+          className="ml-3 text-xs sm:text-sm px-2 py-1 bg-violet-500 hover:bg-violet-400 text-white rounded-md"
+        >
+          {copySuccess ? "Copied!" : "Copy"}
+        </button>
       </div>
 
-      <div className="flex-1 text-right">
-        <h3 className="text-sm sm:text-base md:text-lg lg:text-xl font-medium">
-          USD Equivalent
-        </h3>
-        <p className="font-bold text-xs sm:text-sm md:text-base lg:text-lg">
-          {usdEquivalent !== null ? `$${usdEquivalent.toFixed(2)} USD` : "Loading..."}
-        </p>
+      {/* Balance and USD Equivalent */}
+      <div className="flex flex-col md:flex-row justify-between items-center mt-4 md:space-x-6">
+        <div className="flex flex-col items-center md:items-start">
+          <h3 className="text-lg font-medium">SOL Balance</h3>
+          <p className="text-xl font-bold mt-1">
+            {solBalance !== null ? `${solBalance} SOL` : "Loading..."}
+          </p>
+        </div>
+        <div className="w-px h-6 bg-gray-400 dark:bg-gray-600 hidden md:block" /> {/* Divider */}
+        <div className="flex flex-col items-center md:items-end">
+          <h3 className="text-lg font-medium">USD Equivalent</h3>
+          <p className="text-xl font-bold mt-1">
+            {usdEquivalent !== null ? `$${usdEquivalent.toFixed(2)} USD` : "Loading..."}
+          </p>
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 export default GreetingSection;

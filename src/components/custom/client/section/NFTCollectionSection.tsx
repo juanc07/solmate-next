@@ -17,6 +17,9 @@ const dummyNFTs = [
   { id: "7", name: "Solmate Collection #7", image: "/images/nft/solmate-nft7.jpg", category: "Photography", solPrice: 3.75, collectionName: "Pixel Paradise" },
   { id: "8", name: "Solmate Collection #8", image: "/images/nft/solmate-nft8.webp", category: "Gaming", solPrice: 1.0, collectionName: "Gamers Delight" },
   { id: "9", name: "Solmate Collection #9", image: "/images/nft/solmate-nft9.webp", category: "Music", solPrice: 2.75, collectionName: "Harmony Beats" },
+  { id: "10", name: "Solmate Collection #10", image: "/images/nft/solmate-nft10.webp", category: "Collectibles", solPrice: 3.2, collectionName: "Rare Finds" },
+  { id: "11", name: "Solmate Collection #11", image: "/images/nft/solmate-nft11.webp", category: "Art", solPrice: 4.8, collectionName: "Artistic Visions" },
+  { id: "12", name: "Solmate Collection #12", image: "/images/nft/solmate-nft12.webp", category: "Photography", solPrice: 2.9, collectionName: "Pixel Paradise" },
 ];
 
 const NFTCollectionSection = () => {

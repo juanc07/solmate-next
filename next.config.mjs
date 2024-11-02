@@ -34,7 +34,8 @@ const nextConfig = {
       },
     ],
   },
-  env: {
+  env: {    
+    NEXT_PUBLIC_SOLANA_ENV: process.env.NEXT_PUBLIC_SOLANA_ENV || 'mainnet-beta',
     NEXT_PUBLIC_DEBUG_ON: process.env.NEXT_PUBLIC_DEBUG_ON || 'false',
   },
 };

@@ -22,7 +22,7 @@ const Sidebar = () => {
     return false;
   });
 
-  const isDevnet = process.env.SOLANA_ENV === "devnet";
+  const isDevnet = process.env.NEXT_PUBLIC_SOLANA_ENV === "devnet";
 
   const toggleSidebar = () => {
     setIsCollapsed((prev) => {
@@ -40,13 +40,13 @@ const Sidebar = () => {
   return (
     <aside
       className={`relative flex flex-col min-h-screen bg-black dark:bg-gray-800 text-white shadow-lg transition-all duration-300 z-20 ${
-        isCollapsed ? "w-14" : "w-42" // Updated width for collapsed and expanded states
+        isCollapsed ? "w-10" : "w-42 lg:w-64" // Updated width for collapsed and expanded states
       }`}
     >
       {/* Toggle Button */}
       <button
         onClick={toggleSidebar}
-        className="absolute top-4 -right-4 w-8 h-8 rounded-full bg-gray-700 text-white flex items-center justify-center hover:bg-gray-600 transition-all"
+        className="absolute top-2.5 -right-4 w-8 h-8 rounded-full bg-gray-700 text-white flex items-center justify-center hover:bg-gray-600 transition-all"
         aria-label="Toggle Sidebar"
       >
         {isCollapsed ? (
@@ -60,39 +60,39 @@ const Sidebar = () => {
       <nav className="flex-grow space-y-6 py-7 px-2 overflow-auto">
         <SidebarLink
           href="/dashboard"
-          icon={<HomeIcon className="w-6 h-6" />}
+          icon={<HomeIcon className="w-6 h-6 min-w-5" />}
           label="Dashboard"
           isCollapsed={isCollapsed}
         />
         <SidebarLink
           href="/portfolio"
-          icon={<ChartBarIcon className="w-6 h-6" />}
+          icon={<ChartBarIcon className="w-6 h-6 min-w-5" />}
           label="Portfolio"
           isCollapsed={isCollapsed}
         />
         <SidebarLink
           href="/followWallet"
-          icon={<WalletIcon className="w-6 h-6" />}
+          icon={<WalletIcon className="w-6 h-6 min-w-5" />}
           label="Wallets"
           isCollapsed={isCollapsed}
         />
         <SidebarLink
           href="/nftCollection"
-          icon={<SparklesIcon className="w-6 h-6" />}
+          icon={<SparklesIcon className="w-6 h-6 min-w-5" />}
           label="NFTs"
           isCollapsed={isCollapsed}
         />
         {isDevnet && (
           <SidebarLink
             href="/solFaucet"
-            icon={<DropletIcon className="w-6 h-6" />}
+            icon={<DropletIcon className="w-6 h-6 min-w-5" />}
             label="SolFaucet"
             isCollapsed={isCollapsed}
           />
         )}
         <SidebarLink
           href="/settings"
-          icon={<CogIcon className="w-6 h-6" />}
+          icon={<CogIcon className="w-6 h-6 min-w-5" />}
           label="Settings"
           isCollapsed={isCollapsed}
         />

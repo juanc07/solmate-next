@@ -14,7 +14,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    const env = process.env.SOLANA_ENV || "mainnet-beta";
+    const env = process.env.NEXT_PUBLIC_SOLANA_ENV || "mainnet-beta";
     setSolanaEnvironment(env as SolanaEnvironment);
     console.log(`Using Solana environment: ${env}`);
 

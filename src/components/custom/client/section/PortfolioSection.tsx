@@ -39,7 +39,7 @@ const fetchTokenDataWithCache = async (
     localStorage.setItem(mint, JSON.stringify(token));
     return token;
   } catch (error) {
-    if (error instanceof Error && error.name === "AbortError") {
+    if (error instanceof DOMException && error.name === "AbortError") {
       console.log(`Fetch aborted for mint: ${mint}`);
     } else {
       console.error(`Error fetching data for mint ${mint}:`, error);
@@ -76,7 +76,9 @@ const fetchTokens = async (
 
     return tokens.sort((a, b) => b.usdValue - a.usdValue);
   } catch (error) {
-    if (error instanceof Error && error.name !== "AbortError") {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      console.log("Token fetching aborted");
+    } else {
       console.error("Failed to fetch tokens:", error);
     }
     return [];
@@ -108,7 +110,7 @@ const PortfolioSection = ({ publicKey }: { publicKey: string }) => {
 
   return (
     <div className="flex flex-col items-center justify-center">
-      <h2 className="text-2xl font-semibold text-violet-600 dark:text-violet-400 mb-6 text-center">
+      <h2 className="text-2xl font-semibold text-violet-600 dark:text-violet-400 mb-4 text-center">
         Your Tokens
       </h2>
       {loading ? (
@@ -119,7 +121,7 @@ const PortfolioSection = ({ publicKey }: { publicKey: string }) => {
           </p>
         </div>
       ) : tokens.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-y-6 gap-x-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-y-4 gap-x-6">
           {tokens.map((token) => (
             <TokenItem
               key={token.mint}
@@ -132,7 +134,7 @@ const PortfolioSection = ({ publicKey }: { publicKey: string }) => {
           ))}
         </div>
       ) : (
-        <p className="text-center text-gray-500 mt-6">No tokens found.</p>
+        <p className="text-center text-gray-500 mt-4">No tokens found.</p>
       )}
     </div>
   );

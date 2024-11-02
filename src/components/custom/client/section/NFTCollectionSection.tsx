@@ -17,9 +17,6 @@ const dummyNFTs = [
   { id: "7", name: "Solmate Collection #7", image: "/images/nft/solmate-nft7.jpg", category: "Photography", solPrice: 3.75, collectionName: "Pixel Paradise" },
   { id: "8", name: "Solmate Collection #8", image: "/images/nft/solmate-nft8.webp", category: "Gaming", solPrice: 1.0, collectionName: "Gamers Delight" },
   { id: "9", name: "Solmate Collection #9", image: "/images/nft/solmate-nft9.webp", category: "Music", solPrice: 2.75, collectionName: "Harmony Beats" },
-  { id: "10", name: "Solmate Collection #10", image: "/images/nft/solmate-nft10.webp", category: "Collectibles", solPrice: 3.2, collectionName: "Rare Finds" },
-  { id: "11", name: "Solmate Collection #11", image: "/images/nft/solmate-nft11.webp", category: "Art", solPrice: 4.8, collectionName: "Artistic Visions" },
-  { id: "12", name: "Solmate Collection #12", image: "/images/nft/solmate-nft12.webp", category: "Photography", solPrice: 2.9, collectionName: "Pixel Paradise" },
 ];
 
 const NFTCollectionSection = () => {
@@ -63,11 +60,11 @@ const NFTCollectionSection = () => {
   }
 
   return (
-    <div className="p-4 sm:p-6 md:p-8 lg:p-10 bg-white dark:bg-gray-900 text-black dark:text-white shadow-lg rounded-lg w-full max-w-screen-xl mx-auto">
-      <h2 className="text-2xl font-bold mb-6 text-center">NFT Collection</h2>
+    <div className="p-3 sm:p-4 md:p-6 lg:p-8 bg-white dark:bg-gray-900 text-black dark:text-white shadow-lg rounded-lg w-full max-w-full mx-auto">
+      <h2 className="text-2xl font-bold mb-4 text-center">NFT Collection</h2>
 
       {/* Search Bar, Filter Dropdown, and Search Button */}
-      <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4 mb-6 w-full">
+      <div className="flex flex-col sm:flex-row items-center space-y-3 sm:space-y-0 sm:space-x-3 mb-4 w-full">
         {/* Search Input */}
         <input
           type="text"
@@ -97,7 +94,7 @@ const NFTCollectionSection = () => {
       </div>
 
       {filteredNFTs.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 w-full">
+        <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 md:gap-6 w-full">
           {filteredNFTs.map((nft) => (
             <NFTCard
               key={nft.id}

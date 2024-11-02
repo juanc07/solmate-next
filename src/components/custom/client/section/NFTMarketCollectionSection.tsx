@@ -1,5 +1,3 @@
-"use client";
-
 import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react"; // ShadCN Loading Spinner
 import NFTCard from "@/components/custom/client/NFTCard"; // Import the NFTCard component
@@ -22,26 +20,22 @@ const dummyNFTs = [
   { id: "12", name: "Solmate Collection #12", image: "/images/nft/solmate-nft12.webp", category: "Photography", solPrice: 2.9, collectionName: "Pixel Paradise" },
 ];
 
-
 const NFTMarketCollectionSection = () => {
   const [nfts, setNfts] = useState(dummyNFTs);
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterBy, setFilterBy] = useState("name"); // Default filter is by name
+  const [filterBy, setFilterBy] = useState("name"); 
   const [loading, setLoading] = useState(true);
   const [filteredNFTs, setFilteredNFTs] = useState(dummyNFTs);
 
-  // Simulate fetching NFT data from an API
   useEffect(() => {
     const fetchNFTs = async () => {
       setLoading(true);
-      await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate API delay
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       setLoading(false);
     };
-
     fetchNFTs();
   }, []);
 
-  // Filter NFTs based on search query and selected filter
   const handleSearch = () => {
     const searchValue = searchQuery.toLowerCase();
     const results = nfts.filter((nft) => {
@@ -64,21 +58,19 @@ const NFTMarketCollectionSection = () => {
   }
 
   return (
-    <div className="p-4 md:p-6 lg:p-8 bg-white dark:bg-gray-900 text-black dark:text-white shadow-lg rounded-lg w-full mx-auto">
-      <h2 className="text-2xl font-bold mb-6 text-center">NFT Market</h2>
+    <div className="max-w-full px-4 py-6 md:px-6 lg:px-8 bg-white dark:bg-gray-900 text-black dark:text-white shadow-lg rounded-lg mx-auto">
+      <h2 className="text-2xl font-bold mb-4 text-center">NFT Market</h2>
 
       {/* Search Bar, Filter Dropdown, and Search Button */}
-      <div className="flex items-center space-x-4 mb-6">
-        {/* Search Input */}
+      <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4 mb-6 w-full max-w-xl mx-auto">
         <input
           type="text"
           placeholder={`Search by ${filterBy}`}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full max-w-md p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-600 dark:bg-gray-800 dark:border-gray-700 dark:placeholder-gray-400"
+          className="flex-grow w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-600 dark:bg-gray-800 dark:border-gray-700 dark:placeholder-gray-400"
         />
 
-        {/* Filter Dropdown */}
         <select
           value={filterBy}
           onChange={(e) => setFilterBy(e.target.value)}
@@ -91,14 +83,13 @@ const NFTMarketCollectionSection = () => {
           <option value="collectionName">Collection Name</option>
         </select>
 
-        {/* Search Button */}
-        <Button onClick={handleSearch} className="px-4 py-2 bg-violet-600 text-white rounded-md">
+        <Button onClick={handleSearch} className="px-4 py-2 bg-violet-600 text-white rounded-md w-full sm:w-auto">
           Search
         </Button>
       </div>
 
       {filteredNFTs.length > 0 ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6 w-full">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
           {filteredNFTs.map((nft) => (
             <NFTCard
               key={nft.id}

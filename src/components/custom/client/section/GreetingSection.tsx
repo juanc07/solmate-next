@@ -43,12 +43,17 @@ const GreetingSection = ({
       </div>
 
       {/* Balance and USD Equivalent */}
-      <div className="flex flex-col md:flex-row justify-between items-center mt-4 md:space-x-6">
-        <div className="flex flex-col items-center md:items-start">          
-          <p className="text-xl font-bold mt-1">
-            SOL {solBalance !== null && usdEquivalent !== null ? `${solBalance} - $${usdEquivalent.toFixed(2)}` : "Loading..."}
+      <div className="flex justify-between items-center mt-4">
+        <div className="text-left">          
+          <p className="text-xl font-bold">
+          SOL Balance: {solBalance !== null ? `${solBalance.toFixed(2)} SOL` : "Loading..."}
           </p>
-        </div>        
+        </div>
+        <div className="text-right">          
+          <p className="text-xl font-bold">
+            {usdEquivalent !== null ? `$${usdEquivalent.toFixed(2)}` : "Loading..."}
+          </p>
+        </div>
       </div>
     </div>
   );

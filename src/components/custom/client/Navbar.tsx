@@ -59,7 +59,7 @@ const Navbar: React.FC = () => {
                 <Link href="/wallets" onClick={handleLinkClick} className={linkClass("/wallets")}>
                   Wallets
                 </Link>
-                <Link href="/nft" onClick={handleLinkClick} className={linkClass("/nft")}>
+                <Link href="/nftMarket" onClick={handleLinkClick} className={linkClass("/nftMarket")}>
                   NFT
                 </Link>
                 <Link href="/news" onClick={handleLinkClick} className={linkClass("/news")}>
@@ -121,7 +121,7 @@ const Navbar: React.FC = () => {
               <Link href="/wallets" onClick={handleLinkClick} className={linkClass("/wallets")}>
                 <WalletIcon className="h-6 w-6 mr-2" /> Wallets
               </Link>
-              <Link href="/nft" onClick={handleLinkClick} className={linkClass("/nft")}>
+              <Link href="/nftMarket" onClick={handleLinkClick} className={linkClass("/nftMarket")}>
                 <CubeIcon className="h-6 w-6 mr-2" /> NFT
               </Link>
               <Link href="/news" onClick={handleLinkClick} className={linkClass("/news")}>

@@ -9,9 +9,12 @@ interface NFTCardProps {
   id: string;
   name: string;
   image: string;
+  collectionName?: string; // Optional Collection Name
+  category?: string; // Optional Category
+  solPrice?: number; // Optional Sol Price
 }
 
-const NFTCard: React.FC<NFTCardProps> = ({ id, name, image }) => {
+const NFTCard: React.FC<NFTCardProps> = ({ id, name, image, collectionName, category, solPrice }) => {
   const [isLoading, setIsLoading] = useState(true); // Track loading state
 
   return (
@@ -40,7 +43,18 @@ const NFTCard: React.FC<NFTCardProps> = ({ id, name, image }) => {
       <h3 className="mt-3 text-center font-medium text-lg sm:text-base md:text-lg lg:text-xl">
         {name}
       </h3>
-      <p className="text-sm text-gray-500">Token ID: {id}</p>
+      
+      {collectionName && (
+        <p className="text-sm text-gray-500 text-center mt-1">{collectionName}</p>
+      )}
+      {category && (
+        <p className="text-sm text-gray-500 text-center mt-1">Category: {category}</p>
+      )}
+      {solPrice !== undefined && (
+        <p className="text-sm text-gray-500 text-center mt-1">Price: {solPrice} SOL</p>
+      )}
+
+      <p className="text-sm text-gray-500 mt-2">Token ID: {id}</p>
       <Button
         className="mt-3 w-full text-sm sm:text-xs md:text-sm lg:text-base"
         variant="default"

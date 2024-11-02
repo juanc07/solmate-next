@@ -46,7 +46,7 @@ const GreetingSection = ({
       <div className="flex justify-between items-center mt-4">
         <div className="text-left">          
           <p className="text-xl font-bold">
-          SOL: {solBalance !== null ? `${solBalance.toFixed(2)} SOL` : "Loading..."}
+          SOL: {solBalance !== null ? `${solBalance.toFixed(2)}` : "Loading..."}
           </p>
         </div>
         <div className="text-right">          

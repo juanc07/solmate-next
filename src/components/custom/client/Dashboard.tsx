@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import GreetingSection from "@/components/custom/client/section/GreetingSection";
 import Sidebar from "@/components/custom/client/Sidebar";
-import PortfolioSection from "@/components/custom/client/section/PortfolioSection";
+import PortfolioSummarySection from "@/components/custom/client/section/PortfolioSummarySection";
 import { useEffect } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
 
@@ -69,7 +69,7 @@ const Dashboard = ({
               solBalance={solBalance}
               usdEquivalent={displayUsdEquivalent}
             />
-            <PortfolioSection/>
+            <PortfolioSummarySection/>
           </main>
         )}
       </div>

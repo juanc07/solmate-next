@@ -10,6 +10,7 @@ import {
 import { useWallet } from "@solana/wallet-adapter-react";
 import { SolanaPriceHelper } from "@/lib/SolanaPriceHelper";
 import Image from "next/image";
+import { sanitizeImageUrl } from "@/lib/helper";
 
 interface Token {
   mint: string;
@@ -144,7 +145,7 @@ const PortfolioSummarySection = () => {
               <CardHeader className="flex items-center space-x-3">
                 {token.icon && (
                   <Image
-                    src={token.icon}
+                    src={sanitizeImageUrl(token.icon)}
                     alt={`${token.name} logo`}
                     width={32}
                     height={32}

@@ -64,3 +64,14 @@ export const sanitizeImageUrl = (url:string) => {
   
     return parsedNum.toFixed(2); // Default formatting for smaller numbers
   };
+
+
+  export const truncateString = (value: string, maxLength: number): string => {
+    if (value.length <= maxLength) return value;
+    
+    const frontChars = Math.floor((maxLength - 3) / 2);
+    const backChars = Math.ceil((maxLength - 3) / 2);
+    
+    return `${value.slice(0, frontChars)}...${value.slice(-backChars)}`;
+  };
+  

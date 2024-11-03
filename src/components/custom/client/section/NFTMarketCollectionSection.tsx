@@ -5,19 +5,19 @@ import { Button } from "@/components/ui/button"; // Import ShadCN Button
 
 // Example Dummy NFT Data with category, solPrice, and collectionName
 const dummyNFTs = [
-  { id: "0", name: "Solmate Collection #0", image: "/images/nft/solmate-nft0.jpg", category: "Art", solPrice: 1.5, collectionName: "Solmate" },
-  { id: "1", name: "Solmate Collection #1", image: "/images/nft/solmate-nft1.webp", category: "Music", solPrice: 3.0, collectionName: "Harmony Beats" },
-  { id: "2", name: "Solmate Collection #2", image: "/images/nft/solmate-nft2.webp", category: "Gaming", solPrice: 2.25, collectionName: "Gamers Delight" },
-  { id: "3", name: "Solmate Collection #3", image: "/images/nft/solmate-nft3.webp", category: "Art", solPrice: 4.0, collectionName: "Solmate" },
-  { id: "4", name: "Solmate Collection #4", image: "/images/nft/solmate-nft4.webp", category: "Music", solPrice: 1.75, collectionName: "Harmony Beats" },
-  { id: "5", name: "Solmate Collection #5", image: "/images/nft/solmate-nft5.webp", category: "Gaming", solPrice: 2.5, collectionName: "Gamers Delight" },
-  { id: "6", name: "Solmate Collection #6", image: "/images/nft/solmate-nft6.webp", category: "Art", solPrice: 5.0, collectionName: "Artistic Visions" },
-  { id: "7", name: "Solmate Collection #7", image: "/images/nft/solmate-nft7.jpg", category: "Photography", solPrice: 3.75, collectionName: "Pixel Paradise" },
-  { id: "8", name: "Solmate Collection #8", image: "/images/nft/solmate-nft8.webp", category: "Gaming", solPrice: 1.0, collectionName: "Gamers Delight" },
-  { id: "9", name: "Solmate Collection #9", image: "/images/nft/solmate-nft9.webp", category: "Music", solPrice: 2.75, collectionName: "Harmony Beats" },
-  { id: "10", name: "Solmate Collection #10", image: "/images/nft/solmate-nft10.webp", category: "Collectibles", solPrice: 3.2, collectionName: "Rare Finds" },
-  { id: "11", name: "Solmate Collection #11", image: "/images/nft/solmate-nft11.webp", category: "Art", solPrice: 4.8, collectionName: "Artistic Visions" },
-  { id: "12", name: "Solmate Collection #12", image: "/images/nft/solmate-nft12.webp", category: "Photography", solPrice: 2.9, collectionName: "Pixel Paradise" },
+  { mintAddress: "0", name: "Solmate Collection #0", image: "/images/nft/solmate-nft0.jpg", category: "Art", solPrice: 1.5, collection: "Solmate" },
+  { mintAddress: "1", name: "Solmate Collection #1", image: "/images/nft/solmate-nft1.webp", category: "Music", solPrice: 3.0, collection: "Harmony Beats" },
+  { mintAddress: "2", name: "Solmate Collection #2", image: "/images/nft/solmate-nft2.webp", category: "Gaming", solPrice: 2.25, collection: "Gamers Delight" },
+  { mintAddress: "3", name: "Solmate Collection #3", image: "/images/nft/solmate-nft3.webp", category: "Art", solPrice: 4.0, collection: "Solmate" },
+  { mintAddress: "4", name: "Solmate Collection #4", image: "/images/nft/solmate-nft4.webp", category: "Music", solPrice: 1.75, collection: "Harmony Beats" },
+  { mintAddress: "5", name: "Solmate Collection #5", image: "/images/nft/solmate-nft5.webp", category: "Gaming", solPrice: 2.5, collection: "Gamers Delight" },
+  { mintAddress: "6", name: "Solmate Collection #6", image: "/images/nft/solmate-nft6.webp", category: "Art", solPrice: 5.0, collection: "Artistic Visions" },
+  { mintAddress: "7", name: "Solmate Collection #7", image: "/images/nft/solmate-nft7.jpg", category: "Photography", solPrice: 3.75, collection: "Pixel Paradise" },
+  { mintAddress: "8", name: "Solmate Collection #8", image: "/images/nft/solmate-nft8.webp", category: "Gaming", solPrice: 1.0, collection: "Gamers Delight" },
+  { mintAddress: "9", name: "Solmate Collection #9", image: "/images/nft/solmate-nft9.webp", category: "Music", solPrice: 2.75, collection: "Harmony Beats" },
+  { mintAddress: "10", name: "Solmate Collection #10", image: "/images/nft/solmate-nft10.webp", category: "Collectibles", solPrice: 3.2, collection: "Rare Finds" },
+  { mintAddress: "11", name: "Solmate Collection #11", image: "/images/nft/solmate-nft11.webp", category: "Art", solPrice: 4.8, collection: "Artistic Visions" },
+  { mintAddress: "12", name: "Solmate Collection #12", image: "/images/nft/solmate-nft12.webp", category: "Photography", solPrice: 2.9, collection: "Pixel Paradise" },
 ];
 
 const NFTMarketCollectionSection = () => {
@@ -40,10 +40,10 @@ const NFTMarketCollectionSection = () => {
     const searchValue = searchQuery.toLowerCase();
     const results = nfts.filter((nft) => {
       if (filterBy === "name") return nft.name.toLowerCase().includes(searchValue);
-      if (filterBy === "id") return nft.id.toLowerCase().includes(searchValue);
+      if (filterBy === "mintAddress") return nft.mintAddress.toLowerCase().includes(searchValue);
       if (filterBy === "category") return nft.category.toLowerCase().includes(searchValue);
       if (filterBy === "solPrice") return nft.solPrice.toString().startsWith(searchValue);
-      if (filterBy === "collectionName") return nft.collectionName?.toLowerCase().includes(searchValue);
+      if (filterBy === "collectionName") return nft.collection?.toLowerCase().includes(searchValue);
       return false;
     });
     setFilteredNFTs(results);
@@ -77,7 +77,7 @@ const NFTMarketCollectionSection = () => {
           className="p-2 border border-gray-300 rounded-md shadow-sm dark:bg-gray-800 dark:border-gray-700"
         >
           <option value="name">Name</option>
-          <option value="id">ID</option>
+          <option value="mintAddress">MintAddress</option>
           <option value="category">Category</option>
           <option value="solPrice">SOL Price</option>
           <option value="collectionName">Collection Name</option>
@@ -92,12 +92,12 @@ const NFTMarketCollectionSection = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
           {filteredNFTs.map((nft) => (
             <NFTCard
-              key={nft.id}
-              id={nft.id}
+              key={nft.mintAddress}
+              mintAddress={nft.mintAddress}
               name={nft.name}
               image={nft.image}
               solPrice={nft.solPrice}
-              collectionName={nft.collectionName}
+              collection={nft.collection}
               category={nft.category}
             />
           ))}

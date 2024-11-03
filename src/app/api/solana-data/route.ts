@@ -30,7 +30,7 @@ export async function GET(request: Request) {
     const balance = await connection.getBalance(publicKey);
     const solBalance = balance / 1e9; // Convert lamports to SOL
 
-    let nftData: INFT[] = [];
+    const nftData: INFT[] = [];
 
     // Fetch standard SPL Token accounts
     const standardTokenAccounts = await connection.getParsedTokenAccountsByOwner(

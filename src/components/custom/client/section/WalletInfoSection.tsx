@@ -23,7 +23,7 @@ const WalletInfoSection = ({
   };
 
   return (
-    <div className="max-w-md w-full mx-auto p-4 rounded-lg shadow-lg bg-gradient-to-r from-violet-600 to-violet-900 text-white dark:from-violet-700 dark:to-violet-950">
+    <div className="relative max-w-md w-full mx-auto p-4 rounded-lg shadow-lg bg-gradient-to-r from-violet-600 to-violet-900 text-white dark:from-violet-700 dark:to-violet-950">
       {/* "Connected as" Label */}
       <span className="text-[10px] text-gray-400 dark:text-gray-500 absolute top-2 left-2">
         Connected as

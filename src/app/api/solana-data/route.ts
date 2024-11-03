@@ -3,8 +3,12 @@ import { Connection, PublicKey } from "@solana/web3.js";
 import { setSolanaEnvironment, getSolanaEndpoint, SolanaEnvironment } from "@/lib/config";
 import { createUmi } from '@metaplex-foundation/umi-bundle-defaults';
 import { mplTokenMetadata, fetchDigitalAsset, fetchAllDigitalAssetByOwner, fetchAllDigitalAssetWithTokenByOwner, DigitalAssetWithToken } from "@metaplex-foundation/mpl-token-metadata";
-import { PublicKey as UmiPublicKey } from '@metaplex-foundation/umi'
+import { PublicKey as UmiPublicKey, publicKey as umiPubKey } from '@metaplex-foundation/umi'
 import { INFT } from "@/lib/interfaces/nft";
+import { dasApi } from '@metaplex-foundation/digital-asset-standard-api';
+import { das } from '@metaplex-foundation/mpl-core-das';
+import { fetchAssetsByOwner,searchAssetsByOwner } from "@/lib/fetchAssets";
+
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -52,6 +56,12 @@ export async function GET(request: Request) {
     if (fetchNFTsParam) {
       // Fetch NFT metadata for each NFT mint
       const umi = createUmi(getSolanaEndpoint()).use(mplTokenMetadata());
+      const umi2 = createUmi("https://mainnet.helius-rpc.com/?api-key=c7a321b4-6fd7-4f5a-a48c-b90728f75560").use(mplTokenMetadata());
+      const umiDaspi = createUmi(getSolanaEndpoint()).use(dasApi());
+      const umiDaspi2 = createUmi("https://mainnet.helius-rpc.com/?api-key=c7a321b4-6fd7-4f5a-a48c-b90728f75560").use(dasApi());
+      const owner = umiPubKey(publicKeyParam);
+      const collection = publicKeyParam as UmiPublicKey;
+      const compressedNFT = umiPubKey('2PWp9qbmrdrAAcRLHdDnchbrK422YcYPzB4uz3JK4izA');
 
       //const assets = await fetchAllDigitalAssetByOwner(umi, publicKeyParam as UmiPublicKey)
       //console.log("check assets : ", assets);
@@ -118,10 +128,56 @@ export async function GET(request: Request) {
           console.error(`Failed to fetch NFT data for mint: ${mint}`, nftFetchError);
         }
       }
+
+
+      /*try {
+        const asset = await das.getAsset(umiDaspi2, compressedNFT);
+        const response = await fetch(asset.uri);
+        const jsonMetadata = await response.json();
+        console.log("check daspiAssets: ", jsonMetadata);
+      } catch (error) {
+        console.error('Error fetching asset metadata:', error);
+      } */
+
+      /*try {
+        const dasApiOwnerAssets = await das.getAssetsByOwner(umiDaspi2, {
+          owner,
+          limit: 10
+        })        
+        console.log("check dasApiOwnerAssets: ", dasApiOwnerAssets);
+      } catch (error) {
+        console.error('Error fetching dasApiOwnerAssets:', error);
+      }*/
+
+      /*try {
+        const dasApiAssetsCollection = await das.getAssetsByCollection(umiDaspi2, {
+          collection
+        })        
+        console.log("check dasApiAssetsCollection: ", dasApiAssetsCollection);
+      } catch (error) {
+        console.error('Error fetching dasApiAssetsCollection:', error);
+      }*/
+
+      try {
+        const assets = await fetchAssetsByOwner('c7a321b4-6fd7-4f5a-a48c-b90728f75560', publicKeyParam);
+        console.log('Fetched assets:', assets);
+        console.log('Fetched assets count:', assets.length);
+      } catch (error) {
+        console.error("fetchAssetsByOwner error: ",error);
+      }
+
+      /*
+      try {
+        const searchResults = await searchAssetsByOwner<any>('c7a321b4-6fd7-4f5a-a48c-b90728f75560', publicKeyParam);
+        console.log('Search results:', searchResults);
+        console.log('Search results count:', searchResults.length);
+      } catch (error) {
+        console.error("searchAssetsByOwner error: ", error);
+      }*/
     }
 
     // Return SOL balance, ordinary tokens, and NFT data
-    return NextResponse.json({ solBalance, tokens, nfts});
+    return NextResponse.json({ solBalance, tokens, nfts });
   } catch (error) {
     console.error("Error fetching data from Solana:", error);
     return NextResponse.json(

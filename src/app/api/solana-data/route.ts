@@ -14,6 +14,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const publicKeyParam = searchParams.get("publicKey");
   const fetchNFTsParam = searchParams.get("fetchNFTs") === "true"; // Check if fetchNFTs param is passed and set to "true"
+  const HELIUS_API_KEY_2 = process.env.HELIUS_API_KEY_2 || '';
 
   if (!publicKeyParam) {
     return NextResponse.json(
@@ -56,9 +57,9 @@ export async function GET(request: Request) {
     if (fetchNFTsParam) {
       // Fetch NFT metadata for each NFT mint
       const umi = createUmi(getSolanaEndpoint()).use(mplTokenMetadata());
-      const umi2 = createUmi("https://mainnet.helius-rpc.com/?api-key=c7a321b4-6fd7-4f5a-a48c-b90728f75560").use(mplTokenMetadata());
+      const umi2 = createUmi(`https://mainnet.helius-rpc.com/?api-key=${HELIUS_API_KEY_2}`).use(mplTokenMetadata());
       const umiDaspi = createUmi(getSolanaEndpoint()).use(dasApi());
-      const umiDaspi2 = createUmi("https://mainnet.helius-rpc.com/?api-key=c7a321b4-6fd7-4f5a-a48c-b90728f75560").use(dasApi());
+      const umiDaspi2 = createUmi(`https://mainnet.helius-rpc.com/?api-key=${HELIUS_API_KEY_2}`).use(dasApi());
       const owner = umiPubKey(publicKeyParam);
       const collection = publicKeyParam as UmiPublicKey;
       const compressedNFT = umiPubKey('2PWp9qbmrdrAAcRLHdDnchbrK422YcYPzB4uz3JK4izA');
@@ -159,7 +160,7 @@ export async function GET(request: Request) {
       }*/
 
       /*try {
-        const assets = await fetchAssetsByOwner('c7a321b4-6fd7-4f5a-a48c-b90728f75560', publicKeyParam);
+        const assets = await fetchAssetsByOwner(`${HELIUS_API_KEY_2}`, publicKeyParam);
         console.log('Fetched assets:', assets);
         console.log('Fetched assets count:', assets.length);
       } catch (error) {
@@ -168,7 +169,7 @@ export async function GET(request: Request) {
 
       
       try {
-        const searchResults = await searchAssetsByOwner<any>('c7a321b4-6fd7-4f5a-a48c-b90728f75560', publicKeyParam);
+        const searchResults = await searchAssetsByOwner<any>(`${HELIUS_API_KEY_2}`, publicKeyParam);
         console.log('Search results:', searchResults);
         console.log('Search results count:', searchResults.length);
       } catch (error) {

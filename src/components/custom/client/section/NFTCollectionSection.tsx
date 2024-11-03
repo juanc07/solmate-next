@@ -9,7 +9,7 @@ import { Loader2 } from "lucide-react"; // ShadCN Loading Spinner
 import { Button } from "@/components/ui/button"; // Import ShadCN Button
 
 // Example Dummy NFT Data with category, solPrice, and collectionName
-const dummyNFTs = [
+/*const dummyNFTs = [
   { mintAddress: "0", name: "Solmate Collection #0", image: "/images/nft/solmate-nft0.jpg", category: "Art", solPrice: 1.5, collection: "Solmate" },
   { mintAddress: "1", name: "Solmate Collection #1", image: "/images/nft/solmate-nft1.webp", category: "Music", solPrice: 3.0, collection: "Harmony Beats" },
   { mintAddress: "2", name: "Solmate Collection #2", image: "/images/nft/solmate-nft2.webp", category: "Gaming", solPrice: 2.25, collection: "Gamers Delight" },
@@ -23,7 +23,7 @@ const dummyNFTs = [
   { mintAddress: "10", name: "Solmate Collection #10", image: "/images/nft/solmate-nft10.webp", category: "Collectibles", solPrice: 3.2, collection: "Rare Finds" },
   { mintAddress: "11", name: "Solmate Collection #11", image: "/images/nft/solmate-nft11.webp", category: "Art", solPrice: 4.8, collection: "Artistic Visions" },
   { mintAddress: "12", name: "Solmate Collection #12", image: "/images/nft/solmate-nft12.webp", category: "Photography", solPrice: 2.9, collection: "Pixel Paradise" },
-];
+];*/
 
 const NftCollection = () => {
   const { publicKey, connected, wallet } = useWallet();
@@ -32,26 +32,25 @@ const NftCollection = () => {
   const [showDialog, setShowDialog] = useState(false); // Track dialog visibility
   const [searchQuery, setSearchQuery] = useState(""); // Search query state
   const [filterBy, setFilterBy] = useState("name"); // State for filter option
-  const [filteredNfts, setFilteredNfts] = useState<any[]>(dummyNFTs); // Filtered NFT state
+  //const [filteredNfts, setFilteredNfts] = useState<any[]>(dummyNFTs); // Initial filtered NFT state with dummy data
+  const [filteredNfts, setFilteredNfts] = useState<any[]>([]); // Initial filtered NFT state with dummy data
   const router = useRouter();
   const hasFetchedData = useRef(false);
 
-  // Fetch NFT data from the proxy server (commented out to use dummy data)
+  // Fetch NFT data from the proxy server
   const fetchNftData = useCallback(async () => {
     if (!connected || !publicKey || hasFetchedData.current) return;
 
     setLoading(true);
 
     try {
-      // Uncomment this to fetch real NFT data
       const response = await fetch(`/api/solana-data?publicKey=${publicKey.toString()}&fetchNFTs=true`);
       if (!response.ok) throw new Error("Failed to fetch NFT data");
-      const { nfts } = await response.json();
+      const { nfts } = await response.json();      
       setNfts(nfts || []);
-
-      // Load dummy data for testing
-      //setNfts(dummyNFTs);
-
+      setFilteredNfts(nfts || []);
+      // Uncomment this to load dummy data for testing
+      // setNfts(dummyNFTs);
       hasFetchedData.current = true;
     } catch (error) {
       console.error("Error fetching NFT data:", error);

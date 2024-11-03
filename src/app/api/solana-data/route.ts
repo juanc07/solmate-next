@@ -30,7 +30,7 @@ export async function GET(request: Request) {
     const balance = await connection.getBalance(publicKey);
     const solBalance = balance / 1e9; // Convert lamports to SOL
 
-    const nftData: INFT[] = [];
+    const nfts: INFT[] = [];
 
     // Fetch standard SPL Token accounts
     const standardTokenAccounts = await connection.getParsedTokenAccountsByOwner(
@@ -71,7 +71,7 @@ export async function GET(request: Request) {
         .map(({ mint }) => mint.publicKey); // Map to get the public key of the mint
 
       console.log(`Found ${nftFromAssetTokens.length} NFT token accounts from nftFromAssetTokens.`);
-      console.log("check catch nft: ", nftFromAssetTokens);
+      //console.log("check catch nft: ", nftFromAssetTokens);
 
       // Fetch NFT accounts from the custom NFT program
       /*const nftTokenAccounts = await connection.getParsedTokenAccountsByOwner(
@@ -94,11 +94,11 @@ export async function GET(request: Request) {
       for (const mint of nftFromAssetTokens) {
         try {
           const asset = await fetchDigitalAsset(umi, mint);
-          console.log("check meta data from metaplex:==>> ", asset);
+          //console.log("check meta data from metaplex:==>> ", asset);
           if (asset) {
-            console.log(`Fetched metadata for mint: ${mint}`);
+            //console.log(`Fetched metadata for mint: ${mint}`);
 
-            nftData.push({
+            nfts.push({
               mintAddress: mint,
               balance: 1, // NFTs have a fixed balance of 1
               type: "nft",
@@ -121,7 +121,7 @@ export async function GET(request: Request) {
     }
 
     // Return SOL balance, ordinary tokens, and NFT data
-    return NextResponse.json({ solBalance, tokens, nfts: nftData });
+    return NextResponse.json({ solBalance, tokens, nfts});
   } catch (error) {
     console.error("Error fetching data from Solana:", error);
     return NextResponse.json(

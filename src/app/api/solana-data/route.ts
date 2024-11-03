@@ -6,15 +6,6 @@ import { mplTokenMetadata, fetchDigitalAsset, fetchAllDigitalAssetByOwner, fetch
 import { PublicKey as UmiPublicKey } from '@metaplex-foundation/umi'
 import { INFT } from "@/lib/interfaces/nft";
 
-interface TokenData {
-  mintAddress: string;
-  balance: number;
-  type: "ordinary" | "nft";
-  name?: string;
-  uri?: string;
-  collection?: string;
-}
-
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const publicKeyParam = searchParams.get("publicKey");
@@ -39,8 +30,6 @@ export async function GET(request: Request) {
     const balance = await connection.getBalance(publicKey);
     const solBalance = balance / 1e9; // Convert lamports to SOL
 
-    // Array to hold ordinary tokens
-    let ordinaryTokens: TokenData[] = [];
     let nftData: INFT[] = [];
 
     // Fetch standard SPL Token accounts
@@ -59,27 +48,6 @@ export async function GET(request: Request) {
       return { mint, balance };
     });
 
-
-    // Ensure we have token accounts and handle the mapping
-    if (standardTokenAccounts.value.length > 0) {
-      // Mapping function that always returns a TokenData object or skips
-      ordinaryTokens.push(
-        ...standardTokenAccounts.value
-          .map(({ account }) => {
-            const info = account.data.parsed.info;
-            if (info && info.tokenAmount) {
-              const mint = info.mint;
-              const balance = info.tokenAmount.uiAmount || 0;
-
-              return { mintAddress: mint, balance, type: "ordinary" } as TokenData; // Ordinary token type
-            } else {
-              console.warn("No valid info found in account data", account);
-              return undefined; // Return undefined instead of null
-            }
-          })
-          .filter((token): token is TokenData => token !== undefined) // Type guard to filter out undefined values
-      );
-    }
 
     if (fetchNFTsParam) {
       // Fetch NFT metadata for each NFT mint
@@ -105,18 +73,8 @@ export async function GET(request: Request) {
       console.log(`Found ${nftFromAssetTokens.length} NFT token accounts from nftFromAssetTokens.`);
       console.log("check catch nft: ", nftFromAssetTokens);
 
-      // Fetch NFT accounts from the SPL Token program
-      const nftMintsFromSPL = standardTokenAccounts.value
-        .filter(({ account }) => {
-          const info = account.data.parsed.info;
-          // Check for NFTs in the SPL Token program
-          //console.log("normal nft : ", info);
-          return info.tokenAmount.amount === '1' && info.tokenAmount.decimals === 0; // NFT conditions
-        })
-        .map(({ account }) => account.data.parsed.info.mint);
-
       // Fetch NFT accounts from the custom NFT program
-      const nftTokenAccounts = await connection.getParsedTokenAccountsByOwner(
+      /*const nftTokenAccounts = await connection.getParsedTokenAccountsByOwner(
         publicKey,
         { programId: new PublicKey("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb") } // Custom NFT program
       );
@@ -130,10 +88,7 @@ export async function GET(request: Request) {
           // Check for NFTs in the custom program
           return info.tokenAmount.amount === '1' && info.tokenAmount.decimals === 0; // NFT conditions
         })
-        .map(({ account }) => account.data.parsed.info.mint);
-
-      // Combine all NFT mints
-      const allNftMints = [...nftMintsFromSPL, ...nftMintsFromCustom];
+        .map(({ account }) => account.data.parsed.info.mint);*/
 
 
       for (const mint of nftFromAssetTokens) {
@@ -163,11 +118,6 @@ export async function GET(request: Request) {
           console.error(`Failed to fetch NFT data for mint: ${mint}`, nftFetchError);
         }
       }
-
-
-
-
-
     }
 
     // Return SOL balance, ordinary tokens, and NFT data

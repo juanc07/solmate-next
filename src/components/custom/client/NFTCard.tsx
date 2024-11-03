@@ -17,7 +17,7 @@ const NFTCard: React.FC<INFT> = ({
   uri,
 }) => {
   const [isLoading, setIsLoading] = useState(true); // Track loading state
-  const defaultImage = "/images/token/default-token.png"; // Path to default image
+  const defaultImage = "/images/nft/default-nft.webp"; // Path to default image
 
   // Determine which image to use
   const imageSrc = image && image.trim() ? image : defaultImage;

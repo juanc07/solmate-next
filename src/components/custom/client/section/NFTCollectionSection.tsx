@@ -9,7 +9,7 @@ import { Loader2 } from "lucide-react"; // ShadCN Loading Spinner
 import { Button } from "@/components/ui/button"; // Import ShadCN Button
 
 // Example Dummy NFT Data with category, solPrice, and collectionName
-/*const dummyNFTs = [
+const dummyNFTs = [
   { mintAddress: "0", name: "Solmate Collection #0", image: "/images/nft/solmate-nft0.jpg", category: "Art", solPrice: 1.5, collection: "Solmate" },
   { mintAddress: "1", name: "Solmate Collection #1", image: "/images/nft/solmate-nft1.webp", category: "Music", solPrice: 3.0, collection: "Harmony Beats" },
   { mintAddress: "2", name: "Solmate Collection #2", image: "/images/nft/solmate-nft2.webp", category: "Gaming", solPrice: 2.25, collection: "Gamers Delight" },
@@ -23,9 +23,9 @@ import { Button } from "@/components/ui/button"; // Import ShadCN Button
   { mintAddress: "10", name: "Solmate Collection #10", image: "/images/nft/solmate-nft10.webp", category: "Collectibles", solPrice: 3.2, collection: "Rare Finds" },
   { mintAddress: "11", name: "Solmate Collection #11", image: "/images/nft/solmate-nft11.webp", category: "Art", solPrice: 4.8, collection: "Artistic Visions" },
   { mintAddress: "12", name: "Solmate Collection #12", image: "/images/nft/solmate-nft12.webp", category: "Photography", solPrice: 2.9, collection: "Pixel Paradise" },
-];*/
+];
 
-const NftCollection = () => {
+const NftCollectionSection = () => {
   const { publicKey, connected, wallet } = useWallet();
   const [nfts, setNfts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -49,6 +49,8 @@ const NftCollection = () => {
       const { nfts } = await response.json();      
       setNfts(nfts || []);
       setFilteredNfts(nfts || []);
+      //setNfts(dummyNFTs || []);
+      //setFilteredNfts(dummyNFTs || []);
       // Uncomment this to load dummy data for testing
       // setNfts(dummyNFTs);
       hasFetchedData.current = true;
@@ -178,4 +180,4 @@ const NftCollection = () => {
   );
 };
 
-export default NftCollection;
+export default NftCollectionSection;

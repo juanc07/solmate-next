@@ -58,7 +58,7 @@ export default function Header() {
     e.preventDefault();
     const newDarkMode = !isDarkMode;
     setIsDarkMode(newDarkMode);
-    setDarkModeStorage(newDarkMode); // Save to localStorage
+    //setDarkModeStorage(newDarkMode); // Save to localStorage
   };
 
   return (

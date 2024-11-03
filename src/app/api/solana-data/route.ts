@@ -158,22 +158,22 @@ export async function GET(request: Request) {
         console.error('Error fetching dasApiAssetsCollection:', error);
       }*/
 
-      try {
+      /*try {
         const assets = await fetchAssetsByOwner('c7a321b4-6fd7-4f5a-a48c-b90728f75560', publicKeyParam);
         console.log('Fetched assets:', assets);
         console.log('Fetched assets count:', assets.length);
       } catch (error) {
         console.error("fetchAssetsByOwner error: ",error);
-      }
+      }*/
 
-      /*
+      
       try {
         const searchResults = await searchAssetsByOwner<any>('c7a321b4-6fd7-4f5a-a48c-b90728f75560', publicKeyParam);
         console.log('Search results:', searchResults);
         console.log('Search results count:', searchResults.length);
       } catch (error) {
         console.error("searchAssetsByOwner error: ", error);
-      }*/
+      }
     }
 
     // Return SOL balance, ordinary tokens, and NFT data

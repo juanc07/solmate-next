@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import Image from "next/image";
 import {
   Dialog,
   DialogTrigger,
@@ -8,6 +9,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react"; // Import a loader icon
 
 interface NFTDetailsPopupProps {
   id: string;
@@ -25,6 +27,11 @@ const NFTDetailsPopup: React.FC<NFTDetailsPopupProps> = ({
   collection,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // State to track image loading
+
+  const handleImageLoad = () => {
+    setIsLoading(false);
+  };
 
   return (
     <>
@@ -42,12 +49,24 @@ const NFTDetailsPopup: React.FC<NFTDetailsPopupProps> = ({
             </DialogTitle>
           </DialogHeader>
           <div className="mt-2">
-            <div className="flex justify-center mb-4">
-              <img
-                src={image}
-                alt={name}
-                className="w-full max-w-sm h-auto rounded-md"
-              />
+            <div className="flex justify-center items-center mb-4 relative w-full h-auto">
+              {isLoading && (
+                <div className="absolute flex justify-center items-center w-full h-full bg-gray-200 rounded-md">
+                  <Loader2 className="animate-spin text-violet-600 w-8 h-8" />
+                </div>
+              )}
+              <div className="relative w-full h-0 pb-[75%] md:pb-[60%]"> {/* Maintain aspect ratio */}
+                <Image
+                  src={image}
+                  alt={name}
+                  fill
+                  className={`object-contain rounded-md transition-opacity duration-300 ${
+                    isLoading ? 'opacity-0' : 'opacity-100'
+                  }`}
+                  unoptimized
+                  onLoad={handleImageLoad} // Use onLoad instead of onLoadingComplete
+                />
+              </div>
             </div>
             <p className="text-sm text-gray-500 mb-2">Collection: {collection}</p>
             {description && (

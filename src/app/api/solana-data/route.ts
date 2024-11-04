@@ -2,20 +2,30 @@ import { NextResponse } from "next/server";
 import { Connection, PublicKey } from "@solana/web3.js";
 import { setSolanaEnvironment, getSolanaEndpoint, SolanaEnvironment } from "@/lib/config";
 import { fetchAssetsByOwner, searchAssetsByOwner, Asset, Grouping } from "@/lib/fetchAssets";
+import knownScamAddresses from "@/lib/scamAddresses";
 
-// Define the type for the NFTs being returned
 interface ProcessedNFT {
   id: string;
   name: string;
   image: string;
   description: string;
   collection: string;
+  isVerified: boolean;
+  isScam: boolean; // New field for scam detection
+}
+
+function isScamNFT(nft: ProcessedNFT, scamList: string[]): boolean {
+  return scamList.includes(nft.collection);
+}
+
+function isScamByMint(mint: string, scamMintList: string[]): boolean {
+  return scamMintList.includes(mint);
 }
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const publicKeyParam = searchParams.get("publicKey");
-  const fetchNFTsParam = searchParams.get("fetchNFTs") === "true"; // Check if fetchNFTs param is passed and set to "true"
+  const fetchNFTsParam = searchParams.get("fetchNFTs") === "true";
   const HELIUS_API_KEY_2 = process.env.HELIUS_API_KEY_2 || '';
 
   if (!publicKeyParam) {
@@ -37,10 +47,10 @@ export async function GET(request: Request) {
     const balance = await connection.getBalance(publicKey);
     const solBalance = balance / 1e9; // Convert lamports to SOL
 
-    // Fetch standard SPL Token accounts
+    // Fetch SPL Token accounts
     const standardTokenAccounts = await connection.getParsedTokenAccountsByOwner(
       publicKey,
-      { programId: new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA") } // SPL Token Program
+      { programId: new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA") }
     );
 
     console.log(`Found ${standardTokenAccounts.value.length} standard token accounts.`);
@@ -49,37 +59,49 @@ export async function GET(request: Request) {
       const info = account.data.parsed.info;
       const mint = info.mint;
       const balance = info.tokenAmount.uiAmount || 0;
-
       return { mint, balance };
     });
 
     let nfts: ProcessedNFT[] = [];
     if (fetchNFTsParam) {
       try {
-        // Ensure the response is typed correctly as an array of Asset
-        const response: Asset[] = await searchAssetsByOwner(HELIUS_API_KEY_2, publicKeyParam, 5);
+        const response: Asset[] = await searchAssetsByOwner(HELIUS_API_KEY_2, publicKeyParam, 1000);
 
-        // Check if the response is an array and map it
         if (Array.isArray(response)) {
-          nfts = response.map((item: Asset) => ({
-            id: item.id,
-            name: item.content?.metadata?.name || 'Unknown',
-            image: item.content?.links?.image || '',
-            description: item.content?.metadata?.description || 'No description available',
-            collection: item.grouping.find((group: Grouping) => group.group_key === 'collection')?.group_value || 'N/A',
-          }));
+          nfts = response.map((item: Asset) => {
+            const collection = item.grouping.find((group: Grouping) => group.group_key === 'collection')?.group_value || 'N/A';
+            const isVerified = item.creators?.some(creator => creator.verified) || false;
+
+            const nft: ProcessedNFT = {
+              id: item.id,
+              name: item.content?.metadata?.name || 'Unknown',
+              image: item.content?.links?.image || '',
+              description: item.content?.metadata?.description || 'No description available',
+              collection,
+              isVerified,
+              isScam: false, // Initial value, to be set below
+            };
+
+            // Check if the NFT is a scam            
+            nft.isScam = isScamNFT(nft, knownScamAddresses) || isScamByMint(item.id, knownScamAddresses);
+
+            return nft;
+          });
+
           console.log(`Fetched ${nfts.length} NFTs.`);
         } else {
           console.error("Expected an array, but received:", response);
         }
-
       } catch (error) {
         console.error("Error fetching NFTs:", error);
       }
     }
 
-    // Return SOL balance, ordinary tokens, and NFT data
-    return NextResponse.json({ solBalance, tokens, nfts });
+    // Filter out scam NFTs
+    const verifiedNfts = nfts.filter(nft => nft.isVerified && !nft.isScam);
+
+    // Return SOL balance, tokens, and verified NFT data
+    return NextResponse.json({ solBalance, tokens, nfts: verifiedNfts });
   } catch (error) {
     console.error("Error fetching data from Solana:", error);
     return NextResponse.json(

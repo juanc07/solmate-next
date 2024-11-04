@@ -15,7 +15,12 @@ interface ProcessedNFT {
 }
 
 function isScamNFT(nft: ProcessedNFT, scamList: string[]): boolean {
-  return scamList.includes(nft.collection);
+  // Check if the collection is in the known scam list, if the image is missing, or if the name contains "airdrop" or "claim"
+  return (
+    scamList.includes(nft.collection) ||
+    !nft.image ||
+    (nft.name.toLowerCase().includes("airdrop") || nft.name.toLowerCase().includes("claim"))
+  );
 }
 
 function isScamByMint(mint: string, scamMintList: string[]): boolean {

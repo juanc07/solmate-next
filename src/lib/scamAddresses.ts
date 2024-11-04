@@ -3214,7 +3214,9 @@ export const knownScamAddresses: string[] = [
     "5xovV4RMuRvLVUrZDWDT7yJw6f66s31sKzgyiRQ4ArKb",
     "5ZKWVYZc41thKiX4UFEJyrVdVPej83MJnGYqHryZcaTm",
     "5VqKi77tA2LZKfbV2Lvw1YJN7TpQ2C27DYe1z7c8QE4M",
-    "4yfgCpBTKf3xBC1Fej5hBgKWzcjdynbwjkZZjg2pkvCB"
+    "4yfgCpBTKf3xBC1Fej5hBgKWzcjdynbwjkZZjg2pkvCB",
+    "ERwyLKR3VHdr8AF6wEhqLrDMRZwEeHTYQWVhZsjVt1W2",
+    "4Ydsj3cQeVYi5rHkYtN1bG6TiUuDUs4jR5WD2fsH95Nt"
 ];
 
 export default knownScamAddresses;

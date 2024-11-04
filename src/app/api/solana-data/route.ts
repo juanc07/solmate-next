@@ -12,6 +12,7 @@ interface ProcessedNFT {
   collection: string;
   isVerified: boolean;
   isScam: boolean; // New field for scam detection
+  solPrice?: number;
 }
 
 function isScamNFT(nft: ProcessedNFT, scamList: string[]): boolean {
@@ -85,6 +86,7 @@ export async function GET(request: Request) {
               collection,
               isVerified,
               isScam: false, // Initial value, to be set below
+              solPrice: 0
             };
 
             // Check if the NFT is a scam            

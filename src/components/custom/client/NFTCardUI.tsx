@@ -11,6 +11,7 @@ interface NFTCardProps {
   image: string;
   collection: string;
   description: string;
+  solPrice?: number;
 }
 
 const NFTCardUI: React.FC<NFTCardProps> = ({ id, name, image, collection, description }) => {

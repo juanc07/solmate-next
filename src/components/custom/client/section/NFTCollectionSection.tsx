@@ -85,8 +85,7 @@ const NftCollectionSection = () => {
     const results = nfts.filter(nft => {
       const searchValue = searchQuery.toLowerCase();
       if (filterBy === "name") return nft.name.toLowerCase().includes(searchValue);
-      if (filterBy === "mintAddress") return nft.mintAddress.toLowerCase().includes(searchValue);
-      if (filterBy === "category") return nft.category && nft.category.toLowerCase().includes(searchValue);
+      if (filterBy === "mintAddress") return nft.id.toLowerCase().includes(searchValue);      
       if (filterBy === "solPrice") return nft.solPrice.toString().startsWith(searchValue);
       if (filterBy === "collection") return nft.collection && nft.collection.toLowerCase().includes(searchValue);
       return false;
@@ -149,8 +148,7 @@ const NftCollectionSection = () => {
             className="p-2 border border-gray-300 rounded-md shadow-sm dark:bg-gray-800 dark:border-gray-700"
           >
             <option value="name">Name</option>
-            <option value="mintAddress">Mint Address</option>
-            <option value="category">Category</option>
+            <option value="mintAddress">Mint Address</option>            
             <option value="solPrice">SOL Price</option>
             <option value="collection">Collection</option>
           </select>

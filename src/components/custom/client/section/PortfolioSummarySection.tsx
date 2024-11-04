@@ -145,7 +145,7 @@ const PortfolioSummarySection = () => {
               <CardHeader className="flex items-center space-x-3">
                 {token.icon && (
                   <Image
-                    src={sanitizeImageUrl(token.icon)}
+                    src={sanitizeImageUrl(token.icon)}                    
                     alt={`${token.name} logo`}
                     width={32}
                     height={32}

@@ -7,23 +7,7 @@ import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle } from 
 import NFTCard from "@/components/custom/client/NFTCard"; // Import the NFTCard component
 import { Loader2 } from "lucide-react"; // ShadCN Loading Spinner
 import { Button } from "@/components/ui/button"; // Import ShadCN Button
-
-// Example Dummy NFT Data with category, solPrice, and collectionName
-const dummyNFTs = [
-  { mintAddress: "0", name: "Solmate Collection #0", image: "/images/nft/solmate-nft0.jpg", category: "Art", solPrice: 1.5, collection: "Solmate" },
-  { mintAddress: "1", name: "Solmate Collection #1", image: "/images/nft/solmate-nft1.webp", category: "Music", solPrice: 3.0, collection: "Harmony Beats" },
-  { mintAddress: "2", name: "Solmate Collection #2", image: "/images/nft/solmate-nft2.webp", category: "Gaming", solPrice: 2.25, collection: "Gamers Delight" },
-  { mintAddress: "3", name: "Solmate Collection #3", image: "/images/nft/solmate-nft3.webp", category: "Art", solPrice: 4.0, collection: "Solmate" },
-  { mintAddress: "4", name: "Solmate Collection #4", image: "/images/nft/solmate-nft4.webp", category: "Music", solPrice: 1.75, collection: "Harmony Beats" },
-  { mintAddress: "5", name: "Solmate Collection #5", image: "/images/nft/solmate-nft5.webp", category: "Gaming", solPrice: 2.5, collection: "Gamers Delight" },
-  { mintAddress: "6", name: "Solmate Collection #6", image: "/images/nft/solmate-nft6.webp", category: "Art", solPrice: 5.0, collection: "Artistic Visions" },
-  { mintAddress: "7", name: "Solmate Collection #7", image: "/images/nft/solmate-nft7.jpg", category: "Photography", solPrice: 3.75, collection: "Pixel Paradise" },
-  { mintAddress: "8", name: "Solmate Collection #8", image: "/images/nft/solmate-nft8.webp", category: "Gaming", solPrice: 1.0, collection: "Gamers Delight" },
-  { mintAddress: "9", name: "Solmate Collection #9", image: "/images/nft/solmate-nft9.webp", category: "Music", solPrice: 2.75, collection: "Harmony Beats" },
-  { mintAddress: "10", name: "Solmate Collection #10", image: "/images/nft/solmate-nft10.webp", category: "Collectibles", solPrice: 3.2, collection: "Rare Finds" },
-  { mintAddress: "11", name: "Solmate Collection #11", image: "/images/nft/solmate-nft11.webp", category: "Art", solPrice: 4.8, collection: "Artistic Visions" },
-  { mintAddress: "12", name: "Solmate Collection #12", image: "/images/nft/solmate-nft12.webp", category: "Photography", solPrice: 2.9, collection: "Pixel Paradise" },
-];
+import NFTCardUI from "../NFTCardUI";
 
 const NftCollectionSection = () => {
   const { publicKey, connected, wallet } = useWallet();
@@ -48,11 +32,7 @@ const NftCollectionSection = () => {
       if (!response.ok) throw new Error("Failed to fetch NFT data");
       const { nfts } = await response.json();      
       setNfts(nfts || []);
-      setFilteredNfts(nfts || []);
-      //setNfts(dummyNFTs || []);
-      //setFilteredNfts(dummyNFTs || []);
-      // Uncomment this to load dummy data for testing
-      // setNfts(dummyNFTs);
+      setFilteredNfts(nfts || []);      
       hasFetchedData.current = true;
     } catch (error) {
       console.error("Error fetching NFT data:", error);
@@ -161,15 +141,14 @@ const NftCollectionSection = () => {
         {filteredNfts.length > 0 ? (
           <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 md:gap-6 w-full">
             {filteredNfts.map((nft) => (
-              <NFTCard
-                key={nft.mintAddress}
-                mintAddress={nft.mintAddress}
-                name={nft.name}
-                image={nft.image} // Assuming the `image` field points to the image URL
-                collection={nft.collection}
-                solPrice={nft.solPrice}
-                category={nft.category}
-              />
+              <NFTCardUI
+              key={nft.id}
+              id={nft.id}
+              name={nft.name}
+              image={nft.image}
+              description={nft.description}
+              collection={nft.collection}
+            />
             ))}
           </div>
         ) : (

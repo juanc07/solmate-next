@@ -16,8 +16,11 @@ const NftCollectionSection = () => {
   const [showDialog, setShowDialog] = useState(false); // Track dialog visibility
   const [searchQuery, setSearchQuery] = useState(""); // Search query state
   const [filterBy, setFilterBy] = useState("name"); // State for filter option
-  //const [filteredNfts, setFilteredNfts] = useState<any[]>(dummyNFTs); // Initial filtered NFT state with dummy data
-  const [filteredNfts, setFilteredNfts] = useState<any[]>([]); // Initial filtered NFT state with dummy data
+  const [filteredNfts, setFilteredNfts] = useState<any[]>([]); // Initial filtered NFT state with data
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20; // Adjustable number of items per page
+  const totalPages = Math.ceil(filteredNfts.length / itemsPerPage);
+
   const router = useRouter();
   const hasFetchedData = useRef(false);
 
@@ -30,9 +33,9 @@ const NftCollectionSection = () => {
     try {
       const response = await fetch(`/api/solana-data?publicKey=${publicKey.toString()}&fetchNFTs=true`);
       if (!response.ok) throw new Error("Failed to fetch NFT data");
-      const { nfts } = await response.json();      
+      const { nfts } = await response.json();
       setNfts(nfts || []);
-      setFilteredNfts(nfts || []);      
+      setFilteredNfts(nfts || []);
       hasFetchedData.current = true;
     } catch (error) {
       console.error("Error fetching NFT data:", error);
@@ -88,6 +91,23 @@ const NftCollectionSection = () => {
       return false;
     });
     setFilteredNfts(results); // Update the filtered NFTs
+    setCurrentPage(1); // Reset to the first page after search
+  };
+
+  // Paginated NFTs
+  const currentNFTs = filteredNfts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  // Handle page navigation
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
   };
 
   return (
@@ -139,18 +159,30 @@ const NftCollectionSection = () => {
         </div>
 
         {filteredNfts.length > 0 ? (
-          <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 md:gap-6 w-full">
-            {filteredNfts.map((nft) => (
-              <NFTCardUI
-              key={nft.id}
-              id={nft.id}
-              name={nft.name}
-              image={nft.image}
-              description={nft.description || ""}
-              collection={nft.collection}
-            />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 md:gap-6 w-full">
+              {currentNFTs.map((nft) => (
+                <NFTCardUI
+                  key={nft.id}
+                  id={nft.id}
+                  name={nft.name}
+                  image={nft.image}
+                  description={nft.description || ""}
+                  collection={nft.collection}
+                />
+              ))}
+            </div>
+            {/* Pagination Controls */}
+            <div className="flex justify-between items-center mt-6">
+              <Button onClick={handlePrevPage} disabled={currentPage === 1} className="px-4 py-2">
+                Previous
+              </Button>
+              <span className="text-gray-600 dark:text-gray-300">Page {currentPage} of {totalPages}</span>
+              <Button onClick={handleNextPage} disabled={currentPage === totalPages} className="px-4 py-2">
+                Next
+              </Button>
+            </div>
+          </>
         ) : (
           <p className="text-center text-gray-500">No NFTs found.</p>
         )}

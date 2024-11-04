@@ -146,7 +146,7 @@ const NftCollectionSection = () => {
               id={nft.id}
               name={nft.name}
               image={nft.image}
-              description={nft.description}
+              description={nft.description || ""}
               collection={nft.collection}
             />
             ))}

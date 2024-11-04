@@ -45,7 +45,7 @@ const NFTCardUI: React.FC<NFTCardProps> = ({ id, name, image, collection, descri
       {/*{collection && <p className="text-sm text-gray-500 text-center mt-1">{collection}</p>}*/}
 
       {/* Include the NFTDetailsPopup component */}
-      <NFTDetailsPopup id={id} name={name} image={imageSrc} description={description} collection={collection} />
+      <NFTDetailsPopup id={id} name={name} image={imageSrc} description={description || ""} collection={collection} />
     </div>
   );
 };

@@ -127,4 +127,12 @@ html, body {
     z-index: 40; /* Adjust wallet modal z-index if needed */
   }
 
+  /* Custom class to hide the scrollbar but keep the content scrollable */
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none; /* Hides the scrollbar for Chrome, Safari, and Opera */
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none; /* Hides the scrollbar for Internet Explorer and Edge */
+    scrollbar-width: none; /* Hides the scrollbar for Firefox */
+  }
 }

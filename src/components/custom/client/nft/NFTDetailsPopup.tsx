@@ -55,7 +55,7 @@ const NFTDetailsPopup: React.FC<NFTDetailsPopupProps> = ({
                   <Loader2 className="animate-spin text-violet-600 w-8 h-8" />
                 </div>
               )}
-              <div className="relative w-full h-0 pb-[75%] md:pb-[60%]"> {/* Maintain aspect ratio */}
+              <div className="relative w-full h-0 pb-[100%] md:pb-[80%]"> {/* Adjust aspect ratio here */}
                 <Image
                   src={image}
                   alt={name}

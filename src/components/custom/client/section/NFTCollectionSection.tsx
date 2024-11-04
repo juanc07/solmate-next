@@ -73,8 +73,9 @@ const NftCollectionSection = () => {
   // Handle loading state
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="animate-spin text-violet-600 w-16 h-16" />
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <Loader2 className="animate-spin text-violet-600 w-16 h-16 mb-4" />
+        <p className="text-lg text-gray-600 dark:text-gray-300">Loading NFT data...</p>
       </div>
     );
   }

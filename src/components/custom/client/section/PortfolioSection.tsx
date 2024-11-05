@@ -3,23 +3,54 @@
 import { useEffect, useState } from "react";
 import TokenItem from "@/components/custom/client/TokenItem";
 import { SolanaPriceHelper } from "@/lib/SolanaPriceHelper";
+import { openDB, IDBPDatabase } from "idb";
 
 interface Token {
   mint: string;
   balance: number;
-  icon: string;
+  icon: string; // URL for the token image
   name: string;
   symbol: string;
   usdValue: number;
 }
 
+const DB_NAME = "TokenCache";
+const STORE_NAME = "tokens";
+const DEFAULT_TOKE = "/images/token/default-token.png";
+
+// Utility function to add delay
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// Initialize IndexedDB
+const initDB = async (): Promise<IDBPDatabase> => {
+  return openDB(DB_NAME, 1, {
+    upgrade(db) {
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME, { keyPath: "mint" });
+      }
+    },
+  });
+};
+
+// Get cached token data from IndexedDB
+const getCachedToken = async (mint: string): Promise<Token | null> => {
+  const db = await initDB();
+  return await db.get(STORE_NAME, mint);
+};
+
+// Store token data in IndexedDB
+const cacheToken = async (token: Token): Promise<void> => {
+  const db = await initDB();
+  await db.put(STORE_NAME, token);
+};
+
 const fetchTokenDataWithCache = async (
   mint: string,
   signal: AbortSignal
 ): Promise<Token | null> => {
-  const cachedToken = localStorage.getItem(mint);
+  const cachedToken = await getCachedToken(mint);
   if (cachedToken) {
-    return JSON.parse(cachedToken);
+    return cachedToken;
   }
 
   try {
@@ -27,17 +58,42 @@ const fetchTokenDataWithCache = async (
     if (!response.ok) throw new Error("Failed to fetch token data");
 
     const tokenData = await response.json();
-    const token: Token = {
-      mint: tokenData.address,
-      balance: 0,
-      icon: tokenData.logoURI,
-      name: tokenData.name,
-      symbol: tokenData.symbol,
-      usdValue: 0,
-    };
+    let imageURL;
 
-    localStorage.setItem(mint, JSON.stringify(token));
-    return token;
+    try {
+      // Attempt to fetch the image
+      const imageResponse = await fetch(tokenData.logoURI, { signal });
+      if (!imageResponse.ok) throw new Error("Failed to fetch image");
+      
+      const imageBlob = await imageResponse.blob();
+      imageURL = URL.createObjectURL(imageBlob);
+
+      // Cache the successful image and token data
+      const token: Token = {
+        mint: tokenData.address,
+        balance: 0,
+        icon: imageURL,
+        name: tokenData.name,
+        symbol: tokenData.symbol,
+        usdValue: 0,
+      };
+      await cacheToken(token);
+      return token;
+
+    } catch (imageError) {
+      console.error(`Failed to fetch image for mint ${mint}:`, imageError);
+      // Use the default image but do not cache this instance
+      imageURL = DEFAULT_TOKE;
+
+      return {
+        mint: tokenData.address,
+        balance: 0,
+        icon: imageURL,
+        name: tokenData.name,
+        symbol: tokenData.symbol,
+        usdValue: 0,
+      };
+    }
   } catch (error) {
     if (error instanceof DOMException && error.name === "AbortError") {
       console.log(`Fetch aborted for mint: ${mint}`);
@@ -47,6 +103,7 @@ const fetchTokenDataWithCache = async (
     return null;
   }
 };
+
 
 const fetchTokens = async (
   publicKey: string,
@@ -59,12 +116,23 @@ const fetchTokens = async (
 
     const { tokens: tokenAccounts } = await response.json();
     const totalTokens = tokenAccounts.length;
+    console.log("PortfolioSection totalTokens: ", totalTokens);
     const tokens: Token[] = [];
 
     for (const [index, { mint, balance }] of tokenAccounts.entries()) {
       if (balance < 0.1) continue;
 
-      const tokenData = await fetchTokenDataWithCache(mint, signal);
+      var tokenData = null;
+
+      const cachedToken = await getCachedToken(mint);
+      if (cachedToken) {
+        tokenData = cachedToken;
+      } else {
+        const delayTime = 3500;
+        await sleep(delayTime);
+        tokenData = await fetchTokenDataWithCache(mint, signal);
+      }
+
       if (tokenData) {
         const usdValue = await SolanaPriceHelper.convertTokenToUSDC(tokenData.symbol, balance);
         tokens.push({ ...tokenData, balance, usdValue });
@@ -130,7 +198,7 @@ const PortfolioSection = ({ publicKey }: { publicKey: string }) => {
               symbol={token.symbol}
               balance={token.balance}
               usdValue={token.usdValue}
-              sanitize = {true}
+              sanitize={true}
             />
           ))}
         </div>

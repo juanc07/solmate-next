@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import TokenItem from "@/components/custom/client/TokenItem";
-import { SolanaPriceHelper } from "@/lib/SolanaPriceHelper";
+import { SolanaPriceHelper } from "@/lib/SolanaPriceHelper"; // Ensure this is used
 import { openDB, IDBPDatabase } from "idb";
+import { ITokenAccount } from "@/lib/interfaces/tokenAccount"; // Import the correct interface for Helius response
 
 interface Token {
   mint: string;
@@ -12,6 +13,7 @@ interface Token {
   name: string;
   symbol: string;
   usdValue: number;
+  decimals:number;
 }
 
 const DB_NAME = "TokenCache";
@@ -30,6 +32,10 @@ const initDB = async (): Promise<IDBPDatabase> => {
       }
     },
   });
+};
+
+const normalizeAmount = (amount: number, decimals: number): number => {
+  return amount / Math.pow(10, decimals);
 };
 
 // Get cached token data from IndexedDB
@@ -64,7 +70,7 @@ const fetchTokenDataWithCache = async (
       // Attempt to fetch the image
       const imageResponse = await fetch(tokenData.logoURI, { signal });
       if (!imageResponse.ok) throw new Error("Failed to fetch image");
-      
+
       const imageBlob = await imageResponse.blob();
       imageURL = URL.createObjectURL(imageBlob);
 
@@ -76,6 +82,7 @@ const fetchTokenDataWithCache = async (
         name: tokenData.name,
         symbol: tokenData.symbol,
         usdValue: 0,
+        decimals: tokenData.decimals
       };
       await cacheToken(token);
       return token;
@@ -92,6 +99,7 @@ const fetchTokenDataWithCache = async (
         name: tokenData.name,
         symbol: tokenData.symbol,
         usdValue: 0,
+        decimals: tokenData.decimals
       };
     }
   } catch (error) {
@@ -104,38 +112,27 @@ const fetchTokenDataWithCache = async (
   }
 };
 
-
 const fetchTokens = async (
   publicKey: string,
   signal: AbortSignal,
   setProgress: (progress: number) => void
 ): Promise<Token[]> => {
   try {
+    // Fetch tokens directly from Helius
     const response = await fetch(`/api/solana-data?publicKey=${publicKey}`, { signal });
     if (!response.ok) throw new Error("Failed to fetch token accounts");
 
-    const { tokens: tokenAccounts } = await response.json();
-    const totalTokens = tokenAccounts.length;
-    console.log("PortfolioSection totalTokens: ", totalTokens);
+    // Correctly extract `tokensFromAccountHelius` from the JSON response
+    const { tokensFromAccountHelius }: { tokensFromAccountHelius: ITokenAccount[] } = await response.json();    
+    const totalTokens = tokensFromAccountHelius.length;    
     const tokens: Token[] = [];
 
-    for (const [index, { mint, balance }] of tokenAccounts.entries()) {
-      if (balance < 0.1) continue;
-
-      var tokenData = null;
-
-      const cachedToken = await getCachedToken(mint);
-      if (cachedToken) {
-        tokenData = cachedToken;
-      } else {
-        const delayTime = 3500;
-        await sleep(delayTime);
-        tokenData = await fetchTokenDataWithCache(mint, signal);
-      }
-
-      if (tokenData) {
-        const usdValue = await SolanaPriceHelper.convertTokenToUSDC(tokenData.symbol, balance);
-        tokens.push({ ...tokenData, balance, usdValue });
+    for (const [index, { mint, amount }] of tokensFromAccountHelius.entries()) {
+      const tokenData = await fetchTokenDataWithCache(mint, signal);
+      if (tokenData) {        
+        const normalizedAmount = normalizeAmount(amount,tokenData.decimals); // Adjust `decimals` as needed        
+        const usdValue = await SolanaPriceHelper.convertTokenToUSDC(tokenData.symbol, normalizedAmount);
+        tokens.push({ ...tokenData, balance: normalizedAmount, usdValue });
       }
 
       setProgress(Math.round(((index + 1) / totalTokens) * 100));
@@ -197,7 +194,7 @@ const PortfolioSection = ({ publicKey }: { publicKey: string }) => {
               name={token.name}
               symbol={token.symbol}
               balance={token.balance}
-              usdValue={token.usdValue}              
+              usdValue={token.usdValue}
             />
           ))}
         </div>

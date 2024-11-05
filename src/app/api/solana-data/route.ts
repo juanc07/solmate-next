@@ -55,14 +55,16 @@ export async function GET(request: Request) {
 
     const tokens = standardTokenAccounts.value.map(({ account }) => {
       const info = account.data.parsed.info;
-      const mint = info.mint;
+      const mint = info.mint;      
       const balance = info.tokenAmount.uiAmount || 0;
       return { mint, balance };
     });
 
     // get owner fungitable token using helius api
-    const fungibleAssetResponse: ITokenAccount[] = await getTokenAccounts(HELIUS_API_KEY_2, publicKeyParam, 1000);
-    console.log("getTokenAccounts: ", fungibleAssetResponse);
+    const tokensFromAccountHelius: ITokenAccount[] = await getTokenAccounts(HELIUS_API_KEY_2, publicKeyParam, 1000);
+    //console.log("tokensFromAccountHelius: ", tokensFromAccountHelius);
+    console.log("tokensFromAccountHelius count: ", tokensFromAccountHelius.length);
+
 
     let nfts: IProcessedNFT[] = [];
     if (fetchNFTsParam) {
@@ -103,7 +105,7 @@ export async function GET(request: Request) {
     const verifiedNfts = nfts.filter(nft => nft.isVerified && !nft.isScam);
 
     // Return SOL balance, tokens, and verified NFT data
-    return NextResponse.json({ solBalance, tokens, nfts: verifiedNfts });
+    return NextResponse.json({ solBalance, tokens, nfts: verifiedNfts,tokensFromAccountHelius });
   } catch (error) {
     console.error("Error fetching data from Solana:", error);
     return NextResponse.json(

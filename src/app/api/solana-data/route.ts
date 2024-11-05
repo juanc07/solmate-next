@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { Connection, PublicKey } from "@solana/web3.js";
 import { setSolanaEnvironment, getSolanaEndpoint, SolanaEnvironment } from "@/lib/config";
-import { fetchAssetsByOwner, searchAssetsByOwner, Asset, Grouping } from "@/lib/fetchAssets";
+import { getTokenAccounts, searchAssetsByOwner,getAssetsByOwner} from "@/lib/fetchAssets";
+import { IAsset,Grouping } from '@/lib/interfaces/asset';
+import { ITokenAccount } from '@/lib/interfaces/tokenAccount';
 import knownScamAddresses from "@/lib/scamAddresses";
 import {IProcessedNFT} from "@/lib/interfaces/processNft";
 
@@ -58,13 +60,16 @@ export async function GET(request: Request) {
       return { mint, balance };
     });
 
+    // get owner fungitable token using helius api
+    const fungibleAssetResponse: ITokenAccount[] = await getTokenAccounts(HELIUS_API_KEY_2, publicKeyParam, 1000);
+    console.log("getTokenAccounts: ", fungibleAssetResponse);
+
     let nfts: IProcessedNFT[] = [];
     if (fetchNFTsParam) {
       try {
-        const response: Asset[] = await searchAssetsByOwner(HELIUS_API_KEY_2, publicKeyParam, 1000);
-
+        const response: IAsset[] = await searchAssetsByOwner(HELIUS_API_KEY_2, publicKeyParam, 1000);
         if (Array.isArray(response)) {
-          nfts = response.map((item: Asset) => {
+          nfts = response.map((item: IAsset) => {
             const collection = item.grouping.find((group: Grouping) => group.group_key === 'collection')?.group_value || 'N/A';
             const isVerified = item.creators?.some(creator => creator.verified) || false;
 

@@ -197,8 +197,7 @@ const PortfolioSection = ({ publicKey }: { publicKey: string }) => {
               name={token.name}
               symbol={token.symbol}
               balance={token.balance}
-              usdValue={token.usdValue}
-              sanitize={true}
+              usdValue={token.usdValue}              
             />
           ))}
         </div>

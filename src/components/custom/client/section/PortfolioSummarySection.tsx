@@ -11,6 +11,7 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import { SolanaPriceHelper } from "@/lib/SolanaPriceHelper";
 import Image from "next/image";
 import { sanitizeImageUrl } from "@/lib/helper";
+import { openDB, IDBPDatabase } from "idb";
 
 interface Token {
   mint: string;
@@ -21,32 +22,83 @@ interface Token {
   usdValue: number;
 }
 
+const DB_NAME = "TokenSummaryCache";
+const STORE_NAME = "tokens";
+const DEFAULT_ICON = "/images/token/default-token.png";
+
+// Initialize IndexedDB
+const initDB = async (): Promise<IDBPDatabase> => {
+  return openDB(DB_NAME, 1, {
+    upgrade(db) {
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME, { keyPath: "mint" });
+      }
+    },
+  });
+};
+
+// Get cached token data from IndexedDB
+const getCachedToken = async (mint: string): Promise<Token | null> => {
+  const db = await initDB();
+  return await db.get(STORE_NAME, mint);
+};
+
+// Store token data in IndexedDB
+const cacheToken = async (token: Token): Promise<void> => {
+  const db = await initDB();
+  await db.put(STORE_NAME, token);
+};
+
 const fetchTokenDataWithCache = async (
   mint: string,
   signal: AbortSignal
 ): Promise<Token | null> => {
-  const cachedToken = localStorage.getItem(mint);
-  if (cachedToken) return JSON.parse(cachedToken);
+  const cachedToken = await getCachedToken(mint);
+  if (cachedToken) {
+    return cachedToken;
+  }
 
   try {
     const response = await fetch(`/api/token/${mint}`, { signal });
     if (!response.ok) throw new Error("Failed to fetch token data");
 
     const tokenData = await response.json();
-    const token: Token = {
-      mint: tokenData.address,
-      balance: 0,
-      icon: tokenData.logoURI,
-      name: tokenData.name,
-      symbol: tokenData.symbol,
-      usdValue: 0,
-    };
+    let imageURL;
 
-    localStorage.setItem(mint, JSON.stringify(token));
-    return token;
+    try {
+      const imageResponse = await fetch(tokenData.logoURI, { signal });
+      if (!imageResponse.ok) throw new Error("Failed to fetch image");
+      const imageBlob = await imageResponse.blob();
+      imageURL = URL.createObjectURL(imageBlob);
+
+      // Cache the token data with the fetched image
+      const token: Token = {
+        mint: tokenData.address,
+        balance: 0,
+        icon: imageURL,
+        name: tokenData.name,
+        symbol: tokenData.symbol,
+        usdValue: 0,
+      };
+
+      await cacheToken(token);
+      return token;
+
+    } catch (imageError) {
+      console.error(`Failed to fetch image for mint ${mint}:`, imageError);
+      // Use default image but do not cache it
+      return {
+        mint: tokenData.address,
+        balance: 0,
+        icon: DEFAULT_ICON,
+        name: tokenData.name,
+        symbol: tokenData.symbol,
+        usdValue: 0,
+      };
+    }
   } catch (error) {
-    if (error instanceof Error && error.name === "AbortError") {
-      console.log("Token fetch aborted");
+    if (error instanceof DOMException && error.name === "AbortError") {
+      console.log(`Fetch aborted for mint: ${mint}`);
     } else {
       console.error(`Error fetching data for mint ${mint}:`, error);
     }
@@ -82,7 +134,7 @@ const fetchTokens = async (
 
     return tokens.sort((a, b) => b.usdValue - a.usdValue);
   } catch (error) {
-    if (error instanceof Error && error.name !== "AbortError") {
+    if (error instanceof DOMException && error.name !== "AbortError") {
       console.error("Failed to fetch tokens:", error);
     }
     return [];
@@ -145,7 +197,7 @@ const PortfolioSummarySection = () => {
               <CardHeader className="flex items-center space-x-3">
                 {token.icon && (
                   <Image
-                    src={sanitizeImageUrl(token.icon)}                    
+                    src={token.icon}                    
                     alt={`${token.name} logo`}
                     width={32}
                     height={32}

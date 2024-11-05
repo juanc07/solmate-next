@@ -120,7 +120,10 @@ const NftCollectionSection = () => {
           <DialogHeader>
             <DialogTitle>Wallet Not Connected</DialogTitle>
           </DialogHeader>
-          <p>Please connect your wallet to proceed.</p>
+          {/* Replace nested or unnecessary <p> with <div> or <span> */}
+          <div className="mt-2">
+            <span>Please connect your wallet to proceed.</span>
+          </div>
           <DialogTrigger asChild>
             <button className="mt-4 px-4 py-2 bg-blue-600 text-white rounded">
               Okay
@@ -128,6 +131,7 @@ const NftCollectionSection = () => {
           </DialogTrigger>
         </DialogContent>
       </Dialog>
+
 
       <div className="p-3 sm:p-4 md:p-6 lg:p-8 bg-white dark:bg-gray-900 text-black dark:text-white shadow-lg rounded-lg w-full max-w-full mx-auto">
         <h2 className="text-2xl font-bold mb-4 text-center">NFT Collection</h2>

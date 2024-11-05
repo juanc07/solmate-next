@@ -40,7 +40,7 @@ const NFTDetailsPopup: React.FC<NFTDetailsPopupProps> = ({
       </Button>
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent
-          className="max-w-full sm:max-w-md md:max-w-lg lg:max-w-xl w-full p-4 max-h-[80vh] overflow-y-auto scrollbar-hide"
+          className="max-w-full sm:max-w-md md:max-w-lg lg:max-w-xl w-full p-4 max-h-[80vh] overflow-y-auto bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md shadow-lg scrollbar-hide"
           aria-describedby={description ? "dialog-description" : undefined}
         >
           <DialogHeader>
@@ -51,7 +51,7 @@ const NFTDetailsPopup: React.FC<NFTDetailsPopupProps> = ({
           <div className="mt-2">
             <div className="flex justify-center items-center mb-4 relative w-full h-auto">
               {isLoading && (
-                <div className="absolute flex justify-center items-center w-full h-full bg-gray-200 rounded-md">
+                <div className="absolute flex justify-center items-center w-full h-full bg-gray-200 dark:bg-gray-700 rounded-md">
                   <Loader2 className="animate-spin text-violet-600 w-8 h-8" />
                 </div>
               )}
@@ -68,13 +68,13 @@ const NFTDetailsPopup: React.FC<NFTDetailsPopupProps> = ({
                 />
               </div>
             </div>
-            <p className="text-sm text-gray-500 mb-2">Collection: {collection}</p>
+            <p className="text-sm mb-2">Collection: {collection}</p>
             {description && (
               <DialogDescription id="dialog-description">
                 <p className="text-sm whitespace-pre-line">{description}</p>
               </DialogDescription>
             )}
-            <p className="text-sm text-gray-500 mt-2">ID: {id}</p>
+            <p className="text-sm mt-2">ID: {id}</p>
           </div>
         </DialogContent>
       </Dialog>

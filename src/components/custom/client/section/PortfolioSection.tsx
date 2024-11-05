@@ -13,12 +13,11 @@ interface Token {
   name: string;
   symbol: string;
   usdValue: number;
-  decimals:number;
+  decimals: number;
 }
 
 const DB_NAME = "TokenCache";
 const STORE_NAME = "tokens";
-const DEFAULT_TOKE = "/images/token/default-token.png";
 
 // Utility function to add delay
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -38,13 +37,14 @@ const normalizeAmount = (amount: number, decimals: number): number => {
   return amount / Math.pow(10, decimals);
 };
 
-// Get cached token data from IndexedDB
+// Get cached token data from IndexedDB (including image URL)
 const getCachedToken = async (mint: string): Promise<Token | null> => {
   const db = await initDB();
-  return await db.get(STORE_NAME, mint);
+  const cachedToken = await db.get(STORE_NAME, mint);
+  return cachedToken;
 };
 
-// Store token data in IndexedDB
+// Store token data in IndexedDB (including image URL)
 const cacheToken = async (token: Token): Promise<void> => {
   const db = await initDB();
   await db.put(STORE_NAME, token);
@@ -64,44 +64,20 @@ const fetchTokenDataWithCache = async (
     if (!response.ok) throw new Error("Failed to fetch token data");
 
     const tokenData = await response.json();
-    let imageURL;
 
-    try {
-      // Attempt to fetch the image
-      const imageResponse = await fetch(tokenData.logoURI, { signal });
-      if (!imageResponse.ok) throw new Error("Failed to fetch image");
+    // Directly use the image URL from the response
+    const token: Token = {
+      mint: tokenData.address,
+      balance: 0,
+      icon: tokenData.logoURI,
+      name: tokenData.name,
+      symbol: tokenData.symbol,
+      usdValue: 0,
+      decimals: tokenData.decimals,
+    };
 
-      const imageBlob = await imageResponse.blob();
-      imageURL = URL.createObjectURL(imageBlob);
-
-      // Cache the successful image and token data
-      const token: Token = {
-        mint: tokenData.address,
-        balance: 0,
-        icon: imageURL,
-        name: tokenData.name,
-        symbol: tokenData.symbol,
-        usdValue: 0,
-        decimals: tokenData.decimals
-      };
-      await cacheToken(token);
-      return token;
-
-    } catch (imageError) {
-      console.error(`Failed to fetch image for mint ${mint}:`, imageError);
-      // Use the default image but do not cache this instance
-      imageURL = DEFAULT_TOKE;
-
-      return {
-        mint: tokenData.address,
-        balance: 0,
-        icon: imageURL,
-        name: tokenData.name,
-        symbol: tokenData.symbol,
-        usdValue: 0,
-        decimals: tokenData.decimals
-      };
-    }
+    await cacheToken(token); // Cache the token data including the icon
+    return token;
   } catch (error) {
     if (error instanceof DOMException && error.name === "AbortError") {
       console.log(`Fetch aborted for mint: ${mint}`);
@@ -118,19 +94,17 @@ const fetchTokens = async (
   setProgress: (progress: number) => void
 ): Promise<Token[]> => {
   try {
-    // Fetch tokens directly from Helius
     const response = await fetch(`/api/solana-data?publicKey=${publicKey}`, { signal });
     if (!response.ok) throw new Error("Failed to fetch token accounts");
 
-    // Correctly extract `tokensFromAccountHelius` from the JSON response
-    const { tokensFromAccountHelius }: { tokensFromAccountHelius: ITokenAccount[] } = await response.json();    
-    const totalTokens = tokensFromAccountHelius.length;    
+    const { tokensFromAccountHelius }: { tokensFromAccountHelius: ITokenAccount[] } = await response.json();
+    const totalTokens = tokensFromAccountHelius.length;
     const tokens: Token[] = [];
 
     for (const [index, { mint, amount }] of tokensFromAccountHelius.entries()) {
       const tokenData = await fetchTokenDataWithCache(mint, signal);
-      if (tokenData) {        
-        const normalizedAmount = normalizeAmount(amount,tokenData.decimals); // Adjust `decimals` as needed        
+      if (tokenData) {
+        const normalizedAmount = normalizeAmount(amount, tokenData.decimals);
         const usdValue = await SolanaPriceHelper.convertTokenToUSDC(tokenData.symbol, normalizedAmount);
         tokens.push({ ...tokenData, balance: normalizedAmount, usdValue });
       }

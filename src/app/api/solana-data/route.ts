@@ -46,7 +46,7 @@ export async function GET(request: Request) {
     const solBalance = balance / 1e9; // Convert lamports to SOL
 
     // Fetch SPL Token accounts
-    const standardTokenAccounts = await connection.getParsedTokenAccountsByOwner(
+    /*const standardTokenAccounts = await connection.getParsedTokenAccountsByOwner(
       publicKey,
       { programId: new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA") }
     );
@@ -59,12 +59,10 @@ export async function GET(request: Request) {
       const balance = info.tokenAmount.uiAmount || 0;
       return { mint, balance };
     });
+    */
 
     // get owner fungitable token using helius api
-    const tokensFromAccountHelius: ITokenAccount[] = await getTokenAccounts(HELIUS_API_KEY_2, publicKeyParam, 1000);
-    //console.log("tokensFromAccountHelius: ", tokensFromAccountHelius);
-    console.log("tokensFromAccountHelius count: ", tokensFromAccountHelius.length);
-
+    const tokensFromAccountHelius: ITokenAccount[] = await getTokenAccounts(HELIUS_API_KEY_2, publicKeyParam, 1000);    
 
     let nfts: IProcessedNFT[] = [];
     if (fetchNFTsParam) {
@@ -105,7 +103,8 @@ export async function GET(request: Request) {
     const verifiedNfts = nfts.filter(nft => nft.isVerified && !nft.isScam);
 
     // Return SOL balance, tokens, and verified NFT data
-    return NextResponse.json({ solBalance, tokens, nfts: verifiedNfts,tokensFromAccountHelius });
+    //return NextResponse.json({ solBalance, tokens, nfts: verifiedNfts,tokensFromAccountHelius });
+    return NextResponse.json({ solBalance, nfts: verifiedNfts,tokensFromAccountHelius });
   } catch (error) {
     console.error("Error fetching data from Solana:", error);
     return NextResponse.json(

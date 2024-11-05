@@ -3,19 +3,9 @@ import { Connection, PublicKey } from "@solana/web3.js";
 import { setSolanaEnvironment, getSolanaEndpoint, SolanaEnvironment } from "@/lib/config";
 import { fetchAssetsByOwner, searchAssetsByOwner, Asset, Grouping } from "@/lib/fetchAssets";
 import knownScamAddresses from "@/lib/scamAddresses";
+import {IProcessedNFT} from "@/lib/interfaces/processNft";
 
-interface ProcessedNFT {
-  id: string;
-  name: string;
-  image: string;
-  description: string;
-  collection: string;
-  isVerified: boolean;
-  isScam: boolean; // New field for scam detection
-  solPrice?: number;
-}
-
-function isScamNFT(nft: ProcessedNFT, scamList: string[]): boolean {
+function isScamNFT(nft: IProcessedNFT, scamList: string[]): boolean {
   // Check if the collection is in the known scam list, if the image is missing, or if the name contains "airdrop" or "claim"
   return (
     scamList.includes(nft.collection) ||
@@ -68,7 +58,7 @@ export async function GET(request: Request) {
       return { mint, balance };
     });
 
-    let nfts: ProcessedNFT[] = [];
+    let nfts: IProcessedNFT[] = [];
     if (fetchNFTsParam) {
       try {
         const response: Asset[] = await searchAssetsByOwner(HELIUS_API_KEY_2, publicKeyParam, 1000);
@@ -78,7 +68,7 @@ export async function GET(request: Request) {
             const collection = item.grouping.find((group: Grouping) => group.group_key === 'collection')?.group_value || 'N/A';
             const isVerified = item.creators?.some(creator => creator.verified) || false;
 
-            const nft: ProcessedNFT = {
+            const nft: IProcessedNFT = {
               id: item.id,
               name: item.content?.metadata?.name || 'Unknown',
               image: item.content?.links?.image || '',

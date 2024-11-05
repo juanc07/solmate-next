@@ -18,8 +18,17 @@ const NFTCardUI: React.FC<NFTCardProps> = ({ id, name, image, collection, descri
   const [isLoading, setIsLoading] = React.useState(true);
   const defaultImage = "/images/nft/default-nft.webp"; // Path to default image
 
-  // Determine which image to use
-  const imageSrc = image && image.trim() ? image : defaultImage;
+  // Function to get the proxy URL
+  const getProxyUrl = (imageUrl: string) => {
+    try {
+      return `/api/proxy-image?url=${encodeURIComponent(imageUrl)}`;
+    } catch {
+      return defaultImage; // Fallback to default if encoding fails
+    }
+  };
+
+  // Determine which image to use with the proxy URL
+  const imageSrc = image && image.trim() ? getProxyUrl(image) : defaultImage;
   const altText = name ? name : "";
 
   return (
@@ -37,14 +46,11 @@ const NFTCardUI: React.FC<NFTCardProps> = ({ id, name, image, collection, descri
           fill
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           className={`object-cover transition-opacity duration-500 ${isLoading ? "opacity-0" : "opacity-100"}`}
-          onLoad={() => setIsLoading(false)}
-          unoptimized
+          onLoad={() => setIsLoading(false)}          
         />
       </div>
 
       <h3 className="mt-3 text-center font-medium text-lg sm:text-base md:text-lg lg:text-xl">{name}</h3>
-      {/*{collection && <p className="text-sm text-gray-500 text-center mt-1">{collection}</p>}*/}
-
       {/* Include the NFTDetailsPopup component */}
       <NFTDetailsPopup id={id} name={name} image={imageSrc} description={description || ""} collection={collection} />
     </div>

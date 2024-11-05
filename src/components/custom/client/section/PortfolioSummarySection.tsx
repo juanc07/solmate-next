@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useState } from "react";
 import {
   Card,
@@ -10,7 +12,7 @@ import { SolanaPriceHelper } from "@/lib/SolanaPriceHelper";
 import Image from "next/image";
 import { openDB, IDBPDatabase } from "idb";
 
-import { formatLargeNumber, sanitizeImageUrl } from "@/lib/helper";
+import { formatLargeNumber } from "@/lib/helper";
 
 interface Token {
   mint: string;
@@ -24,7 +26,7 @@ interface Token {
 
 const DB_NAME = "TokenSummaryCache";
 const STORE_NAME = "tokens";
-const DEFAULT_ICON = "/images/token/default-token.png";
+const defaultImage = "/images/token/default-token.png"; // Path to default image
 
 // Initialize IndexedDB
 const initDB = async (): Promise<IDBPDatabase> => {
@@ -43,7 +45,7 @@ const getCachedToken = async (mint: string): Promise<Token | null> => {
   return await db.get(STORE_NAME, mint);
 };
 
-// Store token data in IndexedDB
+// Store token data in IndexedDB (including image URL)
 const cacheToken = async (token: Token): Promise<void> => {
   const db = await initDB();
   await db.put(STORE_NAME, token);
@@ -58,49 +60,31 @@ const fetchTokenDataWithCache = async (
   signal: AbortSignal
 ): Promise<Token | null> => {
   const cachedToken = await getCachedToken(mint);
-  if (cachedToken) {
+
+  // Check if the cached token exists and if the icon is valid (not null or empty)
+  if (cachedToken && cachedToken.icon && cachedToken.icon.trim()) {    
     return cachedToken;
-  }
+  }  
 
   try {
     const response = await fetch(`/api/token/${mint}`, { signal });
     if (!response.ok) throw new Error("Failed to fetch token data");
 
     const tokenData = await response.json();
-    let imageURL;
 
-    try {
-      const imageResponse = await fetch(tokenData.logoURI, { signal });
-      if (!imageResponse.ok) throw new Error("Failed to fetch image");
-      const imageBlob = await imageResponse.blob();
-      imageURL = URL.createObjectURL(imageBlob);
+    // Create a new token object with the data fetched
+    const token: Token = {
+      mint: tokenData.address,
+      balance: 0,
+      icon: tokenData.logoURI,
+      name: tokenData.name,
+      symbol: tokenData.symbol,
+      usdValue: 0,
+      decimals: tokenData.decimals,
+    };
 
-      // Cache the token data with the fetched image
-      const token: Token = {
-        mint: tokenData.address,
-        balance: 0,
-        icon: imageURL,
-        name: tokenData.name,
-        symbol: tokenData.symbol,
-        usdValue: 0,
-        decimals: tokenData.decimals,
-      };
-
-      await cacheToken(token);
-      return token;
-    } catch (imageError) {
-      console.error(`Failed to fetch image for mint ${mint}:`, imageError);
-      // Use default image but do not cache it
-      return {
-        mint: tokenData.address,
-        balance: 0,
-        icon: DEFAULT_ICON,
-        name: tokenData.name,
-        symbol: tokenData.symbol,
-        usdValue: 0,
-        decimals: tokenData.decimals,
-      };
-    }
+    await cacheToken(token); // Cache the token data including the icon
+    return token;
   } catch (error) {
     if (error instanceof DOMException && error.name === "AbortError") {
       console.log(`Fetch aborted for mint: ${mint}`);
@@ -121,10 +105,6 @@ const fetchTokens = async (
     if (!response.ok) throw new Error("Failed to fetch token accounts");
 
     const { tokensFromAccountHelius } = await response.json();
-    if (!Array.isArray(tokensFromAccountHelius)) {
-      throw new Error("tokensFromAccountHelius is not an array");
-    }
-
     const totalTokens = tokensFromAccountHelius.length;
     const tokens: Token[] = [];
 
@@ -148,6 +128,15 @@ const fetchTokens = async (
       console.error("Failed to fetch tokens:", error);
     }
     return [];
+  }
+};
+
+// Function to get the proxy URL
+const getProxyUrl = (imageUrl: string) => {
+  try {
+    return `/api/proxy-image?url=${encodeURIComponent(imageUrl)}`;
+  } catch {
+    return defaultImage; // Fallback to default if encoding fails
   }
 };
 
@@ -207,13 +196,12 @@ const PortfolioSummarySection = () => {
               <CardHeader className="flex items-center space-x-3">
                 {token.icon && (
                   <Image
-                    src={token.icon}
+                    src={token.icon && token.icon.trim() ? getProxyUrl(token.icon) : defaultImage}
                     alt={`${token.name} logo`}
                     layout="responsive"
                     width={32}
                     height={32}
-                    className="rounded-full w-full max-w-[32px] h-auto sm:max-w-[48px]"
-                    unoptimized
+                    className="rounded-full w-full max-w-[32px] h-auto sm:max-w-[48px]"                    
                   />
                 )}
                 <div className="flex-1">

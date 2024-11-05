@@ -55,7 +55,9 @@ const fetchTokenDataWithCache = async (
   signal: AbortSignal
 ): Promise<Token | null> => {
   const cachedToken = await getCachedToken(mint);
-  if (cachedToken) {
+  
+  // Check if the cached token exists and if the icon is valid (not null or empty)
+  if (cachedToken && cachedToken.icon && cachedToken.icon.trim()) {
     return cachedToken;
   }
 

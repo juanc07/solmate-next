@@ -8,88 +8,6 @@ import { Loader2 } from "lucide-react"; // ShadCN Loading Spinner
 import { Button } from "@/components/ui/button"; // Import ShadCN Button
 import NFTCardUI from "../NFTCardUI";
 import { IProcessedNFT } from "@/lib/interfaces/processNft"; // Import the IProcessedNFT interface
-import { openDB, IDBPDatabase } from "idb"; // Import idb for IndexedDB interactions
-
-const DB_NAME = 'NFTImageCache';
-const IMAGE_STORE_NAME = 'images';
-const SKIPPED_STORE_NAME = 'skippedImages';
-const MAX_CACHE_ENTRIES = 100; // Set a limit for the number of cached images
-const MAX_IMAGE_SIZE_MB = 2; // Maximum image size in MB
-const BATCH_SIZE = 10; // Number of images processed per batch for caching
-const ENABLE_CACHING = false; // Toggle this to `false` to disable caching
-
-// Initialize IndexedDB
-const initDB = async (): Promise<IDBPDatabase> => {
-  return openDB(DB_NAME, 1, {
-    upgrade(db) {
-      if (!db.objectStoreNames.contains(IMAGE_STORE_NAME)) {
-        db.createObjectStore(IMAGE_STORE_NAME, { keyPath: 'id' });
-      }
-      if (!db.objectStoreNames.contains(SKIPPED_STORE_NAME)) {
-        db.createObjectStore(SKIPPED_STORE_NAME, { keyPath: 'id' });
-      }
-    },
-  });
-};
-
-// Helper function to get a cached image from IndexedDB
-const getCachedImage = async (id: string): Promise<Blob | null> => {
-  if (!ENABLE_CACHING) return null;
-  const db = await initDB();
-  const cachedData = await db.get(IMAGE_STORE_NAME, id);
-  return cachedData ? cachedData.imageBlob : null;
-};
-
-// Helper function to cache an image in IndexedDB
-const cacheImage = async (id: string, imageBlob: Blob): Promise<void> => {
-  if (!ENABLE_CACHING) return;
-  const db = await initDB();
-  const store = db.transaction(IMAGE_STORE_NAME, 'readwrite').objectStore(IMAGE_STORE_NAME);
-
-  const count = await store.count();
-  if (count >= MAX_CACHE_ENTRIES) {
-    const allKeys = await store.getAllKeys();
-    if (allKeys.length > 0) {
-      await store.delete(allKeys[0]); // Remove the oldest entry
-    }
-  }
-
-  await store.put({ id, imageBlob });
-};
-
-// Helper function to mark an image as skipped
-const markImageAsSkipped = async (id: string): Promise<void> => {
-  if (!ENABLE_CACHING) return;
-  const db = await initDB();
-  const store = db.transaction(SKIPPED_STORE_NAME, 'readwrite').objectStore(SKIPPED_STORE_NAME);
-  await store.put({ id });
-};
-
-// Helper function to check if an image is marked as skipped
-const isImageSkipped = async (id: string): Promise<boolean> => {
-  if (!ENABLE_CACHING) return false;
-  const db = await initDB();
-  const skippedData = await db.get(SKIPPED_STORE_NAME, id);
-  return !!skippedData;
-};
-
-// Function to fetch image as blob
-const fetchImageAsBlob = async (url: string): Promise<Blob | null> => {
-  try {
-    const response = await fetch(url);
-    const blob = await response.blob();
-
-    if (blob.size / (1024 * 1024) > MAX_IMAGE_SIZE_MB) {
-      console.warn(`Image size exceeds ${MAX_IMAGE_SIZE_MB} MB, marking as skipped`);
-      return null;
-    }
-
-    return blob;
-  } catch (error) {
-    console.error("Error fetching image:", error);
-    return null;
-  }
-};
 
 const NftCollectionSection = () => {
   const { publicKey, connected, wallet } = useWallet();
@@ -106,38 +24,6 @@ const NftCollectionSection = () => {
   const router = useRouter();
   const hasFetchedData = useRef(false);
 
-  const processBatchImages = async (nfts: IProcessedNFT[]) => {
-    for (let i = 0; i < nfts.length; i += BATCH_SIZE) {
-      const batch = nfts.slice(i, i + BATCH_SIZE);
-      await Promise.all(
-        batch.map(async (nft) => {
-          if (await isImageSkipped(nft.id)) {
-            console.log(`Skipping large image ${nft.id}`);
-            return nft;
-          }
-
-          const cachedImage = await getCachedImage(nft.id);
-          if (cachedImage) {
-            console.log("nft collection used cached blob image");
-            const imageUrl = URL.createObjectURL(cachedImage);
-            return { ...nft, image: imageUrl };
-          } else if (nft.image) {
-            const imageBlob = await fetchImageAsBlob(nft.image);
-            if (imageBlob) {
-              await cacheImage(nft.id, imageBlob);
-              console.log("nft collection cached new blob image");
-              const imageUrl = URL.createObjectURL(imageBlob);
-              return { ...nft, image: imageUrl };
-            } else {
-              await markImageAsSkipped(nft.id); // Mark the image as skipped
-            }
-          }
-          return nft;
-        })
-      );
-    }
-  };
-
   // Fetch NFT data from the proxy server
   const fetchNftData = useCallback(async () => {
     if (!connected || !publicKey || hasFetchedData.current) return;
@@ -149,18 +35,13 @@ const NftCollectionSection = () => {
       if (!response.ok) throw new Error("Failed to fetch NFT data");
       const { nfts } = await response.json();
 
-      const initialNfts = (nfts as IProcessedNFT[]).slice(0, itemsPerPage).map((nft) => ({
+      const initialNfts = (nfts as IProcessedNFT[]).map((nft) => ({
         ...nft,
-        image: nft.image,
+        image: nft.image, // Directly use the image URL
       }));
 
       setNfts(initialNfts);
       setFilteredNfts(initialNfts);
-
-      if (ENABLE_CACHING) {
-        processBatchImages((nfts as IProcessedNFT[]).slice(itemsPerPage));
-      }
-
       hasFetchedData.current = true;
     } catch (error) {
       console.error("Error fetching NFT data:", error);

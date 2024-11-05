@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect, useState } from "react";
 import {
   Card,
@@ -10,8 +8,9 @@ import {
 import { useWallet } from "@solana/wallet-adapter-react";
 import { SolanaPriceHelper } from "@/lib/SolanaPriceHelper";
 import Image from "next/image";
-import { sanitizeImageUrl } from "@/lib/helper";
 import { openDB, IDBPDatabase } from "idb";
+
+import { formatLargeNumber, sanitizeImageUrl } from "@/lib/helper";
 
 interface Token {
   mint: string;
@@ -20,6 +19,7 @@ interface Token {
   name: string;
   symbol: string;
   usdValue: number;
+  decimals: number;
 }
 
 const DB_NAME = "TokenSummaryCache";
@@ -47,6 +47,10 @@ const getCachedToken = async (mint: string): Promise<Token | null> => {
 const cacheToken = async (token: Token): Promise<void> => {
   const db = await initDB();
   await db.put(STORE_NAME, token);
+};
+
+const normalizeAmount = (amount: number, decimals: number): number => {
+  return amount / Math.pow(10, decimals);
 };
 
 const fetchTokenDataWithCache = async (
@@ -79,11 +83,11 @@ const fetchTokenDataWithCache = async (
         name: tokenData.name,
         symbol: tokenData.symbol,
         usdValue: 0,
+        decimals: tokenData.decimals,
       };
 
       await cacheToken(token);
       return token;
-
     } catch (imageError) {
       console.error(`Failed to fetch image for mint ${mint}:`, imageError);
       // Use default image but do not cache it
@@ -94,6 +98,7 @@ const fetchTokenDataWithCache = async (
         name: tokenData.name,
         symbol: tokenData.symbol,
         usdValue: 0,
+        decimals: tokenData.decimals,
       };
     }
   } catch (error) {
@@ -115,17 +120,20 @@ const fetchTokens = async (
     const response = await fetch(`/api/solana-data?publicKey=${publicKey}`, { signal });
     if (!response.ok) throw new Error("Failed to fetch token accounts");
 
-    const { tokens: tokenAccounts } = await response.json();
-    const totalTokens = tokenAccounts.length;
+    const { tokensFromAccountHelius } = await response.json();
+    if (!Array.isArray(tokensFromAccountHelius)) {
+      throw new Error("tokensFromAccountHelius is not an array");
+    }
+
+    const totalTokens = tokensFromAccountHelius.length;
     const tokens: Token[] = [];
 
-    for (const [index, { mint, balance }] of tokenAccounts.entries()) {
-      if (balance < 0.1) continue;
-
+    for (const [index, { mint, amount }] of tokensFromAccountHelius.entries()) {
       const tokenData = await fetchTokenDataWithCache(mint, signal);
       if (tokenData) {
-        const usdValue = await SolanaPriceHelper.convertTokenToUSDC(tokenData.symbol, balance);
-        tokens.push({ ...tokenData, balance, usdValue });
+        const normalizedAmount = normalizeAmount(amount, tokenData.decimals);
+        const usdValue = await SolanaPriceHelper.convertTokenToUSDC(tokenData.symbol, normalizedAmount);
+        tokens.push({ ...tokenData, balance: normalizedAmount, usdValue });
       }
 
       setProgress(Math.round(((index + 1) / totalTokens) * 100));
@@ -134,7 +142,9 @@ const fetchTokens = async (
 
     return tokens.sort((a, b) => b.usdValue - a.usdValue);
   } catch (error) {
-    if (error instanceof DOMException && error.name !== "AbortError") {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      console.log("Token fetching aborted");
+    } else {
       console.error("Failed to fetch tokens:", error);
     }
     return [];
@@ -160,7 +170,7 @@ const PortfolioSummarySection = () => {
       fetchTokens(publicKey.toString(), signal, setProgress)
         .then((fetchedTokens) => {
           if (!signal.aborted) {
-            setTokens(fetchedTokens.slice(0, 10)); // Take top 10 tokens by USD value
+            setTokens(fetchedTokens.slice(0, 10));
           }
         })
         .finally(() => {
@@ -197,11 +207,12 @@ const PortfolioSummarySection = () => {
               <CardHeader className="flex items-center space-x-3">
                 {token.icon && (
                   <Image
-                    src={token.icon}                    
+                    src={token.icon}
                     alt={`${token.name} logo`}
+                    layout="responsive"
                     width={32}
                     height={32}
-                    className="rounded-full"
+                    className="rounded-full w-full max-w-[32px] h-auto sm:max-w-[48px]"
                     unoptimized
                   />
                 )}
@@ -214,7 +225,7 @@ const PortfolioSummarySection = () => {
               <CardContent>
                 <div className="flex justify-between items-center text-gray-800 dark:text-gray-300">
                   <span className="font-medium">
-                    {token.balance.toFixed(2)} {token.symbol}
+                    {formatLargeNumber(token.balance)} {token.symbol}
                   </span>
                   <span className="font-semibold">${token.usdValue.toFixed(2)}</span>
                 </div>

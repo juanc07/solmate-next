@@ -107,7 +107,7 @@ const fetchTokens = async (
       const tokenData = await fetchTokenDataWithCache(mint, signal);
       if (tokenData) {
         const normalizedAmount = normalizeAmount(amount, tokenData.decimals);
-        const usdValue = await SolanaPriceHelper.convertTokenToUSDC(tokenData.symbol, normalizedAmount);
+        const usdValue = await SolanaPriceHelper.convertTokenToUSDC(tokenData.symbol, mint,normalizedAmount);
         tokens.push({ ...tokenData, balance: normalizedAmount, usdValue });
       }
 

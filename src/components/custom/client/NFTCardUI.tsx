@@ -19,16 +19,16 @@ const NFTCardUI: React.FC<NFTCardProps> = ({ id, name, image, collection, descri
   const defaultImage = "/images/nft/default-nft.webp"; // Path to default image
 
   // Function to get the proxy URL
-  const getProxyUrl = (imageUrl: string) => {
+  const getProxyUrl = (imageUrl: string,type:string) => {
     try {
-      return `/api/proxy-image?url=${encodeURIComponent(imageUrl)}`;
+      return `/api/proxy-image?url=${encodeURIComponent(imageUrl)}&type=${encodeURIComponent(type)}`;
     } catch {
       return defaultImage; // Fallback to default if encoding fails
     }
   };
 
   // Determine which image to use with the proxy URL
-  const imageSrc = image && image.trim() ? getProxyUrl(image) : defaultImage;
+  const imageSrc = image && image.trim() ? getProxyUrl(image,"nft") : defaultImage;
   const altText = name ? name : "";
 
   return (

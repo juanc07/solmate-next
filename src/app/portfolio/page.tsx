@@ -29,7 +29,7 @@ const PortfolioPage = () => {
       if (!response.ok) throw new Error("Failed to fetch SOL balance");
 
       const { solBalance } = await response.json();
-      const price = await SolanaPriceHelper.getTokenPriceInUSD("SOL");
+      const price = await SolanaPriceHelper.getTokenPriceInUSD("SOL","sol-So11111111111111111111111111111111111111112");
 
       const usdValue = solBalance * price;
       setSolBalance(solBalance);

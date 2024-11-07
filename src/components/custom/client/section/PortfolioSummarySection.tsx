@@ -112,7 +112,7 @@ const fetchTokens = async (
       const tokenData = await fetchTokenDataWithCache(mint, signal);
       if (tokenData) {
         const normalizedAmount = normalizeAmount(amount, tokenData.decimals);
-        const usdValue = await SolanaPriceHelper.convertTokenToUSDC(tokenData.symbol, normalizedAmount);
+        const usdValue = await SolanaPriceHelper.convertTokenToUSDC(tokenData.symbol,mint, normalizedAmount);
         tokens.push({ ...tokenData, balance: normalizedAmount, usdValue });
       }
 
@@ -132,9 +132,9 @@ const fetchTokens = async (
 };
 
 // Function to get the proxy URL
-const getProxyUrl = (imageUrl: string) => {
+const getProxyUrl = (imageUrl: string,type:string) => {
   try {
-    return `/api/proxy-image?url=${encodeURIComponent(imageUrl)}`;
+    return `/api/proxy-image?url=${encodeURIComponent(imageUrl)}&type=${encodeURIComponent(type)}`;
   } catch {
     return defaultImage; // Fallback to default if encoding fails
   }
@@ -196,7 +196,7 @@ const PortfolioSummarySection = () => {
               <CardHeader className="flex items-center space-x-3">
                 {token.icon && (
                   <Image
-                    src={token.icon && token.icon.trim() ? getProxyUrl(token.icon) : defaultImage}
+                    src={token.icon && token.icon.trim() ? getProxyUrl(token.icon,"token") : defaultImage}
                     alt={`${token.name} logo`}
                     layout="responsive"
                     width={32}

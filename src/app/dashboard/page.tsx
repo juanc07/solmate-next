@@ -9,7 +9,7 @@ import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"; // 
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 
-const WSOL_ID = "So11111111111111111111111111111111111111112"; // Wrapped SOL ID
+const WSOL_ID = "So11111111111111111111111111111111111111112";
 
 const DashboardPage = () => {
   //const {network} = useWalletContext();

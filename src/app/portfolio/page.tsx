@@ -9,6 +9,8 @@ import { SolanaPriceHelper } from "@/lib/SolanaPriceHelper";
 import { obfuscatePublicKey } from "@/lib/helper";
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
+const WSOL_ID = "So11111111111111111111111111111111111111112";
+
 const PortfolioPage = () => {
   const { publicKey, connected, wallet } = useWallet();
   const [solBalance, setSolBalance] = useState<number | null>(null);
@@ -29,7 +31,7 @@ const PortfolioPage = () => {
       if (!response.ok) throw new Error("Failed to fetch SOL balance");
 
       const { solBalance } = await response.json();
-      const price = await SolanaPriceHelper.getTokenPriceInUSD("SOL","sol-So11111111111111111111111111111111111111112");
+      const price = await SolanaPriceHelper.getTokenPriceInUSD("SOL",WSOL_ID);
 
       const usdValue = solBalance * price;
       setSolBalance(solBalance);

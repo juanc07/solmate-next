@@ -9,6 +9,7 @@ import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"; // 
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 
+const WSOL_ID = "So11111111111111111111111111111111111111112"; // Wrapped SOL ID
 
 const DashboardPage = () => {
   //const {network} = useWalletContext();
@@ -34,7 +35,7 @@ const DashboardPage = () => {
       if (!response.ok) throw new Error("Failed to fetch SOL balance");
       const { solBalance } = await response.json();
 
-      const price = await SolanaPriceHelper.getTokenPriceInUSD("SOL");
+      const price = await SolanaPriceHelper.getTokenPriceInUSD("SOL",WSOL_ID);
 
       const usdValue = solBalance * price;
       setSolBalance(solBalance);

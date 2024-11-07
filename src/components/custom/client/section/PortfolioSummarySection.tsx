@@ -1,17 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-} from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { SolanaPriceHelper } from "@/lib/SolanaPriceHelper";
 import Image from "next/image";
 import { openDB, IDBPDatabase } from "idb";
-
 import { formatLargeNumber } from "@/lib/helper";
 
 interface Token {
@@ -61,7 +55,6 @@ const fetchTokenDataWithCache = async (
 ): Promise<Token | null> => {
   const cachedToken = await getCachedToken(mint);
 
-  // Check if the cached token exists and if the icon is valid (not null or empty)
   if (cachedToken && cachedToken.icon && cachedToken.icon.trim()) {    
     return cachedToken;
   }  
@@ -72,7 +65,6 @@ const fetchTokenDataWithCache = async (
 
     const tokenData = await response.json();
 
-    // Create a new token object with the data fetched
     const token: Token = {
       mint: tokenData.address,
       balance: 0,
@@ -83,7 +75,7 @@ const fetchTokenDataWithCache = async (
       decimals: tokenData.decimals,
     };
 
-    await cacheToken(token); // Cache the token data including the icon
+    await cacheToken(token);
     return token;
   } catch (error) {
     if (error instanceof DOMException && error.name === "AbortError") {
@@ -112,7 +104,7 @@ const fetchTokens = async (
       const tokenData = await fetchTokenDataWithCache(mint, signal);
       if (tokenData) {
         const normalizedAmount = normalizeAmount(amount, tokenData.decimals);
-        const usdValue = await SolanaPriceHelper.convertTokenToUSDC(tokenData.symbol,mint, normalizedAmount);
+        const usdValue = await SolanaPriceHelper.convertTokenToUSDC(tokenData.symbol, mint, normalizedAmount);
         tokens.push({ ...tokenData, balance: normalizedAmount, usdValue });
       }
 
@@ -131,12 +123,14 @@ const fetchTokens = async (
   }
 };
 
-// Function to get the proxy URL
-const getProxyUrl = (imageUrl: string,type:string) => {
+const getProxyUrl = async (imageUrl: string, type: string): Promise<string> => {
   try {
-    return `/api/proxy-image?url=${encodeURIComponent(imageUrl)}&type=${encodeURIComponent(type)}`;
+    const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(imageUrl)}&type=${encodeURIComponent(type)}`;
+    const response = await fetch(proxyUrl, { method: 'HEAD' });
+    const isValidImage = response.ok && response.headers.get("Content-Type")?.startsWith("image/");
+    return isValidImage ? proxyUrl : defaultImage;
   } catch {
-    return defaultImage; // Fallback to default if encoding fails
+    return defaultImage;
   }
 };
 
@@ -156,15 +150,21 @@ const PortfolioSummarySection = () => {
       setLoading(true);
       setProgress(0);
 
-      fetchTokens(publicKey.toString(), signal, setProgress)
-        .then((fetchedTokens) => {
-          if (!signal.aborted) {
-            setTokens(fetchedTokens.slice(0, 10));
-          }
-        })
-        .finally(() => {
-          if (!signal.aborted) setLoading(false);
-        });
+      const fetchedTokens = await fetchTokens(publicKey.toString(), signal, setProgress);
+
+      // Fetch image URLs for tokens asynchronously
+      const tokensWithIcons = await Promise.all(
+        fetchedTokens.slice(0, 10).map(async (token) => ({
+          ...token,
+          icon: await getProxyUrl(token.icon, "token")
+        }))
+      );
+
+      if (!signal.aborted) {
+        setTokens(tokensWithIcons);
+      }
+
+      if (!signal.aborted) setLoading(false);
     };
 
     fetchTopTokens();
@@ -194,16 +194,14 @@ const PortfolioSummarySection = () => {
               className="hover:scale-105 transition-transform border border-violet-500 bg-white dark:bg-gray-800"
             >
               <CardHeader className="flex items-center space-x-3">
-                {token.icon && (
-                  <Image
-                    src={token.icon && token.icon.trim() ? getProxyUrl(token.icon,"token") : defaultImage}
-                    alt={`${token.name} logo`}
-                    layout="responsive"
-                    width={32}
-                    height={32}
-                    className="rounded-full w-full max-w-[32px] h-auto sm:max-w-[48px]"                    
-                  />
-                )}
+                <Image
+                  src={token.icon || defaultImage}
+                  alt={`${token.name} logo`}
+                  layout="responsive"
+                  width={32}
+                  height={32}
+                  className="rounded-full w-full max-w-[32px] h-auto sm:max-w-[48px]"                    
+                />
                 <div className="flex-1">
                   <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white">
                     {token.name} ({token.symbol})

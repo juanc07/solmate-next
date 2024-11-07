@@ -1,7 +1,8 @@
 "use client";
+
 import React, { useState, useEffect } from 'react';
 import { useWallet } from "@solana/wallet-adapter-react";
-import { WalletMultiButton } from "@solana/wallet-adapter-react-ui"; // Button for connecting wallet
+import { WalletConnectOnlyButton } from "./WalletConnectOnlyButton"; // Import your custom connect button
 
 interface Token {
   symbol: string;
@@ -18,12 +19,11 @@ const SwapToken: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
-    // Fetch available tokens from the Jupiter API
     const fetchTokens = async () => {
       try {
         const response = await fetch('https://price.jup.ag/v4/tokens');
         const data = await response.json();
-        
+
         if (Array.isArray(data)) {
           setTokens(data);
         } else {
@@ -136,8 +136,11 @@ const SwapToken: React.FC = () => {
             {loading ? "Swapping..." : "Swap"}
           </button>
         ) : (
-          <WalletMultiButton className="w-full py-2 px-4 bg-violet-600 dark:bg-violet-500 text-white font-semibold rounded hover:bg-violet-700 dark:hover:bg-violet-600 transition-colors duration-200" />
+          <div className="w-full flex">
+            <WalletConnectOnlyButton />
+          </div>
         )}
+
       </div>
     </div>
   );

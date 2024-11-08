@@ -1,23 +1,24 @@
 "use client";
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useWallet } from "@solana/wallet-adapter-react";
 import { WalletConnectOnlyButton } from "./WalletConnectOnlyButton";
 import Spinner from './Spinner';
+import TokenSelection from './TokenSelection';
 
 interface Token {
   created_at?: string;
-  symbol?: string;
-  name?: string;
-  address?: string;
-  logoURI?: string;
-  decimals?: number;
+  symbol: string;
+  name: string;
+  address: string;
+  logoURI: string;
+  decimals: number;
   daily_volume?: number;
   freeze_authority?: string;
   permanent_delegate?: string;
   extensions?: {
     isVerified?: boolean;
   };
+  price: number;
 }
 
 const SwapToken: React.FC = () => {
@@ -46,7 +47,10 @@ const SwapToken: React.FC = () => {
         
         if (Array.isArray(data)) {
           const validTokens = data.filter((token: Token) => token.address && token.symbol);
-          const limitedTokens = validTokens.slice(0, 100);
+          const limitedTokens = validTokens.slice(0, 100).map(token => ({
+            ...token,
+            price: Math.random() * 10 // Placeholder for actual price data
+          }));
           setTokens(limitedTokens);
           setFilteredTokens(limitedTokens);
         }
@@ -194,7 +198,7 @@ const SwapToken: React.FC = () => {
       {loading && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-gray-800 rounded-lg p-6 flex items-center space-x-4">
-            <Spinner/>
+            <Spinner />
             <span className="text-lg font-semibold text-gray-700 dark:text-gray-300">Loading Token...</span>
           </div>
         </div>
@@ -204,7 +208,6 @@ const SwapToken: React.FC = () => {
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 overflow-hidden">
           <div ref={modalRef} className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4">
-            {/* Search Input */}
             <input
               type="text"
               placeholder="Search token"
@@ -212,25 +215,29 @@ const SwapToken: React.FC = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full p-2 mb-4 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-300"
             />
-            {/* Token List */}
             <div className="overflow-y-auto max-h-60">
               <ul className="space-y-2">
                 {filteredTokens.map((token) => (
-                  <li
+                  <TokenSelection
                     key={token.address}
+                    name={token.name}
+                    symbol={token.symbol}
+                    logoURI={token.logoURI}
+                    address={token.address}
+                    price={token.price}
+                    amount={parseFloat(inputAmount) || 0}
+                    isVerified={token.extensions?.isVerified}
+                    freeze_authority={token.freeze_authority}
+                    permanent_delegate={token.permanent_delegate}
                     onClick={() => {
                       if (showModal === 'input') setInputToken(token);
                       else setOutputToken(token);
                       closeModal();
                     }}
-                    className="p-2 rounded cursor-pointer hover:bg-gray-300 dark:hover:bg-gray-600 text-black dark:text-white"
-                  >
-                    <span>{token.name} ({token.symbol})</span>
-                  </li>
+                  />
                 ))}
               </ul>
             </div>
-            {/* Close Button */}
             <button
               onClick={closeModal}
               className="mt-4 w-full py-2 px-4 bg-red-600 text-white rounded"

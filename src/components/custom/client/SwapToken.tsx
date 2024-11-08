@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useWallet } from "@solana/wallet-adapter-react";
 import { WalletConnectOnlyButton } from "./WalletConnectOnlyButton";
+import Spinner from './Spinner';
 
 interface Token {
   created_at?: string;
@@ -36,6 +37,7 @@ const SwapToken: React.FC = () => {
   useEffect(() => {
     if (!connected) return;
 
+    setLoading(true);
     const fetchTokens = async () => {
       try {
         const response = await fetch('https://api.jup.ag/tokens/v1', { cache: "no-store" });
@@ -52,6 +54,8 @@ const SwapToken: React.FC = () => {
         console.error("Failed to fetch tokens:", error);
         setTokens([]);
         setFilteredTokens([]);
+      } finally {
+        setLoading(false);
       }
     };
     fetchTokens();
@@ -100,12 +104,12 @@ const SwapToken: React.FC = () => {
   const openModal = (type: 'input' | 'output') => {
     setShowModal(type);
     setSearchTerm('');
-    document.body.style.overflow = 'hidden'; // Disable background scrolling
+    document.body.style.overflow = 'hidden';
   };
 
   const closeModal = () => {
     setShowModal(null);
-    document.body.style.overflow = 'auto'; // Enable background scrolling
+    document.body.style.overflow = 'auto';
   };
 
   useEffect(() => {
@@ -125,18 +129,18 @@ const SwapToken: React.FC = () => {
   }, [showModal]);
 
   return (
-    <div className="flex flex-col items-center min-h-screen bg-white dark:bg-black transition-colors duration-300 px-4 py-8 md:py-12">
+    <div className="flex flex-col items-center min-h-screen bg-white dark:bg-black transition-colors duration-300 px-4 py-8 md:py-12 relative">
       <h1 className="text-3xl sm:text-4xl font-bold text-violet-600 dark:text-violet-400 mb-4 md:mb-6">
         Swap Tokens
       </h1>
 
-      <div className="w-full max-w-lg p-6 bg-gray-100 dark:bg-gray-800 rounded-lg shadow-md">
-        
+      <div className="w-full max-w-lg p-6 bg-gray-100 dark:bg-gray-800 rounded-lg shadow-md relative z-10">
         {/* Input Token Selection */}
         <label className="block text-gray-700 dark:text-gray-300 font-semibold mb-2">From</label>
         <button
           onClick={() => openModal('input')}
-          className="w-full p-2 mb-4 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-300 text-left"
+          disabled={!connected || loading}
+          className="w-full p-2 mb-4 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-300 text-left disabled:opacity-50"
         >
           {inputToken ? `${inputToken.name} (${inputToken.symbol})` : "Select token"}
         </button>
@@ -148,13 +152,15 @@ const SwapToken: React.FC = () => {
           value={inputAmount}
           onChange={(e) => setInputAmount(e.target.value)}
           className="w-full p-2 mb-4 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-300"
+          disabled={!connected || loading}
         />
 
         {/* Output Token Selection */}
         <label className="block text-gray-700 dark:text-gray-300 font-semibold mb-2">To</label>
         <button
           onClick={() => openModal('output')}
-          className="w-full p-2 mb-4 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-300 text-left"
+          disabled={!connected || loading}
+          className="w-full p-2 mb-4 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-300 text-left disabled:opacity-50"
         >
           {outputToken ? `${outputToken.name} (${outputToken.symbol})` : "Select token"}
         </button>
@@ -173,9 +179,9 @@ const SwapToken: React.FC = () => {
           <button
             onClick={handleSwap}
             disabled={loading || !inputToken || !outputToken || !inputAmount}
-            className="w-full py-2 px-4 bg-violet-600 dark:bg-violet-500 text-white font-semibold rounded hover:bg-violet-700 dark:hover:bg-violet-600 transition-colors duration-200"
+            className="w-full py-2 px-4 bg-violet-600 dark:bg-violet-500 text-white font-semibold rounded hover:bg-violet-700 dark:hover:bg-violet-600 transition-colors duration-200 disabled:opacity-50"
           >
-            {loading ? "Swapping..." : "Swap"}
+            Swap
           </button>
         ) : (
           <div className="w-full flex">
@@ -183,6 +189,16 @@ const SwapToken: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Loading Overlay */}
+      {loading && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 flex items-center space-x-4">
+            <Spinner/>
+            <span className="text-lg font-semibold text-gray-700 dark:text-gray-300">Loading Token...</span>
+          </div>
+        </div>
+      )}
 
       {/* Modal for Token Selection */}
       {showModal && (

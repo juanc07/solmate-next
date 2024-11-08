@@ -136,7 +136,7 @@ const SwapToken: React.FC = () => {
 
       <div className="w-full max-w-lg p-6 bg-gray-100 dark:bg-gray-800 rounded-lg shadow-md relative z-10">
         {/* Input Token Selection */}
-        <label className="block text-gray-700 dark:text-gray-300 font-semibold mb-2">From</label>
+        <label className="block text-gray-700 dark:text-gray-300 font-semibold mb-2">You're Selling</label>
         <button
           onClick={() => openModal('input')}
           disabled={!connected || loading}
@@ -156,7 +156,7 @@ const SwapToken: React.FC = () => {
         />
 
         {/* Output Token Selection */}
-        <label className="block text-gray-700 dark:text-gray-300 font-semibold mb-2">To</label>
+        <label className="block text-gray-700 dark:text-gray-300 font-semibold mb-2">You're Buying</label>
         <button
           onClick={() => openModal('output')}
           disabled={!connected || loading}

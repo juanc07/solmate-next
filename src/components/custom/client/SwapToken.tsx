@@ -40,12 +40,12 @@ const SwapToken: React.FC = () => {
         const response = await fetch('https://api.jup.ag/tokens/v1', { cache: "no-store" });
         if (!response.ok) throw new Error("Failed to fetch tokens");
         const data = await response.json();
-        console.log("data: ", data);
-
+        
         if (Array.isArray(data)) {
           const validTokens = data.filter((token: Token) => token.address && token.symbol);
-          setTokens(validTokens);
-          setFilteredTokens(validTokens);  // Set initial filtered tokens to full list
+          const limitedTokens = validTokens.slice(0, 100); // Limit to first 100 tokens
+          setTokens(limitedTokens);
+          setFilteredTokens(limitedTokens);
         }
       } catch (error) {
         console.error("Failed to fetch tokens:", error);

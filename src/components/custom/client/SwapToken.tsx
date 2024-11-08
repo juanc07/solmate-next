@@ -29,7 +29,7 @@ const SwapToken: React.FC = () => {
   const [filteredTokens, setFilteredTokens] = useState<Token[]>([]);
   const [showModal, setShowModal] = useState<'input' | 'output' | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
-  const [searchTerm, setSearchTerm] = useState<string>(''); // New state for search term
+  const [searchTerm, setSearchTerm] = useState<string>('');
 
   const modalRef = useRef<HTMLDivElement>(null);
 
@@ -44,9 +44,9 @@ const SwapToken: React.FC = () => {
         
         if (Array.isArray(data)) {
           const validTokens = data.filter((token: Token) => token.address && token.symbol);
-          const limitedTokens = validTokens.slice(0, 100); // Limit to first 100 tokens
+          const limitedTokens = validTokens.slice(0, 100);
           setTokens(limitedTokens);
-          setFilteredTokens(limitedTokens); // Set initial filtered tokens
+          setFilteredTokens(limitedTokens);
         }
       } catch (error) {
         console.error("Failed to fetch tokens:", error);
@@ -57,7 +57,6 @@ const SwapToken: React.FC = () => {
     fetchTokens();
   }, [connected]);
 
-  // Filter tokens when search term changes
   useEffect(() => {
     if (searchTerm === '') {
       setFilteredTokens(tokens);
@@ -100,12 +99,15 @@ const SwapToken: React.FC = () => {
 
   const openModal = (type: 'input' | 'output') => {
     setShowModal(type);
-    setSearchTerm(''); // Clear search on modal open
+    setSearchTerm('');
+    document.body.style.overflow = 'hidden'; // Disable background scrolling
   };
 
-  const closeModal = () => setShowModal(null);
+  const closeModal = () => {
+    setShowModal(null);
+    document.body.style.overflow = 'auto'; // Enable background scrolling
+  };
 
-  // Close modal on click outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
@@ -184,7 +186,7 @@ const SwapToken: React.FC = () => {
 
       {/* Modal for Token Selection */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 overflow-hidden">
           <div ref={modalRef} className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4">
             {/* Search Input */}
             <input
@@ -205,7 +207,7 @@ const SwapToken: React.FC = () => {
                       else setOutputToken(token);
                       closeModal();
                     }}
-                    className="p-2 rounded cursor-pointer hover:bg-gray-300 dark:hover:bg-gray-600"
+                    className="p-2 rounded cursor-pointer hover:bg-gray-300 dark:hover:bg-gray-600 text-black dark:text-white"
                   >
                     <span>{token.name} ({token.symbol})</span>
                   </li>

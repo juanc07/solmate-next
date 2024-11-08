@@ -1,25 +1,23 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useWallet } from "@solana/wallet-adapter-react";
 import { WalletConnectOnlyButton } from "./WalletConnectOnlyButton";
 
 interface Token {
-  created_at?:string;
+  created_at?: string;
   symbol?: string;
   name?: string;
   address?: string;
-  logoURI?:string;
-  decimals?:number;
-  daily_volume?:number;
-  freeze_authority?:string;
-  permanent_delegate?:string;
+  logoURI?: string;
+  decimals?: number;
+  daily_volume?: number;
+  freeze_authority?: string;
+  permanent_delegate?: string;
   extensions?: {
     isVerified?: boolean;
   };
 }
-
-
 
 const SwapToken: React.FC = () => {
   const { publicKey, connected } = useWallet();
@@ -29,32 +27,25 @@ const SwapToken: React.FC = () => {
   const [outputAmount, setOutputAmount] = useState<string>('');
   const [tokens, setTokens] = useState<Token[]>([]);
   const [filteredTokens, setFilteredTokens] = useState<Token[]>([]);
-  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [showModal, setShowModal] = useState<'input' | 'output' | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
 
+  const modalRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
-    if (!connected) return; // Only fetch tokens if wallet is connected
+    if (!connected) return;
 
     const fetchTokens = async () => {
-      console.log("Wallet connected. Fetching tokens...");
       try {
         const response = await fetch('https://api.jup.ag/tokens/v1', { cache: "no-store" });
-        
-        if (!response.ok) {
-          throw new Error("Failed to fetch tokens");
-        }
+        if (!response.ok) throw new Error("Failed to fetch tokens");
         const data = await response.json();
-        console.log("Fetched token data:", data); // Log the raw token data
+        console.log("data: ", data);
 
         if (Array.isArray(data)) {
           const validTokens = data.filter((token: Token) => token.address && token.symbol);
           setTokens(validTokens);
-          setFilteredTokens(validTokens); // Set filteredTokens initially
-          console.log("Tokens set:", validTokens); // Log valid tokens
-        } else {
-          console.error("Unexpected token data format:", data);
-          setTokens([]);
-          setFilteredTokens([]);
+          setFilteredTokens(validTokens);  // Set initial filtered tokens to full list
         }
       } catch (error) {
         console.error("Failed to fetch tokens:", error);
@@ -64,13 +55,6 @@ const SwapToken: React.FC = () => {
     };
     fetchTokens();
   }, [connected]);
-
-  // Temporary test: Directly set filteredTokens to tokens without filtering
-  useEffect(() => {
-    console.log("Applying filter...");
-    console.log("Original tokens:", tokens); // Log tokens to confirm data structure
-    setFilteredTokens(tokens); // Temporarily set filteredTokens to tokens directly
-  }, [tokens]);
 
   const handleSwap = async () => {
     if (!inputToken || !outputToken || !publicKey) return;
@@ -100,6 +84,29 @@ const SwapToken: React.FC = () => {
     }
   };
 
+  const openModal = (type: 'input' | 'output') => {
+    setShowModal(type);
+  };
+
+  const closeModal = () => setShowModal(null);
+
+  // Close modal on click outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
+        closeModal();
+      }
+    };
+
+    if (showModal) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showModal]);
+
   return (
     <div className="flex flex-col items-center min-h-screen bg-white dark:bg-black transition-colors duration-300 px-4 py-8 md:py-12">
       <h1 className="text-3xl sm:text-4xl font-bold text-violet-600 dark:text-violet-400 mb-4 md:mb-6">
@@ -108,30 +115,14 @@ const SwapToken: React.FC = () => {
 
       <div className="w-full max-w-lg p-6 bg-gray-100 dark:bg-gray-800 rounded-lg shadow-md">
         
-        {/* Search Field */}
-        <label className="block text-gray-700 dark:text-gray-300 font-semibold mb-2">Search Token</label>
-        <input
-          type="text"
-          placeholder="Search by name or symbol"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full p-2 mb-4 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-300"
-        />
-
         {/* Input Token Selection */}
         <label className="block text-gray-700 dark:text-gray-300 font-semibold mb-2">From</label>
-        <select
-          value={inputToken?.address || ''}
-          onChange={(e) => setInputToken(filteredTokens.find(t => t.address === e.target.value) || null)}
-          className="w-full p-2 mb-4 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-300"
+        <button
+          onClick={() => openModal('input')}
+          className="w-full p-2 mb-4 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-300 text-left"
         >
-          <option value="">Select token</option>
-          {filteredTokens.slice(0, 100).map(token => (
-            <option key={`${token.symbol}-${token.address}`} value={token.address}>
-              {token.name} ({token.symbol})
-            </option>
-          ))}
-        </select>
+          {inputToken ? `${inputToken.name} (${inputToken.symbol})` : "Select token"}
+        </button>
 
         {/* Input Amount */}
         <input
@@ -144,18 +135,12 @@ const SwapToken: React.FC = () => {
 
         {/* Output Token Selection */}
         <label className="block text-gray-700 dark:text-gray-300 font-semibold mb-2">To</label>
-        <select
-          value={outputToken?.address || ''}
-          onChange={(e) => setOutputToken(filteredTokens.find(t => t.address === e.target.value) || null)}
-          className="w-full p-2 mb-4 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-300"
+        <button
+          onClick={() => openModal('output')}
+          className="w-full p-2 mb-4 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-300 text-left"
         >
-          <option value="">Select token</option>
-          {filteredTokens.slice(0, 100).map(token => (
-            <option key={`${token.symbol}-${token.address}`} value={token.address}>
-              {token.name} ({token.symbol})
-            </option>
-          ))}
-        </select>
+          {outputToken ? `${outputToken.name} (${outputToken.symbol})` : "Select token"}
+        </button>
 
         {/* Output Amount */}
         <input
@@ -181,6 +166,45 @@ const SwapToken: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Modal for Token Selection */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+          <div ref={modalRef} className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4">
+            {/* Static Search Input */}
+            <input
+              type="text"
+              placeholder="Search token"
+              className="w-full p-2 mb-4 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-300"
+            />
+            {/* Token List */}
+            <div className="overflow-y-auto max-h-60">
+              <ul className="space-y-2">
+                {tokens.map((token) => (
+                  <li
+                    key={token.address}
+                    onClick={() => {
+                      if (showModal === 'input') setInputToken(token);
+                      else setOutputToken(token);
+                      closeModal();
+                    }}
+                    className="p-2 rounded cursor-pointer hover:bg-gray-300 dark:hover:bg-gray-600"
+                  >
+                    <span>{token.name} ({token.symbol})</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            {/* Close Button */}
+            <button
+              onClick={closeModal}
+              className="mt-4 w-full py-2 px-4 bg-red-600 text-white rounded"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -29,6 +29,7 @@ const SwapToken: React.FC = () => {
   const [filteredTokens, setFilteredTokens] = useState<Token[]>([]);
   const [showModal, setShowModal] = useState<'input' | 'output' | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
+  const [searchTerm, setSearchTerm] = useState<string>(''); // New state for search term
 
   const modalRef = useRef<HTMLDivElement>(null);
 
@@ -45,7 +46,7 @@ const SwapToken: React.FC = () => {
           const validTokens = data.filter((token: Token) => token.address && token.symbol);
           const limitedTokens = validTokens.slice(0, 100); // Limit to first 100 tokens
           setTokens(limitedTokens);
-          setFilteredTokens(limitedTokens);
+          setFilteredTokens(limitedTokens); // Set initial filtered tokens
         }
       } catch (error) {
         console.error("Failed to fetch tokens:", error);
@@ -55,6 +56,19 @@ const SwapToken: React.FC = () => {
     };
     fetchTokens();
   }, [connected]);
+
+  // Filter tokens when search term changes
+  useEffect(() => {
+    if (searchTerm === '') {
+      setFilteredTokens(tokens);
+    } else {
+      const filtered = tokens.filter(token =>
+        token.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        token.symbol?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredTokens(filtered);
+    }
+  }, [searchTerm, tokens]);
 
   const handleSwap = async () => {
     if (!inputToken || !outputToken || !publicKey) return;
@@ -86,6 +100,7 @@ const SwapToken: React.FC = () => {
 
   const openModal = (type: 'input' | 'output') => {
     setShowModal(type);
+    setSearchTerm(''); // Clear search on modal open
   };
 
   const closeModal = () => setShowModal(null);
@@ -171,16 +186,18 @@ const SwapToken: React.FC = () => {
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
           <div ref={modalRef} className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4">
-            {/* Static Search Input */}
+            {/* Search Input */}
             <input
               type="text"
               placeholder="Search token"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full p-2 mb-4 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-300"
             />
             {/* Token List */}
             <div className="overflow-y-auto max-h-60">
               <ul className="space-y-2">
-                {tokens.map((token) => (
+                {filteredTokens.map((token) => (
                   <li
                     key={token.address}
                     onClick={() => {

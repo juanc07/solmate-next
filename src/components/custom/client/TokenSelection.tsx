@@ -1,4 +1,3 @@
-// components/TokenSelection.tsx
 import { truncateString } from '@/lib/helper';
 import { useState, useEffect } from "react";
 import Image from "next/image";
@@ -39,7 +38,7 @@ const TokenSelection: React.FC<TokenSelectionProps> = ({
     isVerified,
     freeze_authority,
     permanent_delegate,
-    onClick
+    onClick,
 }) => {
     const calculatedValue = (amount * price).toFixed(2);
     const [imageSrc, setImageSrc] = useState(defaultImage);

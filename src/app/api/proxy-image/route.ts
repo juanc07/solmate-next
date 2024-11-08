@@ -1,62 +1,65 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+const isProduction = process.env.VERCEL_ENV === 'production' || process.env.NODE_ENV === 'production';
+const baseUrl = isProduction
+  ? 'https://solmate-next.vercel.app'
+  : 'http://localhost:3000';
+
 const DEFAULT_IMAGES: { [key: string]: string } = {
-  token: '/images/token/default-token.png', // Default token image
-  nft: '/images/nft/default-nft.webp',       // Default NFT image
-  other: '/images/nft/default-nft.webp'        // Default image for other types
+  token: `${baseUrl}/images/token/default-token.png`,
+  nft: `${baseUrl}/images/nft/default-nft.webp`,
+  other: `${baseUrl}/images/nft/default-nft.webp`,
 };
 
 export async function GET(req: NextRequest) {
   const imageUrl = req.nextUrl.searchParams.get('url');
-  const type = req.nextUrl.searchParams.get('type') || 'other'; // Default to "other" if type is missing
+  const type = req.nextUrl.searchParams.get('type') || 'other';
 
   if (!imageUrl) {
-    return NextResponse.json(
-      { error: 'URL query parameter is missing' },
-      { status: 400 }
-    );
-  }
-
-  if (!type) {
-    return NextResponse.json(
-      { error: 'type query parameter is missing' },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: 'URL query parameter is missing' }, { status: 400 });
   }
 
   try {
-    // Attempt to fetch the image from the provided URL
+    // Use AbortController to set a fetch timeout for resource efficiency
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000); // 10 seconds timeout
+
     const response = await fetch(imageUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
       },
+      signal: controller.signal,
     });
 
-    // Check if the fetch was successful
+    clearTimeout(timeout); // Clear the timeout if fetch is successful
+
     if (!response.ok) {
       console.error(`Failed to fetch image from URL: ${imageUrl}`);
-      return fetchDefaultImage(type); // Use default image based on type
+      return fetchDefaultImage(type);
     }
 
-    // Validate that the content is an image
     const contentType = response.headers.get('Content-Type');
     if (!contentType || !contentType.startsWith('image/')) {
       console.error(`Invalid Content-Type for URL: ${imageUrl} - Content-Type: ${contentType}`);
-      return fetchDefaultImage(type); // Use default image based on type
+      return fetchDefaultImage(type);
     }
 
-    // Read the image as an array buffer and return
-    const imageBuffer = await response.arrayBuffer();
+    // Stream the image directly for memory efficiency
+    const imageStream = response.body;
 
-    return new NextResponse(imageBuffer, {
+    return new NextResponse(imageStream, {
       headers: {
         'Content-Type': contentType,
-        'Cache-Control': 'public, max-age=86400', // Optional caching
+        'Cache-Control': 'public, max-age=86400', // Optional caching for 24 hours
       },
     });
   } catch (error: any) {
-    console.error('Error fetching image:', error);
-    return fetchDefaultImage(type); // Use default image based on type
+    if (error.name === 'AbortError') {
+      console.error('Fetch aborted due to timeout');
+    } else {
+      console.error('Error fetching image:', error);
+    }
+    return fetchDefaultImage(type);
   }
 }
 

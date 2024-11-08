@@ -1,9 +1,11 @@
 "use client";
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useWallet } from "@solana/wallet-adapter-react";
 import { WalletConnectOnlyButton } from "./WalletConnectOnlyButton";
 import Spinner from './Spinner';
 import TokenSelection from './TokenSelection';
+import { FaSearch } from 'react-icons/fa';
 
 interface Token {
   created_at?: string;
@@ -21,6 +23,8 @@ interface Token {
   price: number;
 }
 
+const INITIAL_LOAD_COUNT = 200;
+
 const SwapToken: React.FC = () => {
   const { publicKey, connected } = useWallet();
   const [inputToken, setInputToken] = useState<Token | null>(null);
@@ -32,8 +36,10 @@ const SwapToken: React.FC = () => {
   const [showModal, setShowModal] = useState<'input' | 'output' | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const [scrollToToken, setScrollToToken] = useState<string | null>(null); // New state to store token to scroll to
 
   const modalRef = useRef<HTMLDivElement>(null);
+  const tokenRefs = useRef<{ [key: string]: React.RefObject<HTMLLIElement> }>({});
 
   useEffect(() => {
     if (!connected) return;
@@ -44,15 +50,18 @@ const SwapToken: React.FC = () => {
         const response = await fetch('https://api.jup.ag/tokens/v1', { cache: "no-store" });
         if (!response.ok) throw new Error("Failed to fetch tokens");
         const data = await response.json();
-        
+
         if (Array.isArray(data)) {
-          const validTokens = data.filter((token: Token) => token.address && token.symbol);
-          const limitedTokens = validTokens.slice(0, 100).map(token => ({
-            ...token,
-            price: Math.random() * 10 // Placeholder for actual price data
-          }));
-          setTokens(limitedTokens);
-          setFilteredTokens(limitedTokens);
+          const validTokens = data
+            .filter((token: Token) => token.address && token.symbol)
+            .map(token => ({
+              ...token,
+              price: Math.random() * 10 // Placeholder for actual price data
+            }));
+          setTokens(validTokens);
+
+          // Display only the first 200 tokens initially
+          setFilteredTokens(validTokens.slice(0, INITIAL_LOAD_COUNT));
         }
       } catch (error) {
         console.error("Failed to fetch tokens:", error);
@@ -65,17 +74,37 @@ const SwapToken: React.FC = () => {
     fetchTokens();
   }, [connected]);
 
-  useEffect(() => {
-    if (searchTerm === '') {
-      setFilteredTokens(tokens);
+  // Handle search and append new results
+  const handleSearch = () => {
+    if (!searchTerm) {
+      setFilteredTokens(tokens.slice(0, INITIAL_LOAD_COUNT));
     } else {
-      const filtered = tokens.filter(token =>
-        token.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        token.symbol?.toLowerCase().includes(searchTerm.toLowerCase())
+      const matchedTokens = tokens.filter(token =>
+        token.name.toLowerCase() === searchTerm.toLowerCase() ||
+        token.symbol.toLowerCase() === searchTerm.toLowerCase() ||
+        token.address.toLowerCase() === searchTerm.toLowerCase()
       );
-      setFilteredTokens(filtered);
+
+      const uniqueTokens = matchedTokens.filter(
+        (newToken) => !filteredTokens.some(existingToken => existingToken.address === newToken.address)
+      );
+
+      setFilteredTokens(prevTokens => [...prevTokens, ...uniqueTokens]);
+
+      // Store the address of the first match to scroll after render
+      if (uniqueTokens.length > 0) {
+        setScrollToToken(uniqueTokens[0].address);
+      }
     }
-  }, [searchTerm, tokens]);
+  };
+
+  useEffect(() => {
+    // Scroll to the matched token if `scrollToToken` is set
+    if (scrollToToken && tokenRefs.current[scrollToToken]?.current) {
+      tokenRefs.current[scrollToToken].current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      setScrollToToken(null); // Reset after scrolling to prevent repeated actions
+    }
+  }, [filteredTokens, scrollToToken]);
 
   const handleSwap = async () => {
     if (!inputToken || !outputToken || !publicKey) return;
@@ -139,7 +168,6 @@ const SwapToken: React.FC = () => {
       </h1>
 
       <div className="w-full max-w-lg p-6 bg-gray-100 dark:bg-gray-800 rounded-lg shadow-md relative z-10">
-        {/* Input Token Selection */}
         <label className="block text-gray-700 dark:text-gray-300 font-semibold mb-2">You're Selling</label>
         <button
           onClick={() => openModal('input')}
@@ -149,7 +177,6 @@ const SwapToken: React.FC = () => {
           {inputToken ? `${inputToken.name} (${inputToken.symbol})` : "Select token"}
         </button>
 
-        {/* Input Amount */}
         <input
           type="number"
           placeholder="Enter amount"
@@ -159,7 +186,6 @@ const SwapToken: React.FC = () => {
           disabled={!connected || loading}
         />
 
-        {/* Output Token Selection */}
         <label className="block text-gray-700 dark:text-gray-300 font-semibold mb-2">You're Buying</label>
         <button
           onClick={() => openModal('output')}
@@ -169,7 +195,6 @@ const SwapToken: React.FC = () => {
           {outputToken ? `${outputToken.name} (${outputToken.symbol})` : "Select token"}
         </button>
 
-        {/* Output Amount */}
         <input
           type="text"
           placeholder="Estimated amount"
@@ -178,7 +203,6 @@ const SwapToken: React.FC = () => {
           className="w-full p-2 mb-4 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-300"
         />
 
-        {/* Connect Wallet / Swap Button */}
         {connected ? (
           <button
             onClick={handleSwap}
@@ -194,7 +218,6 @@ const SwapToken: React.FC = () => {
         )}
       </div>
 
-      {/* Loading Overlay */}
       {loading && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-gray-800 rounded-lg p-6 flex items-center space-x-4">
@@ -204,38 +227,49 @@ const SwapToken: React.FC = () => {
         </div>
       )}
 
-      {/* Modal for Token Selection */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 overflow-hidden">
           <div ref={modalRef} className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4">
-            <input
-              type="text"
-              placeholder="Search token"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full p-2 mb-4 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-300"
-            />
+            <div className="relative flex items-center mb-4">
+              <input
+                type="text"
+                placeholder="Search token"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full p-2 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-300"
+              />
+              <button
+                onClick={handleSearch}
+                className="absolute right-2 p-1 bg-violet-600 text-white rounded"
+              >
+                <FaSearch />
+              </button>
+            </div>
             <div className="overflow-y-auto max-h-60">
               <ul className="space-y-2">
-                {filteredTokens.map((token) => (
-                  <TokenSelection
-                    key={token.address}
-                    name={token.name}
-                    symbol={token.symbol}
-                    logoURI={token.logoURI}
-                    address={token.address}
-                    price={token.price}
-                    amount={parseFloat(inputAmount) || 0}
-                    isVerified={token.extensions?.isVerified}
-                    freeze_authority={token.freeze_authority}
-                    permanent_delegate={token.permanent_delegate}
-                    onClick={() => {
-                      if (showModal === 'input') setInputToken(token);
-                      else setOutputToken(token);
-                      closeModal();
-                    }}
-                  />
-                ))}
+                {filteredTokens.map((token, index) => {
+                  const ref = (tokenRefs.current[token.address] ||= React.createRef());
+                  return (
+                    <li key={`${token.address}-${index}`} ref={ref}>
+                      <TokenSelection
+                        name={token.name}
+                        symbol={token.symbol}
+                        logoURI={token.logoURI}
+                        address={token.address}
+                        price={token.price}
+                        amount={parseFloat(inputAmount) || 0}
+                        isVerified={token.extensions?.isVerified}
+                        freeze_authority={token.freeze_authority}
+                        permanent_delegate={token.permanent_delegate}
+                        onClick={() => {
+                          if (showModal === 'input') setInputToken(token);
+                          else setOutputToken(token);
+                          closeModal();
+                        }}
+                      />
+                    </li>
+                  );
+                })}
               </ul>
             </div>
             <button

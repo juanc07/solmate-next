@@ -2,12 +2,24 @@
 
 import React, { useState, useEffect } from 'react';
 import { useWallet } from "@solana/wallet-adapter-react";
-import { WalletConnectOnlyButton } from "./WalletConnectOnlyButton"; // Import your custom connect button
+import { WalletConnectOnlyButton } from "./WalletConnectOnlyButton";
 
 interface Token {
-  symbol: string;
-  mintAddress: string;
+  created_at?:string;
+  symbol?: string;
+  name?: string;
+  address?: string;
+  logoURI?:string;
+  decimals?:number;
+  daily_volume?:number;
+  freeze_authority?:string;
+  permanent_delegate?:string;
+  extensions?: {
+    isVerified?: boolean;
+  };
 }
+
+
 
 const SwapToken: React.FC = () => {
   const { publicKey, connected } = useWallet();
@@ -16,50 +28,67 @@ const SwapToken: React.FC = () => {
   const [inputAmount, setInputAmount] = useState<string>('');
   const [outputAmount, setOutputAmount] = useState<string>('');
   const [tokens, setTokens] = useState<Token[]>([]);
+  const [filteredTokens, setFilteredTokens] = useState<Token[]>([]);
+  const [searchTerm, setSearchTerm] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
+    if (!connected) return; // Only fetch tokens if wallet is connected
+
     const fetchTokens = async () => {
+      console.log("Wallet connected. Fetching tokens...");
       try {
-        const response = await fetch('https://price.jup.ag/v4/tokens');
+        const response = await fetch('https://api.jup.ag/tokens/v1', { cache: "no-store" });
+        
+        if (!response.ok) {
+          throw new Error("Failed to fetch tokens");
+        }
         const data = await response.json();
+        console.log("Fetched token data:", data); // Log the raw token data
 
         if (Array.isArray(data)) {
-          setTokens(data);
+          const validTokens = data.filter((token: Token) => token.address && token.symbol);
+          setTokens(validTokens);
+          setFilteredTokens(validTokens); // Set filteredTokens initially
+          console.log("Tokens set:", validTokens); // Log valid tokens
         } else {
           console.error("Unexpected token data format:", data);
           setTokens([]);
+          setFilteredTokens([]);
         }
       } catch (error) {
         console.error("Failed to fetch tokens:", error);
         setTokens([]);
+        setFilteredTokens([]);
       }
     };
     fetchTokens();
-  }, []);
+  }, [connected]);
+
+  // Temporary test: Directly set filteredTokens to tokens without filtering
+  useEffect(() => {
+    console.log("Applying filter...");
+    console.log("Original tokens:", tokens); // Log tokens to confirm data structure
+    setFilteredTokens(tokens); // Temporarily set filteredTokens to tokens directly
+  }, [tokens]);
 
   const handleSwap = async () => {
     if (!inputToken || !outputToken || !publicKey) return;
 
     setLoading(true);
     try {
-      const response = await fetch('https://quote-api.jup.ag/v1/quote', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          inputMint: inputToken.mintAddress,
-          outputMint: outputToken.mintAddress,
-          amount: parseFloat(inputAmount) * Math.pow(10, 6),
-          slippage: 0.5,
-          userPublicKey: publicKey.toString(),
-        }),
-      });
+      const inputMint = inputToken.address;
+      const outputMint = outputToken.address;
+      const amount = (parseFloat(inputAmount) * Math.pow(10, 6)).toFixed(0);
+      const slippageBps = 50;
 
+      const response = await fetch(
+        `https://quote-api.jup.ag/v6/quote?inputMint=${inputMint}&outputMint=${outputMint}&amount=${amount}&slippageBps=${slippageBps}`
+      );
       const data = await response.json();
-      if (data && data.outputAmount) {
-        setOutputAmount((data.outputAmount / Math.pow(10, 6)).toString());
+
+      if (data && data.quoteResponse) {
+        setOutputAmount((data.quoteResponse.outputAmount / Math.pow(10, 6)).toString());
       } else {
         alert("Swap failed: Unable to fetch quote");
       }
@@ -78,17 +107,28 @@ const SwapToken: React.FC = () => {
       </h1>
 
       <div className="w-full max-w-lg p-6 bg-gray-100 dark:bg-gray-800 rounded-lg shadow-md">
+        
+        {/* Search Field */}
+        <label className="block text-gray-700 dark:text-gray-300 font-semibold mb-2">Search Token</label>
+        <input
+          type="text"
+          placeholder="Search by name or symbol"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full p-2 mb-4 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-300"
+        />
+
         {/* Input Token Selection */}
         <label className="block text-gray-700 dark:text-gray-300 font-semibold mb-2">From</label>
         <select
-          value={inputToken?.mintAddress || ''}
-          onChange={(e) => setInputToken(tokens.find(t => t.mintAddress === e.target.value) || null)}
+          value={inputToken?.address || ''}
+          onChange={(e) => setInputToken(filteredTokens.find(t => t.address === e.target.value) || null)}
           className="w-full p-2 mb-4 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-300"
         >
           <option value="">Select token</option>
-          {tokens.map(token => (
-            <option key={token.mintAddress} value={token.mintAddress}>
-              {token.symbol}
+          {filteredTokens.slice(0, 100).map(token => (
+            <option key={`${token.symbol}-${token.address}`} value={token.address}>
+              {token.name} ({token.symbol})
             </option>
           ))}
         </select>
@@ -105,14 +145,14 @@ const SwapToken: React.FC = () => {
         {/* Output Token Selection */}
         <label className="block text-gray-700 dark:text-gray-300 font-semibold mb-2">To</label>
         <select
-          value={outputToken?.mintAddress || ''}
-          onChange={(e) => setOutputToken(tokens.find(t => t.mintAddress === e.target.value) || null)}
+          value={outputToken?.address || ''}
+          onChange={(e) => setOutputToken(filteredTokens.find(t => t.address === e.target.value) || null)}
           className="w-full p-2 mb-4 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-300"
         >
           <option value="">Select token</option>
-          {tokens.map(token => (
-            <option key={token.mintAddress} value={token.mintAddress}>
-              {token.symbol}
+          {filteredTokens.slice(0, 100).map(token => (
+            <option key={`${token.symbol}-${token.address}`} value={token.address}>
+              {token.name} ({token.symbol})
             </option>
           ))}
         </select>
@@ -140,7 +180,6 @@ const SwapToken: React.FC = () => {
             <WalletConnectOnlyButton />
           </div>
         )}
-
       </div>
     </div>
   );

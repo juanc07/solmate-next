@@ -5,11 +5,11 @@ import { WalletConnectOnlyButton } from "./WalletConnectOnlyButton";
 import Spinner from './Spinner';
 import TokenSelection from './TokenSelection';
 import { FaSearch } from 'react-icons/fa';
-import { ITokenAccount } from "@/lib/interfaces/tokenAccount"; // Import the correct interface for Helius response
+import { ITokenAccount } from "@/lib/interfaces/tokenAccount";
 import { IToken } from "@/lib/interfaces/token";
 import { IJupiterToken } from "@/lib/interfaces/jupiterToken";
 import TokenItem from "@/components/custom/client/TokenItem";
-import { SolanaPriceHelper } from "@/lib/SolanaPriceHelper"; // Ensure this is used
+import { SolanaPriceHelper } from "@/lib/SolanaPriceHelper";
 import { openDB, IDBPDatabase } from "idb";
 import { normalizeAmount } from "@/lib/helper";
 import { PublicKey } from '@solana/web3.js';
@@ -30,37 +30,25 @@ const initDB = async (): Promise<IDBPDatabase> => {
   });
 };
 
-// Get cached token data from IndexedDB (including image URL)
 const getCachedToken = async (mint: string): Promise<IToken | null> => {
   const db = await initDB();
-  const cachedToken = await db.get(STORE_NAME, mint);
-  return cachedToken;
+  return db.get(STORE_NAME, mint);
 };
 
-// Store token data in IndexedDB (including image URL)
 const cacheToken = async (token: IToken): Promise<void> => {
   const db = await initDB();
   await db.put(STORE_NAME, token);
 };
 
-const fetchTokenDataWithCache = async (
-  mint: string,
-  signal: AbortSignal
-): Promise<IToken | null> => {
+const fetchTokenDataWithCache = async (mint: string, signal: AbortSignal): Promise<IToken | null> => {
   const cachedToken = await getCachedToken(mint);
-
-  // Check if the cached token exists and if the icon is valid (not null or empty)
-  if (cachedToken && cachedToken.icon && cachedToken.icon.trim()) {
-    return cachedToken;
-  }
+  if (cachedToken && cachedToken.icon && cachedToken.icon.trim()) return cachedToken;
 
   try {
     const response = await fetch(`/api/token/${mint}`, { signal });
     if (!response.ok) throw new Error("Failed to fetch token data");
 
     const tokenData = await response.json();
-
-    // Directly use the image URL from the response
     const token: IToken = {
       mint: tokenData.address,
       balance: 0,
@@ -69,9 +57,10 @@ const fetchTokenDataWithCache = async (
       symbol: tokenData.symbol,
       usdValue: 0,
       decimals: tokenData.decimals,
+      price: 0
     };
 
-    await cacheToken(token); // Cache the token data including the icon
+    await cacheToken(token);
     return token;
   } catch (error) {
     if (error instanceof DOMException && error.name === "AbortError") {
@@ -96,40 +85,43 @@ const fetchAccountTokens = async (
     const totalTokens = tokensFromAccountHelius.length;
     const accountTokens: IToken[] = [];
 
-    for (const [index, { mint, amount }] of tokensFromAccountHelius.entries()) {
+    // Create an array of promises for token data fetching
+    const fetchPromises = tokensFromAccountHelius.map(async ({ mint, amount }, index) => {
       const tokenData = await fetchTokenDataWithCache(mint, signal);
       if (tokenData) {
         const normalizedAmount = normalizeAmount(amount, tokenData.decimals);
-        const usdValue = await SolanaPriceHelper.convertTokenToUSDC(tokenData.symbol, mint, normalizedAmount);
-        accountTokens.push({ ...tokenData, balance: normalizedAmount, usdValue });
+        const { tokenAccountValue, tokenPrice } = await SolanaPriceHelper.convertTokenToUSDC(tokenData.symbol, mint, normalizedAmount);        
+        accountTokens.push({ ...tokenData, balance: normalizedAmount, usdValue:tokenAccountValue, price:tokenPrice });
       }
 
-      setProgress(Math.round(((index + 1) / totalTokens) * 100));
-      if (signal.aborted) break;
-    }
+      // Update progress occasionally to prevent excessive state updates
+      if (index % 10 === 0) {
+        setProgress(Math.round(((index + 1) / totalTokens) * 100));
+      }
+    });
 
+    // Wait for all token fetches to complete
+    await Promise.all(fetchPromises);
+
+    // Sort account tokens by USD value descending
     return accountTokens.sort((a, b) => b.usdValue - a.usdValue);
   } catch (error) {
-    if (error instanceof DOMException && error.name === "AbortError") {
-      console.log("Token fetching aborted");
-    } else {
-      console.error("Failed to fetch tokens:", error);
-    }
+    console.error("Failed to fetch tokens:", error);
     return [];
   }
 };
 
+
 const SwapToken: React.FC = () => {
   const { publicKey, connected } = useWallet();
   const [accountTokens, setAccountTokens] = useState<IToken[]>([]);
-  const [progress, setProgress] = useState(0);
-
+  const [tokens, setTokens] = useState<IJupiterToken[]>([]);
+  const [filteredTokens, setFilteredTokens] = useState<IJupiterToken[]>([]);
   const [inputToken, setInputToken] = useState<IJupiterToken | null>(null);
   const [outputToken, setOutputToken] = useState<IJupiterToken | null>(null);
   const [inputAmount, setInputAmount] = useState<string>('');
   const [outputAmount, setOutputAmount] = useState<string>('');
-  const [tokens, setTokens] = useState<IJupiterToken[]>([]);
-  const [filteredTokens, setFilteredTokens] = useState<IJupiterToken[]>([]);
+  const [progress, setProgress] = useState(0);
   const [showModal, setShowModal] = useState<'input' | 'output' | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -144,36 +136,56 @@ const SwapToken: React.FC = () => {
     const controller = new AbortController();
     const { signal } = controller;
 
-    setLoading(true);    
+    setLoading(true);
     setProgress(0);
 
-    fetchAccountTokens(publicKey, signal, setProgress)
-      .then((fetchedTokens) => {
-        if (!signal.aborted) setAccountTokens(fetchedTokens);
-      })
-      .finally(() => {
-        if (!signal.aborted) setLoading(false);
-      });    
-
-
-    const fetchTokens = async () => {
+    const loadTokens = async () => {
       try {
-        const response = await fetch('https://api.jup.ag/tokens/v1', { cache: "no-store" });
-        if (!response.ok) throw new Error("Failed to fetch tokens");
-        const data = await response.json();
+        const [accountTokens, jupiterData] = await Promise.all([
+          fetchAccountTokens(publicKey, signal, setProgress),
+          fetch('https://api.jup.ag/tokens/v1', { cache: "no-store" }).then(res => res.json()),
+        ]);
 
-        if (Array.isArray(data)) {
-          const validTokens = data
-            .filter((token: IJupiterToken) => token.address && token.symbol)
-            .map(token => ({
-              ...token,
-              price: Math.random() * 10 // Placeholder for actual price data
-            }));
-          setTokens(validTokens);
+        console.log("accountTokens count: ", accountTokens.length);
+        console.log("jupiterData count: ", jupiterData.length);
 
-          // Display only the first 200 tokens initially
-          setFilteredTokens(validTokens.slice(0, INITIAL_LOAD_COUNT));
-        }
+        const jupiterTokens = Array.isArray(jupiterData)
+          ? jupiterData.filter((token: IJupiterToken) => token.address && token.symbol)
+          : [];
+
+        // Map account tokens with price information for matched tokens in jupiterTokens
+        const matchedAccountTokens = accountTokens.reduce<IJupiterToken[]>((result, accountToken) => {
+          const match = jupiterTokens.find(jToken => jToken.address === accountToken.mint);
+          if (match) {
+            console.log("price:==> ",accountToken.price);
+            // Set price based on user's token USD value
+            const tokenWithPrice = {
+              ...match,
+              price: accountToken.price,
+              amount: accountToken.balance,
+            };
+            result.push(tokenWithPrice);
+          }
+          return result;
+        }, []);
+
+        // Filter out matched tokens from jupiterTokens to avoid duplicates
+        const remainingJupiterTokens = jupiterTokens.filter(
+          jToken => !matchedAccountTokens.some(accountToken => accountToken.address === jToken.address)
+        );
+
+        // Combine matched account tokens with remaining Jupiter tokens
+        const combinedTokens = [...matchedAccountTokens, ...remainingJupiterTokens.slice(0, INITIAL_LOAD_COUNT)];
+
+        setTokens(combinedTokens);
+        setFilteredTokens(combinedTokens.slice(0, INITIAL_LOAD_COUNT));
+
+        // Set the initial token to the first available token from the user’s account, if available
+        /*if (accountTokens.length > 0) {
+          const firstAccountToken = combinedTokens.find(token => token.address === accountTokens[0].mint);
+          if (firstAccountToken) setInputToken(firstAccountToken);
+        }*/
+
       } catch (error) {
         console.error("Failed to fetch tokens:", error);
         setTokens([]);
@@ -182,38 +194,31 @@ const SwapToken: React.FC = () => {
         setLoading(false);
       }
     };
-    fetchTokens();
+
+    loadTokens();
+
     return () => controller.abort();
   }, [connected]);
 
-  // Handle search and append new results
   const handleSearch = () => {
     if (!searchTerm) {
       setFilteredTokens(tokens.slice(0, INITIAL_LOAD_COUNT));
     } else {
       const matchedTokens = tokens.filter(token =>
-        token.name.toLowerCase() === searchTerm.toLowerCase() ||
-        token.symbol.toLowerCase() === searchTerm.toLowerCase() ||
-        token.address.toLowerCase() === searchTerm.toLowerCase()
+        token.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        token.symbol.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        token.address.toLowerCase().includes(searchTerm.toLowerCase())
       );
 
-      const uniqueTokens = matchedTokens.filter(
-        (newToken) => !filteredTokens.some(existingToken => existingToken.address === newToken.address)
-      );
-
-      setFilteredTokens(prevTokens => [...prevTokens, ...uniqueTokens]);
-
-      if (matchedTokens.length > 0) {
-        setScrollToToken(matchedTokens[0].address); // Set the address of the first matched token for scrolling
-      }
+      setFilteredTokens(matchedTokens);
+      setScrollToToken(matchedTokens[0]?.address || null);
     }
   };
 
   useEffect(() => {
-    // Scroll to the matched token if `scrollToToken` is set
     if (scrollToToken && tokenRefs.current[scrollToToken]?.current) {
       tokenRefs.current[scrollToToken].current?.scrollIntoView({ behavior: "smooth", block: "center" });
-      setScrollToToken(null); // Reset after scrolling to prevent repeated actions
+      setScrollToToken(null);
     }
   }, [filteredTokens, scrollToToken]);
 
@@ -356,7 +361,7 @@ const SwapToken: React.FC = () => {
                 <FaSearch />
               </button>
             </div>
-            <div className="overflow-y-auto max-h-60">
+            <div className="overflow-y-auto max-h-60 scrollbar-hide">
               <ul className="space-y-2">
                 {filteredTokens.map((token, index) => {
                   const ref = (tokenRefs.current[token.address] ||= React.createRef());
@@ -368,7 +373,7 @@ const SwapToken: React.FC = () => {
                         logoURI={token.logoURI}
                         address={token.address}
                         price={token.price}
-                        amount={parseFloat(inputAmount) || 0}
+                        amount={token.amount}
                         isVerified={token.extensions?.isVerified}
                         freeze_authority={token.freeze_authority}
                         permanent_delegate={token.permanent_delegate}

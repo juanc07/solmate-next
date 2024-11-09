@@ -104,8 +104,8 @@ const fetchTokens = async (
       const tokenData = await fetchTokenDataWithCache(mint, signal);
       if (tokenData) {
         const normalizedAmount = normalizeAmount(amount, tokenData.decimals);
-        const usdValue = await SolanaPriceHelper.convertTokenToUSDC(tokenData.symbol, mint, normalizedAmount);
-        tokens.push({ ...tokenData, balance: normalizedAmount, usdValue });
+        const { tokenAccountValue, tokenPrice } = await SolanaPriceHelper.convertTokenToUSDC(tokenData.symbol, mint, normalizedAmount);
+        tokens.push({ ...tokenData, balance: normalizedAmount, usdValue:tokenAccountValue });
       }
 
       setProgress(Math.round(((index + 1) / totalTokens) * 100));

@@ -12,4 +12,5 @@ export interface IJupiterToken {
       isVerified?: boolean;
     };
     price: number;
+    amount: number;
   }

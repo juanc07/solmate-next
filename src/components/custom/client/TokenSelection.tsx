@@ -1,4 +1,4 @@
-import { truncateString } from '@/lib/helper';
+import { truncateString,formatLargeNumber } from '@/lib/helper';
 import { useState, useEffect } from "react";
 import Image from "next/image";
 
@@ -8,7 +8,7 @@ interface TokenSelectionProps {
     logoURI: string;
     address: string;
     price: number;
-    amount: number;
+    amount: number;    
     isVerified?: boolean;
     freeze_authority?: string;
     permanent_delegate?: string;
@@ -34,14 +34,18 @@ const TokenSelection: React.FC<TokenSelectionProps> = ({
     logoURI,
     address,
     price,
-    amount,
+    amount,    
     isVerified,
     freeze_authority,
     permanent_delegate,
     onClick,
-}) => {
-    const calculatedValue = (amount * price).toFixed(2);
+}) => {    
+    const calculatedValue = amount && price ? (amount * price).toFixed(2) : "$0.00";
     const [imageSrc, setImageSrc] = useState(defaultImage);
+
+    console.log(`TokenSelection symbol: ${symbol}`);
+    console.log(`TokenSelection amount: ${amount} price:`,price);
+    console.log(`TokenSelection calculatedValue: ${calculatedValue}`);
 
     useEffect(() => {
         const fetchImageSrc = async () => {
@@ -73,8 +77,8 @@ const TokenSelection: React.FC<TokenSelectionProps> = ({
                 {isVerified && <span className="text-green-500 text-xs font-semibold">Verified</span>}
             </div>
             <div className="text-right">
-                <p className="text-black dark:text-white">${price.toFixed(2)}</p>
-                <p className="text-gray-600 dark:text-gray-400 text-sm">${calculatedValue}</p>
+                <p className="text-black dark:text-white">{amount != null ? `${formatLargeNumber(amount)}` : "0"}</p>
+                <p className="text-gray-600 dark:text-gray-400 text-sm">{calculatedValue}</p>
             </div>
         </div>
     );

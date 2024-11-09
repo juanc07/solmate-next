@@ -5,5 +5,6 @@ export interface IToken {
     name: string;
     symbol: string;
     usdValue: number;
+    price: number;
     decimals: number;
 }

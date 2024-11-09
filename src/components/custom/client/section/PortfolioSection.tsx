@@ -62,6 +62,7 @@ const fetchTokenDataWithCache = async (
       symbol: tokenData.symbol,
       usdValue: 0,
       decimals: tokenData.decimals,
+      price: 0
     };
 
     await cacheToken(token); // Cache the token data including the icon
@@ -93,8 +94,8 @@ const fetchTokens = async (
       const tokenData = await fetchTokenDataWithCache(mint, signal);
       if (tokenData) {
         const normalizedAmount = normalizeAmount(amount, tokenData.decimals);
-        const usdValue = await SolanaPriceHelper.convertTokenToUSDC(tokenData.symbol, mint,normalizedAmount);
-        tokens.push({ ...tokenData, balance: normalizedAmount, usdValue });
+        const { tokenAccountValue, tokenPrice } = await SolanaPriceHelper.convertTokenToUSDC(tokenData.symbol, mint,normalizedAmount);        
+        tokens.push({ ...tokenData, balance: normalizedAmount, usdValue:tokenAccountValue });
       }
 
       setProgress(Math.round(((index + 1) / totalTokens) * 100));

@@ -11,13 +11,13 @@ export class SolanaPriceHelper {
     try {
       console.log(`Fetching price for ${tokenId} from local API route`);
       // Construct the URL with both `tokenId` and `tokenAddress`
-      const response = await fetch(`${this.LOCAL_API_URL}/${tokenId}/${tokenAddress}`);      
+      const response = await fetch(`${this.LOCAL_API_URL}/${tokenId}/${tokenAddress}`);
       // Check if response is okay before parsing
       if (!response.ok) {
         console.error(`Error fetching from local API: ${response.status} ${response.statusText}`);
         return null;
       }
-  
+
       // Parse JSON and handle response structure carefully
       const data = await response.json();
       return data.price || null; // Access price directly from the response
@@ -44,13 +44,14 @@ export class SolanaPriceHelper {
     tokenId: string,
     tokenAddress: string,
     tokenAmount: number
-  ): Promise<number> {
+  ): Promise<{ tokenAccountValue: number; tokenPrice: number }> { // Updated return type
     try {
       const tokenPrice = await this.getTokenPriceInUSD(tokenId, tokenAddress);
-      return tokenAmount * tokenPrice;
+      const tokenAccountValue = tokenAmount * tokenPrice;
+      return { tokenAccountValue, tokenPrice };
     } catch (error) {
       console.error(`Error converting ${tokenId} to USDC:`, error);
-      return 0;
+      return { tokenAccountValue: 0, tokenPrice: 0 }; // Return default values in case of error
     }
   }
 }

@@ -12,6 +12,7 @@ import { SolanaPriceHelper } from "@/lib/SolanaPriceHelper";
 import { openDB, IDBPDatabase } from "idb";
 import { normalizeAmount } from "@/lib/helper";
 import { PublicKey } from '@solana/web3.js';
+import { solanaTokens } from "@/lib/solanaTokens";
 
 const INITIAL_LOAD_COUNT = 200;
 

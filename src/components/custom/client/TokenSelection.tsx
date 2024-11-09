@@ -43,7 +43,7 @@ const TokenSelection: React.FC<TokenSelectionProps> = ({
     permanent_delegate,
     onClick,
 }) => {
-    const calculatedValue = amount && price ? (amount * price).toFixed(2) : "$0.00";
+    const calculatedValue = amount && price ? `$${(amount * price).toFixed(2)}` : "$0.00";
     const [imageSrc, setImageSrc] = useState(defaultImage);
 
     useEffect(() => {

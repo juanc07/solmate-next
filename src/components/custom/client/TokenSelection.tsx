@@ -1,4 +1,4 @@
-import { truncateString,formatLargeNumber } from '@/lib/helper';
+import { truncateString, formatLargeNumber } from '@/lib/helper';
 import { useState, useEffect } from "react";
 import Image from "next/image";
 
@@ -8,7 +8,7 @@ interface TokenSelectionProps {
     logoURI: string;
     address: string;
     price: number;
-    amount: number;    
+    amount: number;
     isVerified?: boolean;
     freeze_authority?: string;
     permanent_delegate?: string;
@@ -17,13 +17,16 @@ interface TokenSelectionProps {
 
 const defaultImage = "/images/token/default-token.png";
 
-const getProxyUrl = async (imageUrl: string, type: string): Promise<string> => {
+const getProxyUrl = async (imageUrl: string, type: string, signal: AbortSignal): Promise<string> => {
     try {
         const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(imageUrl)}&type=${encodeURIComponent(type)}`;
-        const response = await fetch(proxyUrl, { method: 'HEAD' });
+        const response = await fetch(proxyUrl, { method: 'HEAD', signal });
         const isValidImage = response.ok && response.headers.get("Content-Type")?.startsWith("image/");
         return isValidImage ? proxyUrl : defaultImage;
-    } catch (error) {
+    } catch (error:any) {
+        if (error.name !== "AbortError") {
+            console.error("Failed to fetch image:", error);
+        }
         return defaultImage;
     }
 };
@@ -34,25 +37,27 @@ const TokenSelection: React.FC<TokenSelectionProps> = ({
     logoURI,
     address,
     price,
-    amount,    
+    amount,
     isVerified,
     freeze_authority,
     permanent_delegate,
     onClick,
-}) => {    
+}) => {
     const calculatedValue = amount && price ? (amount * price).toFixed(2) : "$0.00";
     const [imageSrc, setImageSrc] = useState(defaultImage);
 
-    console.log(`TokenSelection symbol: ${symbol}`);
-    console.log(`TokenSelection amount: ${amount} price:`,price);
-    console.log(`TokenSelection calculatedValue: ${calculatedValue}`);
-
     useEffect(() => {
+        const controller = new AbortController();
+        const { signal } = controller;
+
         const fetchImageSrc = async () => {
-            const src = logoURI && logoURI.trim() ? await getProxyUrl(logoURI, "token") : defaultImage;
+            const src = logoURI && logoURI.trim() ? await getProxyUrl(logoURI, "token", signal) : defaultImage;
             setImageSrc(src);
         };
+
         fetchImageSrc();
+
+        return () => controller.abort(); // Cleanup function to abort fetch on component unmount
     }, [logoURI]);
 
     return (

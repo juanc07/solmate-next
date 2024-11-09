@@ -8,7 +8,6 @@ import { FaSearch } from 'react-icons/fa';
 import { ITokenAccount } from "@/lib/interfaces/tokenAccount";
 import { IToken } from "@/lib/interfaces/token";
 import { IJupiterToken } from "@/lib/interfaces/jupiterToken";
-import TokenItem from "@/components/custom/client/TokenItem";
 import { SolanaPriceHelper } from "@/lib/SolanaPriceHelper";
 import { openDB, IDBPDatabase } from "idb";
 import { normalizeAmount } from "@/lib/helper";
@@ -85,25 +84,20 @@ const fetchAccountTokens = async (
     const totalTokens = tokensFromAccountHelius.length;
     const accountTokens: IToken[] = [];
 
-    // Create an array of promises for token data fetching
     const fetchPromises = tokensFromAccountHelius.map(async ({ mint, amount }, index) => {
       const tokenData = await fetchTokenDataWithCache(mint, signal);
       if (tokenData) {
         const normalizedAmount = normalizeAmount(amount, tokenData.decimals);
-        const { tokenAccountValue, tokenPrice } = await SolanaPriceHelper.convertTokenToUSDC(tokenData.symbol, mint, normalizedAmount);        
-        accountTokens.push({ ...tokenData, balance: normalizedAmount, usdValue:tokenAccountValue, price:tokenPrice });
+        const { tokenAccountValue, tokenPrice } = await SolanaPriceHelper.convertTokenToUSDC(tokenData.symbol, mint, normalizedAmount);
+        accountTokens.push({ ...tokenData, balance: normalizedAmount, usdValue: tokenAccountValue, price: tokenPrice });
       }
 
-      // Update progress occasionally to prevent excessive state updates
       if (index % 10 === 0) {
         setProgress(Math.round(((index + 1) / totalTokens) * 100));
       }
     });
 
-    // Wait for all token fetches to complete
     await Promise.all(fetchPromises);
-
-    // Sort account tokens by USD value descending
     return accountTokens.sort((a, b) => b.usdValue - a.usdValue);
   } catch (error) {
     console.error("Failed to fetch tokens:", error);
@@ -115,6 +109,7 @@ const fetchAccountTokens = async (
 const SwapToken: React.FC = () => {
   const { publicKey, connected } = useWallet();
   const [accountTokens, setAccountTokens] = useState<IToken[]>([]);
+  const [jupiterTokens, setJupiterTokens] = useState<IJupiterToken[]>([]);
   const [tokens, setTokens] = useState<IJupiterToken[]>([]);
   const [filteredTokens, setFilteredTokens] = useState<IJupiterToken[]>([]);
   const [inputToken, setInputToken] = useState<IJupiterToken | null>(null);
@@ -143,22 +138,18 @@ const SwapToken: React.FC = () => {
       try {
         const [accountTokens, jupiterData] = await Promise.all([
           fetchAccountTokens(publicKey, signal, setProgress),
-          fetch('https://api.jup.ag/tokens/v1', { cache: "no-store" }).then(res => res.json()),
+          fetch('https://api.jup.ag/tokens/v1', { cache: "no-store", signal }).then(res => res.json()),
         ]);
-
-        console.log("accountTokens count: ", accountTokens.length);
-        console.log("jupiterData count: ", jupiterData.length);
 
         const jupiterTokens = Array.isArray(jupiterData)
           ? jupiterData.filter((token: IJupiterToken) => token.address && token.symbol)
           : [];
 
-        // Map account tokens with price information for matched tokens in jupiterTokens
+        setJupiterTokens(jupiterTokens);
+
         const matchedAccountTokens = accountTokens.reduce<IJupiterToken[]>((result, accountToken) => {
           const match = jupiterTokens.find(jToken => jToken.address === accountToken.mint);
           if (match) {
-            console.log("price:==> ",accountToken.price);
-            // Set price based on user's token USD value
             const tokenWithPrice = {
               ...match,
               price: accountToken.price,
@@ -169,22 +160,14 @@ const SwapToken: React.FC = () => {
           return result;
         }, []);
 
-        // Filter out matched tokens from jupiterTokens to avoid duplicates
         const remainingJupiterTokens = jupiterTokens.filter(
           jToken => !matchedAccountTokens.some(accountToken => accountToken.address === jToken.address)
         );
 
-        // Combine matched account tokens with remaining Jupiter tokens
         const combinedTokens = [...matchedAccountTokens, ...remainingJupiterTokens.slice(0, INITIAL_LOAD_COUNT)];
 
         setTokens(combinedTokens);
         setFilteredTokens(combinedTokens.slice(0, INITIAL_LOAD_COUNT));
-
-        // Set the initial token to the first available token from the user’s account, if available
-        /*if (accountTokens.length > 0) {
-          const firstAccountToken = combinedTokens.find(token => token.address === accountTokens[0].mint);
-          if (firstAccountToken) setInputToken(firstAccountToken);
-        }*/
 
       } catch (error) {
         console.error("Failed to fetch tokens:", error);
@@ -204,16 +187,25 @@ const SwapToken: React.FC = () => {
     if (!searchTerm) {
       setFilteredTokens(tokens.slice(0, INITIAL_LOAD_COUNT));
     } else {
-      const matchedTokens = tokens.filter(token =>
-        token.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        token.symbol.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        token.address.toLowerCase().includes(searchTerm.toLowerCase())
+      const matchedTokens = jupiterTokens.filter(token =>
+        token.name.toLowerCase() === searchTerm.toLowerCase() ||
+        token.symbol.toLowerCase() === searchTerm.toLowerCase() ||
+        token.address.toLowerCase() === searchTerm.toLowerCase()
       );
 
-      setFilteredTokens(matchedTokens);
+      // Append the matched tokens to the current filteredTokens array without replacing it
+      setFilteredTokens(prevFilteredTokens => {
+        const newTokens = matchedTokens.filter(
+          matchedToken => !prevFilteredTokens.some(token => token.address === matchedToken.address)
+        );
+        return [...prevFilteredTokens, ...newTokens];
+      });
+
+      // Scroll to the first match if available
       setScrollToToken(matchedTokens[0]?.address || null);
     }
   };
+
 
   useEffect(() => {
     if (scrollToToken && tokenRefs.current[scrollToToken]?.current) {

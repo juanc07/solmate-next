@@ -1,5 +1,4 @@
-"use client";
-
+'use client';
 import React, { useState, useEffect, useRef } from 'react';
 import { useWallet } from "@solana/wallet-adapter-react";
 import { WalletConnectOnlyButton } from "./WalletConnectOnlyButton";
@@ -36,7 +35,7 @@ const SwapToken: React.FC = () => {
   const [showModal, setShowModal] = useState<'input' | 'output' | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState<string>('');
-  const [scrollToToken, setScrollToToken] = useState<string | null>(null); // New state to store token to scroll to
+  const [scrollToToken, setScrollToToken] = useState<string | null>(null);
 
   const modalRef = useRef<HTMLDivElement>(null);
   const tokenRefs = useRef<{ [key: string]: React.RefObject<HTMLLIElement> }>({});
@@ -91,9 +90,8 @@ const SwapToken: React.FC = () => {
 
       setFilteredTokens(prevTokens => [...prevTokens, ...uniqueTokens]);
 
-      // Store the address of the first match to scroll after render
-      if (uniqueTokens.length > 0) {
-        setScrollToToken(uniqueTokens[0].address);
+      if (matchedTokens.length > 0) {
+        setScrollToToken(matchedTokens[0].address); // Set the address of the first matched token for scrolling
       }
     }
   };

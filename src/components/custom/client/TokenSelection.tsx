@@ -64,6 +64,7 @@ const TokenSelection: React.FC<TokenSelectionProps> = ({
                     height={32}
                     sizes="(max-width: 640px) 32px, (max-width: 768px) 40px, 48px"
                     className="rounded-full object-cover w-[48px] h-[48px]"
+                    unoptimized
                 />
             </div>
             <div className="flex-1">

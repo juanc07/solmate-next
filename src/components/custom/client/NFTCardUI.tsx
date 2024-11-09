@@ -46,6 +46,7 @@ const NFTCardUI: React.FC<NFTCardProps> = ({ id, name, image, collection, descri
           fill
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           className={`object-cover transition-opacity duration-500 ${isLoading ? "opacity-0" : "opacity-100"}`}
+          unoptimized
           onLoad={() => setIsLoading(false)}          
         />
       </div>

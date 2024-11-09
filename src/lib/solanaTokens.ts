@@ -75,4 +75,9 @@ export const solanaTokens: SolanaToken[] = [
         symbol: "CLOUD",
         mintAddress: "CLoUDKc4Ane7HeQcPpE3YHnznRxhMimJ4MyaUqyHFzAu",
     },
+    {
+        name: "ai16z",
+        symbol: "ai16z",
+        mintAddress: "HeLp6NuQkmYB4pYWo2zYs22mESHXPQYzXbB8n4V98jwC",
+    },
 ];

@@ -148,28 +148,49 @@ const SwapToken: React.FC = () => {
 
         setJupiterTokens(jupiterTokens);
 
-        const matchedAccountTokens = accountTokens.reduce<IJupiterToken[]>((result, accountToken) => {
-          const match = jupiterTokens.find(jToken => jToken.address === accountToken.mint);
-          if (match) {
-            const tokenWithPrice = {
+        // Step 1: Match `solanaTokens` (popular tokens) with `jupiterTokens`, ensuring no duplicates by using a Set
+        const uniqueAddresses = new Set();
+        const matchedPopularTokens = solanaTokens.reduce<IJupiterToken[]>((result, sToken) => {
+          const match = jupiterTokens.find(jToken => jToken.address === sToken.mintAddress);
+          if (match && !uniqueAddresses.has(match.address)) {
+            uniqueAddresses.add(match.address);
+            result.push({
               ...match,
-              price: accountToken.price,
-              amount: accountToken.balance,
-            };
-            result.push(tokenWithPrice);
+              price: null, // Placeholder, to be updated as needed
+              amount: null,
+            });
           }
           return result;
         }, []);
 
+        // Step 2: Match `accountTokens` with `jupiterTokens` to load user-specific tokens
+        const matchedAccountTokens = accountTokens.reduce<IJupiterToken[]>((result, accountToken) => {
+          const match = jupiterTokens.find(jToken => jToken.address === accountToken.mint);
+          if (match && !uniqueAddresses.has(match.address)) {
+            uniqueAddresses.add(match.address);
+            result.push({
+              ...match,
+              price: accountToken.price,
+              amount: accountToken.balance,
+            });
+          }
+          return result;
+        }, []);
+
+        // Step 3: Filter out remaining tokens already included to avoid duplicates
         const remainingJupiterTokens = jupiterTokens.filter(
-          jToken => !matchedAccountTokens.some(accountToken => accountToken.address === jToken.address)
+          jToken => !uniqueAddresses.has(jToken.address)
         );
 
-        const combinedTokens = [...matchedAccountTokens, ...remainingJupiterTokens.slice(0, INITIAL_LOAD_COUNT)];
+        // Step 4: Combine all tokens and set the state
+        const combinedTokens = [
+          ...matchedPopularTokens,
+          ...matchedAccountTokens,
+          ...remainingJupiterTokens.slice(0, INITIAL_LOAD_COUNT),
+        ];
 
         setTokens(combinedTokens);
         setFilteredTokens(combinedTokens.slice(0, INITIAL_LOAD_COUNT));
-
       } catch (error) {
         console.error("Failed to fetch tokens:", error);
         setTokens([]);

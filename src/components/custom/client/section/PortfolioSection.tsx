@@ -5,22 +5,12 @@ import TokenItem from "@/components/custom/client/TokenItem";
 import { SolanaPriceHelper } from "@/lib/SolanaPriceHelper"; // Ensure this is used
 import { openDB, IDBPDatabase } from "idb";
 import { ITokenAccount } from "@/lib/interfaces/tokenAccount"; // Import the correct interface for Helius response
+import { IToken } from "@/lib/interfaces/token";
+import { normalizeAmount } from "@/lib/helper";
 
-interface Token {
-  mint: string;
-  balance: number;
-  icon: string; // URL for the token image
-  name: string;
-  symbol: string;
-  usdValue: number;
-  decimals: number;
-}
 
 const DB_NAME = "TokenCache";
 const STORE_NAME = "tokens";
-
-// Utility function to add delay
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // Initialize IndexedDB
 const initDB = async (): Promise<IDBPDatabase> => {
@@ -33,19 +23,15 @@ const initDB = async (): Promise<IDBPDatabase> => {
   });
 };
 
-const normalizeAmount = (amount: number, decimals: number): number => {
-  return amount / Math.pow(10, decimals);
-};
-
 // Get cached token data from IndexedDB (including image URL)
-const getCachedToken = async (mint: string): Promise<Token | null> => {
+const getCachedToken = async (mint: string): Promise<IToken | null> => {
   const db = await initDB();
   const cachedToken = await db.get(STORE_NAME, mint);
   return cachedToken;
 };
 
 // Store token data in IndexedDB (including image URL)
-const cacheToken = async (token: Token): Promise<void> => {
+const cacheToken = async (token: IToken): Promise<void> => {
   const db = await initDB();
   await db.put(STORE_NAME, token);
 };
@@ -53,7 +39,7 @@ const cacheToken = async (token: Token): Promise<void> => {
 const fetchTokenDataWithCache = async (
   mint: string,
   signal: AbortSignal
-): Promise<Token | null> => {
+): Promise<IToken | null> => {
   const cachedToken = await getCachedToken(mint);
   
   // Check if the cached token exists and if the icon is valid (not null or empty)
@@ -68,7 +54,7 @@ const fetchTokenDataWithCache = async (
     const tokenData = await response.json();
 
     // Directly use the image URL from the response
-    const token: Token = {
+    const token: IToken = {
       mint: tokenData.address,
       balance: 0,
       icon: tokenData.logoURI,
@@ -94,14 +80,14 @@ const fetchTokens = async (
   publicKey: string,
   signal: AbortSignal,
   setProgress: (progress: number) => void
-): Promise<Token[]> => {
+): Promise<IToken[]> => {
   try {
     const response = await fetch(`/api/solana-data?publicKey=${publicKey}`, { signal });
     if (!response.ok) throw new Error("Failed to fetch token accounts");
 
     const { tokensFromAccountHelius }: { tokensFromAccountHelius: ITokenAccount[] } = await response.json();
     const totalTokens = tokensFromAccountHelius.length;
-    const tokens: Token[] = [];
+    const tokens: IToken[] = [];
 
     for (const [index, { mint, amount }] of tokensFromAccountHelius.entries()) {
       const tokenData = await fetchTokenDataWithCache(mint, signal);
@@ -127,7 +113,7 @@ const fetchTokens = async (
 };
 
 const PortfolioSection = ({ publicKey }: { publicKey: string }) => {
-  const [tokens, setTokens] = useState<Token[]>([]);
+  const [tokens, setTokens] = useState<IToken[]>([]);
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState(0);
 

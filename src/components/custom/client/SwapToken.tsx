@@ -5,33 +5,131 @@ import { WalletConnectOnlyButton } from "./WalletConnectOnlyButton";
 import Spinner from './Spinner';
 import TokenSelection from './TokenSelection';
 import { FaSearch } from 'react-icons/fa';
-
-interface Token {
-  created_at?: string;
-  symbol: string;
-  name: string;
-  address: string;
-  logoURI: string;
-  decimals: number;
-  daily_volume?: number;
-  freeze_authority?: string;
-  permanent_delegate?: string;
-  extensions?: {
-    isVerified?: boolean;
-  };
-  price: number;
-}
+import { ITokenAccount } from "@/lib/interfaces/tokenAccount"; // Import the correct interface for Helius response
+import { IToken } from "@/lib/interfaces/token";
+import { IJupiterToken } from "@/lib/interfaces/jupiterToken";
+import TokenItem from "@/components/custom/client/TokenItem";
+import { SolanaPriceHelper } from "@/lib/SolanaPriceHelper"; // Ensure this is used
+import { openDB, IDBPDatabase } from "idb";
+import { normalizeAmount } from "@/lib/helper";
+import { PublicKey } from '@solana/web3.js';
 
 const INITIAL_LOAD_COUNT = 200;
 
+const DB_NAME = "SwapTokenCache";
+const STORE_NAME = "swapTokens";
+
+// Initialize IndexedDB
+const initDB = async (): Promise<IDBPDatabase> => {
+  return openDB(DB_NAME, 1, {
+    upgrade(db) {
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME, { keyPath: "mint" });
+      }
+    },
+  });
+};
+
+// Get cached token data from IndexedDB (including image URL)
+const getCachedToken = async (mint: string): Promise<IToken | null> => {
+  const db = await initDB();
+  const cachedToken = await db.get(STORE_NAME, mint);
+  return cachedToken;
+};
+
+// Store token data in IndexedDB (including image URL)
+const cacheToken = async (token: IToken): Promise<void> => {
+  const db = await initDB();
+  await db.put(STORE_NAME, token);
+};
+
+const fetchTokenDataWithCache = async (
+  mint: string,
+  signal: AbortSignal
+): Promise<IToken | null> => {
+  const cachedToken = await getCachedToken(mint);
+
+  // Check if the cached token exists and if the icon is valid (not null or empty)
+  if (cachedToken && cachedToken.icon && cachedToken.icon.trim()) {
+    return cachedToken;
+  }
+
+  try {
+    const response = await fetch(`/api/token/${mint}`, { signal });
+    if (!response.ok) throw new Error("Failed to fetch token data");
+
+    const tokenData = await response.json();
+
+    // Directly use the image URL from the response
+    const token: IToken = {
+      mint: tokenData.address,
+      balance: 0,
+      icon: tokenData.logoURI,
+      name: tokenData.name,
+      symbol: tokenData.symbol,
+      usdValue: 0,
+      decimals: tokenData.decimals,
+    };
+
+    await cacheToken(token); // Cache the token data including the icon
+    return token;
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      console.log(`Fetch aborted for mint: ${mint}`);
+    } else {
+      console.error(`Error fetching data for mint ${mint}:`, error);
+    }
+    return null;
+  }
+};
+
+const fetchAccountTokens = async (
+  publicKey: PublicKey | null,
+  signal: AbortSignal,
+  setProgress: (progress: number) => void
+): Promise<IToken[]> => {
+  try {
+    const response = await fetch(`/api/solana-data?publicKey=${publicKey}`, { signal });
+    if (!response.ok) throw new Error("Failed to fetch token accounts");
+
+    const { tokensFromAccountHelius }: { tokensFromAccountHelius: ITokenAccount[] } = await response.json();
+    const totalTokens = tokensFromAccountHelius.length;
+    const accountTokens: IToken[] = [];
+
+    for (const [index, { mint, amount }] of tokensFromAccountHelius.entries()) {
+      const tokenData = await fetchTokenDataWithCache(mint, signal);
+      if (tokenData) {
+        const normalizedAmount = normalizeAmount(amount, tokenData.decimals);
+        const usdValue = await SolanaPriceHelper.convertTokenToUSDC(tokenData.symbol, mint, normalizedAmount);
+        accountTokens.push({ ...tokenData, balance: normalizedAmount, usdValue });
+      }
+
+      setProgress(Math.round(((index + 1) / totalTokens) * 100));
+      if (signal.aborted) break;
+    }
+
+    return accountTokens.sort((a, b) => b.usdValue - a.usdValue);
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      console.log("Token fetching aborted");
+    } else {
+      console.error("Failed to fetch tokens:", error);
+    }
+    return [];
+  }
+};
+
 const SwapToken: React.FC = () => {
   const { publicKey, connected } = useWallet();
-  const [inputToken, setInputToken] = useState<Token | null>(null);
-  const [outputToken, setOutputToken] = useState<Token | null>(null);
+  const [accountTokens, setAccountTokens] = useState<IToken[]>([]);
+  const [progress, setProgress] = useState(0);
+
+  const [inputToken, setInputToken] = useState<IJupiterToken | null>(null);
+  const [outputToken, setOutputToken] = useState<IJupiterToken | null>(null);
   const [inputAmount, setInputAmount] = useState<string>('');
   const [outputAmount, setOutputAmount] = useState<string>('');
-  const [tokens, setTokens] = useState<Token[]>([]);
-  const [filteredTokens, setFilteredTokens] = useState<Token[]>([]);
+  const [tokens, setTokens] = useState<IJupiterToken[]>([]);
+  const [filteredTokens, setFilteredTokens] = useState<IJupiterToken[]>([]);
   const [showModal, setShowModal] = useState<'input' | 'output' | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -43,7 +141,21 @@ const SwapToken: React.FC = () => {
   useEffect(() => {
     if (!connected) return;
 
-    setLoading(true);
+    const controller = new AbortController();
+    const { signal } = controller;
+
+    setLoading(true);    
+    setProgress(0);
+
+    fetchAccountTokens(publicKey, signal, setProgress)
+      .then((fetchedTokens) => {
+        if (!signal.aborted) setAccountTokens(fetchedTokens);
+      })
+      .finally(() => {
+        if (!signal.aborted) setLoading(false);
+      });    
+
+
     const fetchTokens = async () => {
       try {
         const response = await fetch('https://api.jup.ag/tokens/v1', { cache: "no-store" });
@@ -52,7 +164,7 @@ const SwapToken: React.FC = () => {
 
         if (Array.isArray(data)) {
           const validTokens = data
-            .filter((token: Token) => token.address && token.symbol)
+            .filter((token: IJupiterToken) => token.address && token.symbol)
             .map(token => ({
               ...token,
               price: Math.random() * 10 // Placeholder for actual price data
@@ -71,6 +183,7 @@ const SwapToken: React.FC = () => {
       }
     };
     fetchTokens();
+    return () => controller.abort();
   }, [connected]);
 
   // Handle search and append new results

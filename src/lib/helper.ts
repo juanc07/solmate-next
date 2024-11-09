@@ -75,3 +75,7 @@ export const sanitizeImageUrl = (url:string) => {
     return `${value.slice(0, frontChars)}...${value.slice(-backChars)}`;
   };
   
+
+  export const normalizeAmount = (amount: number, decimals: number): number => {
+    return amount / Math.pow(10, decimals);
+  };

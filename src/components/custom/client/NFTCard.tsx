@@ -47,6 +47,7 @@ const NFTCard: React.FC<INFT> = ({
           className={`object-cover transition-opacity duration-500 ${
             isLoading ? "opacity-0" : "opacity-100"
           }`}
+          unoptimized
           onLoad={() => setIsLoading(false)} // Use onLoad to manage loading state
         />
       </div>

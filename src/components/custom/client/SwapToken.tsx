@@ -15,11 +15,9 @@ import { PublicKey } from '@solana/web3.js';
 import { solanaTokens } from "@/lib/solanaTokens";
 
 const INITIAL_LOAD_COUNT = 200;
-
 const DB_NAME = "SwapTokenCache";
 const STORE_NAME = "swapTokens";
 
-// Initialize IndexedDB
 const initDB = async (): Promise<IDBPDatabase> => {
   return openDB(DB_NAME, 1, {
     upgrade(db) {
@@ -85,27 +83,38 @@ const fetchAccountTokens = async (
     const totalTokens = tokensFromAccountHelius.length;
     const accountTokens: IToken[] = [];
 
-    const fetchPromises = tokensFromAccountHelius.map(async ({ mint, amount }, index) => {
-      const tokenData = await fetchTokenDataWithCache(mint, signal);
-      if (tokenData) {
-        const normalizedAmount = normalizeAmount(amount, tokenData.decimals);
-        const { tokenAccountValue, tokenPrice } = await SolanaPriceHelper.convertTokenToUSDC(tokenData.symbol, mint, normalizedAmount);
-        accountTokens.push({ ...tokenData, balance: normalizedAmount, usdValue: tokenAccountValue, price: tokenPrice });
-      }
+    const chunkSize = 10;
+    let completed = 0;
 
-      if (index % 10 === 0) {
-        setProgress(Math.round(((index + 1) / totalTokens) * 100));
-      }
-    });
+    for (let i = 0; i < tokensFromAccountHelius.length; i += chunkSize) {
+      const chunk = tokensFromAccountHelius.slice(i, i + chunkSize);
+      const chunkPromises = chunk.map(async ({ mint, amount }) => {
+        const tokenData = await fetchTokenDataWithCache(mint, signal);
+        if (tokenData) {
+          const normalizedAmount = normalizeAmount(amount, tokenData.decimals);
+          const { tokenAccountValue, tokenPrice } = await SolanaPriceHelper.convertTokenToUSDC(tokenData.symbol, mint, normalizedAmount);
+          accountTokens.push({ ...tokenData, balance: normalizedAmount, usdValue: tokenAccountValue, price: tokenPrice });
+        }
+      });
+      await Promise.all(chunkPromises);
 
-    await Promise.all(fetchPromises);
+      completed += chunk.length;
+      setProgress(Math.round((completed / totalTokens) * 100));
+
+      await new Promise(resolve => setTimeout(resolve, 0));
+      if (signal.aborted) return [];
+    }
+
     return accountTokens.sort((a, b) => b.usdValue - a.usdValue);
   } catch (error) {
-    console.error("Failed to fetch tokens:", error);
+    if (error instanceof DOMException && error.name === "AbortError") {
+      console.log("Token fetching aborted");
+    } else {
+      console.error("Failed to fetch tokens:", error);
+    }
     return [];
   }
 };
-
 
 const SwapToken: React.FC = () => {
   const { publicKey, connected } = useWallet();
@@ -125,11 +134,18 @@ const SwapToken: React.FC = () => {
 
   const modalRef = useRef<HTMLDivElement>(null);
   const tokenRefs = useRef<{ [key: string]: React.RefObject<HTMLLIElement> }>({});
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     if (!connected) return;
 
+    /*if (abortControllerRef.current) {
+      setLoading(false);
+      abortControllerRef.current.abort();
+    }*/
+
     const controller = new AbortController();
+    abortControllerRef.current = controller;
     const { signal } = controller;
 
     setLoading(true);
@@ -148,47 +164,56 @@ const SwapToken: React.FC = () => {
 
         setJupiterTokens(jupiterTokens);
 
-        // Step 1: Match `solanaTokens` (popular tokens) with `jupiterTokens`, ensuring no duplicates by using a Set
         const uniqueAddresses = new Set();
-        const matchedPopularTokens = solanaTokens.reduce<IJupiterToken[]>((result, sToken) => {
+        const matchedPopularTokens: IJupiterToken[] = [];
+
+        for (const sToken of solanaTokens) {
+          if (signal.aborted) break;
+
           const match = jupiterTokens.find(jToken => jToken.address === sToken.mintAddress);
           if (match && !uniqueAddresses.has(match.address)) {
             uniqueAddresses.add(match.address);
-            result.push({
+            matchedPopularTokens.push({
               ...match,
-              price: null, // Placeholder, to be updated as needed
+              price: null,
               amount: null,
             });
           }
-          return result;
-        }, []);
+        }
 
-        // Step 2: Match `accountTokens` with `jupiterTokens` to load user-specific tokens
-        const matchedAccountTokens = accountTokens.reduce<IJupiterToken[]>((result, accountToken) => {
+        const matchedAccountTokens: IJupiterToken[] = [];
+        for (const accountToken of accountTokens) {
+          if (signal.aborted) break;
+
           const match = jupiterTokens.find(jToken => jToken.address === accountToken.mint);
           if (match && !uniqueAddresses.has(match.address)) {
             uniqueAddresses.add(match.address);
-            result.push({
+            matchedAccountTokens.push({
               ...match,
               price: accountToken.price,
               amount: accountToken.balance,
             });
           }
-          return result;
-        }, []);
+        }
 
-        // Step 3: Filter out remaining tokens already included to avoid duplicates
-        const remainingJupiterTokens = jupiterTokens.filter(
-          jToken => !uniqueAddresses.has(jToken.address)
-        );
 
-        // Step 4: Combine all tokens and set the state
-        const combinedTokens = [
-          ...matchedPopularTokens,
-          ...matchedAccountTokens,
-          ...remainingJupiterTokens.slice(0, INITIAL_LOAD_COUNT),
-        ];
+        const remainingJupiterTokens: IJupiterToken[] = [];
+        for (const jToken of jupiterTokens) {
+          if (signal.aborted) break;
 
+          if (!uniqueAddresses.has(jToken.address)) {
+            remainingJupiterTokens.push(jToken);
+          }
+        }
+
+        const combinedTokens: IJupiterToken[] = [];
+        if (!signal.aborted) {
+          combinedTokens.push(
+            ...matchedPopularTokens,
+            ...matchedAccountTokens,
+            ...remainingJupiterTokens.slice(0, INITIAL_LOAD_COUNT)
+          );
+        }
         setTokens(combinedTokens);
         setFilteredTokens(combinedTokens.slice(0, INITIAL_LOAD_COUNT));
       } catch (error) {
@@ -202,8 +227,11 @@ const SwapToken: React.FC = () => {
 
     loadTokens();
 
-    return () => controller.abort();
-  }, [connected]);
+    return () => {
+      setLoading(false);
+      controller.abort();
+    };
+  }, [publicKey]);
 
   const handleSearch = () => {
     if (!searchTerm) {
@@ -215,7 +243,6 @@ const SwapToken: React.FC = () => {
         token.address.toLowerCase() === searchTerm.toLowerCase()
       );
 
-      // Append the matched tokens to the current filteredTokens array without replacing it
       setFilteredTokens(prevFilteredTokens => {
         const newTokens = matchedTokens.filter(
           matchedToken => !prevFilteredTokens.some(token => token.address === matchedToken.address)
@@ -223,11 +250,9 @@ const SwapToken: React.FC = () => {
         return [...prevFilteredTokens, ...newTokens];
       });
 
-      // Scroll to the first match if available
       setScrollToToken(matchedTokens[0]?.address || null);
     }
   };
-
 
   useEffect(() => {
     if (scrollToToken && tokenRefs.current[scrollToToken]?.current) {

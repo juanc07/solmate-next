@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const isProduction = process.env.VERCEL_ENV === 'production' || process.env.NODE_ENV === 'production';
+const isProduction = process.env.NEXT_PUBLIC_ENV === 'production' || process.env.NEXT_PUBLIC_ENV === 'production';
 const baseUrl = isProduction
   ? 'https://solmate-next.vercel.app'
   : 'http://localhost:3000';

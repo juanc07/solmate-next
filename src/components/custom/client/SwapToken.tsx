@@ -38,12 +38,12 @@ const cacheToken = async (token: IToken): Promise<void> => {
   await db.put(STORE_NAME, token);
 };
 
-const fetchTokenDataWithCache = async (mint: string, signal: AbortSignal): Promise<IToken | null> => {
+const fetchTokenDataWithCache = async (mint: string): Promise<IToken | null> => {
   const cachedToken = await getCachedToken(mint);
   if (cachedToken && cachedToken.icon && cachedToken.icon.trim()) return cachedToken;
 
   try {
-    const response = await fetch(`/api/token/${mint}`, { signal });
+    const response = await fetch(`/api/token/${mint}`);
     if (!response.ok) throw new Error("Failed to fetch token data");
 
     const tokenData = await response.json();
@@ -61,22 +61,17 @@ const fetchTokenDataWithCache = async (mint: string, signal: AbortSignal): Promi
     await cacheToken(token);
     return token;
   } catch (error) {
-    if (error instanceof DOMException && error.name === "AbortError") {
-      console.log(`Fetch aborted for mint: ${mint}`);
-    } else {
-      console.error(`Error fetching data for mint ${mint}:`, error);
-    }
+    console.error(`Error fetching data for mint ${mint}:`, error);
     return null;
   }
 };
 
 const fetchAccountTokens = async (
   publicKey: PublicKey | null,
-  signal: AbortSignal,
   setProgress: (progress: number) => void
 ): Promise<IToken[]> => {
   try {
-    const response = await fetch(`/api/solana-data?publicKey=${publicKey}`, { signal });
+    const response = await fetch(`/api/solana-data?publicKey=${publicKey}`);
     if (!response.ok) throw new Error("Failed to fetch token accounts");
 
     const { tokensFromAccountHelius }: { tokensFromAccountHelius: ITokenAccount[] } = await response.json();
@@ -89,7 +84,7 @@ const fetchAccountTokens = async (
     for (let i = 0; i < tokensFromAccountHelius.length; i += chunkSize) {
       const chunk = tokensFromAccountHelius.slice(i, i + chunkSize);
       const chunkPromises = chunk.map(async ({ mint, amount }) => {
-        const tokenData = await fetchTokenDataWithCache(mint, signal);
+        const tokenData = await fetchTokenDataWithCache(mint);
         if (tokenData) {
           const normalizedAmount = normalizeAmount(amount, tokenData.decimals);
           const { tokenAccountValue, tokenPrice } = await SolanaPriceHelper.convertTokenToUSDC(tokenData.symbol, mint, normalizedAmount);
@@ -100,18 +95,12 @@ const fetchAccountTokens = async (
 
       completed += chunk.length;
       setProgress(Math.round((completed / totalTokens) * 100));
-
       await new Promise(resolve => setTimeout(resolve, 0));
-      if (signal.aborted) return [];
     }
 
     return accountTokens.sort((a, b) => b.usdValue - a.usdValue);
   } catch (error) {
-    if (error instanceof DOMException && error.name === "AbortError") {
-      console.log("Token fetching aborted");
-    } else {
-      console.error("Failed to fetch tokens:", error);
-    }
+    console.error("Failed to fetch tokens:", error);
     return [];
   }
 };
@@ -134,19 +123,9 @@ const SwapToken: React.FC = () => {
 
   const modalRef = useRef<HTMLDivElement>(null);
   const tokenRefs = useRef<{ [key: string]: React.RefObject<HTMLLIElement> }>({});
-  const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     if (!connected) return;
-
-    /*if (abortControllerRef.current) {
-      setLoading(false);
-      abortControllerRef.current.abort();
-    }*/
-
-    const controller = new AbortController();
-    abortControllerRef.current = controller;
-    const { signal } = controller;
 
     setLoading(true);
     setProgress(0);
@@ -154,8 +133,8 @@ const SwapToken: React.FC = () => {
     const loadTokens = async () => {
       try {
         const [accountTokens, jupiterData] = await Promise.all([
-          fetchAccountTokens(publicKey, signal, setProgress),
-          fetch('https://api.jup.ag/tokens/v1', { cache: "no-store", signal }).then(res => res.json()),
+          fetchAccountTokens(publicKey, setProgress),
+          fetch('https://api.jup.ag/tokens/v1', { cache: "no-store" }).then(res => res.json()),
         ]);
 
         const jupiterTokens = Array.isArray(jupiterData)
@@ -168,8 +147,6 @@ const SwapToken: React.FC = () => {
         const matchedPopularTokens: IJupiterToken[] = [];
 
         for (const sToken of solanaTokens) {
-          if (signal.aborted) break;
-
           const match = jupiterTokens.find(jToken => jToken.address === sToken.mintAddress);
           if (match && !uniqueAddresses.has(match.address)) {
             uniqueAddresses.add(match.address);
@@ -183,8 +160,6 @@ const SwapToken: React.FC = () => {
 
         const matchedAccountTokens: IJupiterToken[] = [];
         for (const accountToken of accountTokens) {
-          if (signal.aborted) break;
-
           const match = jupiterTokens.find(jToken => jToken.address === accountToken.mint);
           if (match && !uniqueAddresses.has(match.address)) {
             uniqueAddresses.add(match.address);
@@ -196,24 +171,19 @@ const SwapToken: React.FC = () => {
           }
         }
 
-
         const remainingJupiterTokens: IJupiterToken[] = [];
         for (const jToken of jupiterTokens) {
-          if (signal.aborted) break;
-
           if (!uniqueAddresses.has(jToken.address)) {
             remainingJupiterTokens.push(jToken);
           }
         }
 
-        const combinedTokens: IJupiterToken[] = [];
-        if (!signal.aborted) {
-          combinedTokens.push(
-            ...matchedPopularTokens,
-            ...matchedAccountTokens,
-            ...remainingJupiterTokens.slice(0, INITIAL_LOAD_COUNT)
-          );
-        }
+        const combinedTokens: IJupiterToken[] = [
+          ...matchedPopularTokens,
+          ...matchedAccountTokens,
+          ...remainingJupiterTokens.slice(0, INITIAL_LOAD_COUNT)
+        ];
+        
         setTokens(combinedTokens);
         setFilteredTokens(combinedTokens.slice(0, INITIAL_LOAD_COUNT));
       } catch (error) {
@@ -226,11 +196,6 @@ const SwapToken: React.FC = () => {
     };
 
     loadTokens();
-
-    return () => {
-      setLoading(false);
-      controller.abort();
-    };
   }, [publicKey]);
 
   const handleSearch = () => {
@@ -421,6 +386,7 @@ const SwapToken: React.FC = () => {
                           else setOutputToken(token);
                           closeModal();
                         }}
+                        useProxy={false}
                       />
                     </li>
                   );

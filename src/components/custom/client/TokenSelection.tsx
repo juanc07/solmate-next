@@ -13,6 +13,7 @@ interface TokenSelectionProps {
     freeze_authority?: string;
     permanent_delegate?: string;
     onClick: () => void;
+    useProxy?: boolean; // New prop to toggle proxy usage
 }
 
 const defaultImage = "/images/token/default-token.png";
@@ -23,7 +24,7 @@ const getProxyUrl = async (imageUrl: string, type: string, signal: AbortSignal):
         const response = await fetch(proxyUrl, { method: 'HEAD', signal });
         const isValidImage = response.ok && response.headers.get("Content-Type")?.startsWith("image/");
         return isValidImage ? proxyUrl : defaultImage;
-    } catch (error:any) {
+    } catch (error: any) {
         if (error.name !== "AbortError") {
             console.error("Failed to fetch image:", error);
         }
@@ -42,6 +43,7 @@ const TokenSelection: React.FC<TokenSelectionProps> = ({
     freeze_authority,
     permanent_delegate,
     onClick,
+    useProxy = true, // Default to using proxy
 }) => {
     const calculatedValue = amount && price ? `$${(amount * price).toFixed(2)}` : "$0.00";
     const [imageSrc, setImageSrc] = useState(defaultImage);
@@ -51,14 +53,19 @@ const TokenSelection: React.FC<TokenSelectionProps> = ({
         const { signal } = controller;
 
         const fetchImageSrc = async () => {
-            const src = logoURI && logoURI.trim() ? await getProxyUrl(logoURI, "token", signal) : defaultImage;
+            let src;
+            if (useProxy && logoURI && logoURI.trim()) {
+                src = await getProxyUrl(logoURI, "token", signal);
+            } else {
+                src = logoURI || defaultImage;
+            }
             setImageSrc(src);
         };
 
         fetchImageSrc();
 
         return () => controller.abort(); // Cleanup function to abort fetch on component unmount
-    }, [logoURI]);
+    }, [logoURI, useProxy]);
 
     return (
         <div

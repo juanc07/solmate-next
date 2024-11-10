@@ -1,14 +1,13 @@
-'use client';
+"use client";
 import React, { useState, useEffect, useRef } from 'react';
 import { useWallet } from "@solana/wallet-adapter-react";
 import { WalletConnectOnlyButton } from "./WalletConnectOnlyButton";
 import Spinner from './Spinner';
-import TokenSelection from './TokenSelection';
-import { FaSearch } from 'react-icons/fa';
 import { IToken } from "@/lib/interfaces/token";
 import { IJupiterToken } from "@/lib/interfaces/jupiterToken";
 import { solanaTokens } from "@/lib/solanaTokens";
 import { fetchAccountTokens } from '@/lib/swapTokenHelper';
+import TokenSelectionModal from './modal/TokenSelectionModal';
 
 const INITIAL_LOAD_COUNT = 200;
 
@@ -28,7 +27,6 @@ const SwapToken: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [scrollToToken, setScrollToToken] = useState<string | null>(null);
 
-  const modalRef = useRef<HTMLDivElement>(null);
   const tokenRefs = useRef<{ [key: string]: React.RefObject<HTMLLIElement> }>({});
 
   useEffect(() => {
@@ -171,22 +169,6 @@ const SwapToken: React.FC = () => {
     document.body.style.overflow = 'auto';
   };
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
-        closeModal();
-      }
-    };
-
-    if (showModal) {
-      document.addEventListener("mousedown", handleClickOutside);
-    } else {
-      document.removeEventListener("mousedown", handleClickOutside);
-    }
-
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [showModal]);
-
   return (
     <div className="flex flex-col items-center min-h-screen bg-white dark:bg-black transition-colors duration-300 px-4 py-8 md:py-12 relative">
       <h1 className="text-3xl sm:text-4xl font-bold text-violet-600 dark:text-violet-400 mb-4 md:mb-6">
@@ -254,59 +236,19 @@ const SwapToken: React.FC = () => {
       )}
 
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 overflow-hidden">
-          <div ref={modalRef} className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4">
-            <div className="relative flex items-center mb-4">
-              <input
-                type="text"
-                placeholder="Search token"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full p-2 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-300"
-              />
-              <button
-                onClick={handleSearch}
-                className="absolute right-2 p-1 bg-violet-600 text-white rounded"
-              >
-                <FaSearch />
-              </button>
-            </div>
-            <div className="overflow-y-auto max-h-60 scrollbar-hide">
-              <ul className="space-y-2">
-                {filteredTokens.map((token, index) => {
-                  const ref = (tokenRefs.current[token.address] ||= React.createRef());
-                  return (
-                    <li key={`${token.address}-${index}`} ref={ref}>
-                      <TokenSelection
-                        name={token.name}
-                        symbol={token.symbol}
-                        logoURI={token.logoURI}
-                        address={token.address}
-                        price={token.price}
-                        amount={token.amount}
-                        isVerified={token.extensions?.isVerified}
-                        freeze_authority={token.freeze_authority}
-                        permanent_delegate={token.permanent_delegate}
-                        onClick={() => {
-                          if (showModal === 'input') setInputToken(token);
-                          else setOutputToken(token);
-                          closeModal();
-                        }}
-                        useProxy={false}
-                      />
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-            <button
-              onClick={closeModal}
-              className="mt-4 w-full py-2 px-4 bg-red-600 text-white rounded"
-            >
-              Close
-            </button>
-          </div>
-        </div>
+        <TokenSelectionModal
+          filteredTokens={filteredTokens}
+          tokenRefs={tokenRefs}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          handleSearch={handleSearch}
+          onClose={closeModal}
+          onSelectToken={(token) => {
+            if (showModal === 'input') setInputToken(token);
+            else setOutputToken(token);
+            closeModal();
+          }}
+        />
       )}
     </div>
   );

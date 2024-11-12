@@ -125,7 +125,7 @@ const SwapToken: React.FC = () => {
 
   useEffect(() => {
     if (scrollToToken && tokenRefs.current[scrollToToken]?.current) {
-      tokenRefs.current[scrollToToken].current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      tokenRefs.current[scrollToToken].current?.scrollIntoView({ behavior: "auto", block: "center" });
       setScrollToToken(null);
     }
   }, [filteredTokens, scrollToToken]);

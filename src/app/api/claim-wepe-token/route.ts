@@ -112,16 +112,6 @@ export async function POST(req: NextRequest) {
     // Sign the transaction with the faucet's private key for token transfer
     transaction.sign([faucetKeypair]);
 
-    // Save the claim in Supabase
-    const { error: insertError } = await solmateSupabase
-      .from("claims")
-      .insert([{ public_key: recipientPublicKey.toString(), claimed: true }]);
-
-    if (insertError) {
-      console.error("Error inserting claim data into Supabase:", insertError);
-      return NextResponse.json({ error: "Error saving claim status." }, { status: 500 });
-    }
-
     // Return the partially signed transaction to the client
     const serializedTransaction = transaction.serialize();
     return NextResponse.json(

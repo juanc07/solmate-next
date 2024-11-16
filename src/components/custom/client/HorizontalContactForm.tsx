@@ -1,15 +1,15 @@
 "use client"; // Designates this as a Client Component
 
-import React from 'react';
+import React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { toast } from "@/components/hooks/use-toast";
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Form,
   FormControl,
@@ -27,7 +27,7 @@ const FormSchema = z.object({
   email: z.string().email("Invalid email address"),
   phone: z.string().min(1, "Phone is required"),
   message: z.string().min(1, "Message is required"),
-  terms: z.boolean().refine(val => val === true, "You must accept the terms and conditions"),
+  terms: z.boolean().refine((val) => val === true, "You must accept the terms and conditions"),
 });
 
 // Define TypeScript type for form data
@@ -46,19 +46,40 @@ const HorizontalContactForm: React.FC<ITitleProps> = ({ title }) => {
     },
   });
 
-  const onSubmit = (data: FormData) => {
-    // Show a toast with the form data
-    toast({
-      title: "Form Submitted",
-      description: (
-        <pre className="mt-2 w-full rounded-md bg-slate-950 p-4 overflow-auto">
-          <code className="text-white">{JSON.stringify(data, null, 2)}</code>
-        </pre>
-      ),
-    });
+  const onSubmit = async (data: FormData) => {
+    try {
+      // Show a toast that the submission is in progress
+      toast({
+        title: "Submitting...",
+        description: "Your form is being submitted. Please wait.",
+      });
 
-    // Reset the form after submission
-    form.reset();
+      // Send form data to the API endpoint
+      const response = await fetch("/api/send-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to send the message. Please try again later.");
+      }
+
+      // Show a success toast
+      toast({
+        title: "Form Submitted",
+        description: "Your message has been sent successfully!",
+      });
+
+      // Reset the form after successful submission
+      form.reset();
+    } catch (error: any) {
+      // Show an error toast
+      toast({
+        title: "Error",
+        description: error.message || "An unexpected error occurred.",
+      });
+    }
   };
 
   return (

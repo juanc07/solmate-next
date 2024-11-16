@@ -161,6 +161,14 @@ const ClaimWepeContent = () => {
             </Button>
           )}
         </div>
+
+        <div className="mt-8 text-center text-gray-700 dark:text-gray-300">
+          <p>
+            Thank you for supporting <strong>WEPE</strong>. Let’s build this community and thrive together.
+            <br />
+            <strong>In WEPE We Trust.</strong>
+          </p>
+        </div>
       </div>
 
       <Dialog open={showDialog} onOpenChange={setShowDialog}>

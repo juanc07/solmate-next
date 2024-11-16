@@ -1,5 +1,5 @@
-import React from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import React from "react";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
 const WhoWeAreCard: React.FC = () => {
   return (
@@ -30,6 +30,14 @@ const WhoWeAreCard: React.FC = () => {
             Whether you're an active trader, a collector, or a curious observer, Solmate brings the best of 
             the decentralized world straight to your fingertips.
           </p>
+          <div className="mt-6 p-4 bg-yellow-100 dark:bg-yellow-700 text-yellow-800 dark:text-yellow-200 rounded-lg shadow-md">
+            <p>
+              <strong>Note:</strong> Solmate is still under active development. As we build this platform in public, 
+              you might encounter placeholders, incomplete features, or occasional bugs. 
+              We truly appreciate your patience and understanding as we work to improve and deliver the best experience possible. 
+              Thank you for joining us on this exciting journey!
+            </p>
+          </div>
         </CardContent>
       </Card>
     </div>

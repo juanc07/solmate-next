@@ -6,8 +6,8 @@ import HorizontalContactForm from "@/components/custom/client/HorizontalContactF
 const ContactPage = () => {
   return (
     <Layout>
-    <Contact title="Contact Us"/>
     <HorizontalContactForm title="Message Us"/>
+    {/*<Contact title="Contact Us"/>*/}    
     </Layout>
   )
 }

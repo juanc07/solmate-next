@@ -68,15 +68,10 @@ export default function Home() {
     <Layout>      
       <Carousel/>
       <WhoWeAreCard/>
-      <ServiceStats/>      
-      <Contact title="Contact Us"/>
+      <ServiceStats/>            
       <HorizontalContactForm title="Message Us"/>
       {/*
-      <h1>Hello world</h1>
-      <Link href="/users">Users</Link> <br />
-      <Link href="/ourWork">Our Work</Link> <br />
-      <ProductCard />
-      <Counter />
+      <Contact title="Contact Us"/>
       */}
     </Layout>
   );

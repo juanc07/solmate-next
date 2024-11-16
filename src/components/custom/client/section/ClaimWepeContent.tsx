@@ -61,33 +61,33 @@ const ClaimWepeContent = () => {
         setShowDialog(true);
         return;
       }
-  
+
       const walletAddress = publicKey.toString();
       setLoadingClaim(true);
-  
+
       // Step 1: Fetch the partially signed transaction from the backend
       const response = await fetch("/api/claim-wepe-token", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ recipient: walletAddress }),
       });
-  
+
       const data = await response.json();
       if (!response.ok) {
         setMessage(`Error: ${data.error}`);
         setShowDialog(true);
         return;
       }
-  
+
       // Step 2: Convert base64 transaction into Uint8Array
       const transactionBuffer = Uint8Array.from(Buffer.from(data.transaction, "base64"));
-  
+
       // Step 3: Deserialize transaction for signing
       const transaction = VersionedTransaction.deserialize(transactionBuffer);
-  
+
       // Step 4: Sign the transaction using the wallet
       const signedTransaction = await signTransaction(transaction);
-  
+
       // Step 5: Pass the signed transaction and recipient to the backend for submission
       const sendResponse = await fetch("/api/submit-signed-transaction", {
         method: "POST",
@@ -97,14 +97,14 @@ const ClaimWepeContent = () => {
           recipient: walletAddress, // Include recipient here
         }),
       });
-  
+
       const sendResult = await sendResponse.json();
       if (sendResponse.ok) {
         setMessage(`Success: ${sendResult.message}`);
       } else {
         setMessage(`Error: ${sendResult.error}`);
       }
-  
+
       setShowDialog(true);
     } catch (error) {
       console.error("Transaction failed:", error);
@@ -114,7 +114,7 @@ const ClaimWepeContent = () => {
       setLoadingClaim(false);
     }
   };
-  
+
 
   return (
     <div className="min-h-screen min-w-full flex flex-col items-center justify-start bg-black text-gray-100 transition-colors duration-300 relative">
@@ -143,13 +143,13 @@ const ClaimWepeContent = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
           <div className="flex flex-col items-center md:items-start">
-            <p className="text-lg">
+            <p className="text-lg text-black dark:text-white">
               <strong>SOL Balance:</strong> {solBalance ?? 0}
             </p>
           </div>
 
           <div className="flex flex-col items-center md:items-end">
-            <p className="text-lg">
+            <p className="text-lg text-black dark:text-white">
               <strong>USD Equivalent:</strong> ${usdEquivalent.toFixed(2)}
             </p>
           </div>

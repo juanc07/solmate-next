@@ -16,12 +16,14 @@ const ClaimWepeContent = () => {
   const [usdEquivalent, setUsdEquivalent] = useState<number>(0);
   const [message, setMessage] = useState("");
   const [showDialog, setShowDialog] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loadingWallet, setLoadingWallet] = useState(false);
+  const [loadingClaim, setLoadingClaim] = useState(false);
 
+  // Function to load wallet information
   const fetchSolBalanceAndPrice = useCallback(async () => {
     if (!connected || !publicKey) return;
 
-    setLoading(true);
+    setLoadingWallet(true);
     try {
       const response = await fetch(`/api/solana-data?publicKey=${publicKey.toString()}`);
       if (!response.ok) throw new Error("Failed to fetch SOL balance");
@@ -39,7 +41,7 @@ const ClaimWepeContent = () => {
       setSolPrice(null);
       setUsdEquivalent(0);
     } finally {
-      setLoading(false);
+      setLoadingWallet(false);
     }
   }, [connected, publicKey]);
 
@@ -52,6 +54,7 @@ const ClaimWepeContent = () => {
     }
   }, [connected, publicKey, fetchSolBalanceAndPrice]);
 
+  // Function to handle token claim
   const handleClaimToken = async () => {
     try {
       if (!publicKey || !signTransaction) {
@@ -61,7 +64,7 @@ const ClaimWepeContent = () => {
       }
 
       const walletAddress = publicKey.toString();
-      setLoading(true);
+      setLoadingClaim(true);
 
       // Step 1: Fetch the partially signed transaction from the backend
       const response = await fetch("/api/claim-wepe-token", {
@@ -108,18 +111,18 @@ const ClaimWepeContent = () => {
       setMessage("An unexpected error occurred during transaction signing or submission.");
       setShowDialog(true);
     } finally {
-      setLoading(false);
+      setLoadingClaim(false);
     }
   };
 
   return (
     <div className="min-h-screen min-w-full flex flex-col items-center justify-start bg-black text-gray-100 transition-colors duration-300 relative">
-      {loading && (
+      {(loadingWallet || loadingClaim) && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-gray-800 rounded-lg p-6 flex items-center space-x-4">
             <Spinner />
             <span className="text-lg font-semibold text-gray-700 dark:text-gray-300">
-              Processing your request...
+              {loadingWallet ? "Loading wallet data..." : "Processing your claim..."}
             </span>
           </div>
         </div>

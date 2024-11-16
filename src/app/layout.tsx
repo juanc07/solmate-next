@@ -36,7 +36,7 @@ export const metadata = {
     siteName: 'Solmate',
     images: [
       {
-        url: 'https://solmate.vercel.app/images/logo/solmate-logo.webp', // Update with the correct path to your logo
+        url: 'https://solmate.vercel.app/images/logo/solmate-logo.png', // Update with the correct path to your logo
         width: 1200,
         height: 630,
         alt: 'Solmate Logo',
@@ -48,11 +48,11 @@ export const metadata = {
     site: '@solmate',  // Replace with your actual Twitter handle
     title: 'Solmate | All Things Solana in One Place',
     description: 'Discover the world of Solana on Solmate. Buy, sell, swap, and track trending tokens, followed wallets, and market movements effortlessly.',
-    images: ['https://solmate.vercel.app/images/logo/solmate-logo.webp'], // Correct path to your Twitter card image
+    images: ['https://solmate.vercel.app/images/logo/solmate-logo.png'], // Correct path to your Twitter card image
   },
   icons: {
     icon: '/favicon.ico',  // Ensure your favicon is placed in the public directory
-    appleTouchIcon: '/images/logo/solmate-logo.webp',  // Update Apple icon path if necessary
+    appleTouchIcon: '/images/logo/solmate-logo.png',  // Update Apple icon path if necessary
   },
 };
 

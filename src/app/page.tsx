@@ -34,7 +34,7 @@ export const metadata = {
     siteName: 'Solmate',
     images: [
       {
-        url: 'https://solmate.vercel.app/images/logo/solmate-logo.webp',  // Replace with the correct logo URL
+        url: 'https://solmate.vercel.app/images/logo/solmate-logo.png',  // Replace with the correct logo URL
         width: 1200,
         height: 630,
         alt: 'Solmate Logo',
@@ -56,7 +56,7 @@ export const metadata = {
   },
   icons: {
     icon: '/favicon.ico',  // Ensure this file is in your public folder
-    appleTouchIcon: '/images/logo/solmate-logo.webp',  // Your custom Apple touch icon
+    appleTouchIcon: '/images/logo/solmate-logo.png',  // Your custom Apple touch icon
   },
 };
 

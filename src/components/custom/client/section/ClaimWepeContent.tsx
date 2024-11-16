@@ -19,7 +19,6 @@ const ClaimWepeContent = () => {
   const [loadingWallet, setLoadingWallet] = useState(false);
   const [loadingClaim, setLoadingClaim] = useState(false);
 
-  // Function to load wallet information
   const fetchSolBalanceAndPrice = useCallback(async () => {
     if (!connected || !publicKey) return;
 
@@ -65,7 +64,6 @@ const ClaimWepeContent = () => {
       const walletAddress = publicKey.toString();
       setLoadingClaim(true);
 
-      // Step 1: Fetch the partially signed transaction from the backend
       const response = await fetch("/api/claim-wepe-token", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -79,22 +77,17 @@ const ClaimWepeContent = () => {
         return;
       }
 
-      // Step 2: Convert base64 transaction into Uint8Array
       const transactionBuffer = Uint8Array.from(Buffer.from(data.transaction, "base64"));
-
-      // Step 3: Deserialize transaction for signing
       const transaction = VersionedTransaction.deserialize(transactionBuffer);
 
-      // Step 4: Sign the transaction using the wallet
       const signedTransaction = await signTransaction(transaction);
 
-      // Step 5: Pass the signed transaction and recipient to the backend for submission
       const sendResponse = await fetch("/api/submit-signed-transaction", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           signedTransaction: Buffer.from(signedTransaction.serialize()).toString("base64"),
-          recipient: walletAddress, // Include recipient here
+          recipient: walletAddress,
         }),
       });
 
@@ -115,9 +108,8 @@ const ClaimWepeContent = () => {
     }
   };
 
-
   return (
-    <div className="min-h-screen min-w-full flex flex-col items-center justify-start bg-black text-gray-100 transition-colors duration-300 relative">
+    <div className="min-h-screen min-w-full flex flex-col items-center justify-start bg-white dark:bg-black text-gray-900 dark:text-gray-100 transition-colors duration-300 relative">
       {(loadingWallet || loadingClaim) && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-gray-800 rounded-lg p-6 flex items-center space-x-4">
@@ -129,27 +121,27 @@ const ClaimWepeContent = () => {
         </div>
       )}
 
-      <div className="w-full max-w-4xl px-4 py-12 md:py-16 bg-white dark:bg-gray-800 shadow-lg rounded-lg mt-[10vh]">
+      <div className="w-full max-w-4xl px-4 py-12 md:py-16 bg-gray-100 dark:bg-gray-900 shadow-lg rounded-lg mt-[10vh]">
         <div className="flex flex-col items-center md:items-start md:flex-row">
           <img
             src="/images/token/WEPE.jpg"
             alt="WEPE Token"
             className="w-24 h-24 rounded-full shadow-md mb-4 md:mb-0 md:mr-6"
           />
-          <h1 className="text-3xl font-extrabold text-purple-600 text-center md:text-left">
+          <h1 className="text-3xl font-extrabold text-purple-600 dark:text-purple-400 text-center md:text-left">
             WEPE Token Claim
           </h1>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
           <div className="flex flex-col items-center md:items-start">
-            <p className="text-lg text-black dark:text-white">
+            <p className="text-lg text-gray-900 dark:text-gray-100">
               <strong>SOL Balance:</strong> {solBalance ?? 0}
             </p>
           </div>
 
           <div className="flex flex-col items-center md:items-end">
-            <p className="text-lg text-black dark:text-white">
+            <p className="text-lg text-gray-900 dark:text-gray-100">
               <strong>USD Equivalent:</strong> ${usdEquivalent.toFixed(2)}
             </p>
           </div>

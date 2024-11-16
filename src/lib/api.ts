@@ -1,5 +1,5 @@
 import { IUser } from "@/lib/interfaces";
-import { supabase } from '@/supabaseClient'; // Updated import to use supabaseClient
+import { supabase } from '@/lib/supabaseClient'; // Updated import to use supabaseClient
 import { AuthError, Session, User } from "@supabase/supabase-js"; // Import types from Supabase
 
 // Fetch users from an external API

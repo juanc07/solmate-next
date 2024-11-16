@@ -53,6 +53,9 @@ const Navbar: React.FC = () => {
                 <Link href="/swapToken" onClick={handleLinkClick} className={linkClass("/swapToken")}>
                   Swap Token
                 </Link>
+                <Link href="/claimWepe" onClick={handleLinkClick} className={linkClass("/claimWepe")}>
+                  Claim WEPE
+                </Link>
                 <Link href="/tokens" onClick={handleLinkClick} className={linkClass("/tokens")}>
                   Tokens
                 </Link>
@@ -117,6 +120,9 @@ const Navbar: React.FC = () => {
               </Link>
               <Link href="/swapToken" onClick={handleLinkClick} className={linkClass("/swapToken")}>
                 <ArrowsRightLeftIcon className="h-6 w-6 mr-2" /> Swap Token
+              </Link>
+              <Link href="/claimWepe" onClick={handleLinkClick} className={linkClass("/claimWepe")}>
+                <ArrowsRightLeftIcon className="h-6 w-6 mr-2" /> Claim WEPE
               </Link>
               <Link href="/wallets" onClick={handleLinkClick} className={linkClass("/wallets")}>
                 <WalletIcon className="h-6 w-6 mr-2" /> Wallets

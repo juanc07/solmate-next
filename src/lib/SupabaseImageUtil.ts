@@ -1,4 +1,4 @@
-import { supabase } from '@/supabaseClient';
+import { supabase } from '@/lib/supabaseClient';
 import { IImageService } from './../lib/interfaces/IImageService';
 
 export class SupabaseImageUtil implements IImageService {

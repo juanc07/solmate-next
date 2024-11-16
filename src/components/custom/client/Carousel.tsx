@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { supabase } from '@/supabaseClient';
+import { supabase } from '@/lib/supabaseClient';
 import { SupabaseImageUtil } from '@/lib/SupabaseImageUtil';
 import ErrorBoundary from '@/components/custom/client/ErrorBoundary';
 import Link from 'next/link';

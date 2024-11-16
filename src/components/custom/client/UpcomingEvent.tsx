@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Card } from '@/components/ui/card';
-import { supabase } from '@/supabaseClient'; // Import Supabase client
+import { supabase } from '@/lib/supabaseClient'; // Import Supabase client
 import { SupabaseImageUtil } from '@/lib/SupabaseImageUtil'; // Import Supabase utility
 
 const supabaseImageUtil = new SupabaseImageUtil('upcoming-event'); // Initialize with your bucket name

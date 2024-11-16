@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { shuffleArray } from '@/lib/helper';
-import { supabase } from '@/supabaseClient';
+import { supabase } from '@/lib/supabaseClient';
 import { SupabaseImageUtil } from '@/lib/SupabaseImageUtil';
 import Image from 'next/image';
 import { ITitleProps } from '@/lib/interfaces';

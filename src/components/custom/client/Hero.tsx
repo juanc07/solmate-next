@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { supabase } from '@/supabaseClient';
+import { supabase } from '@/lib/supabaseClient';
 import { SupabaseImageUtil } from '@/lib/SupabaseImageUtil';
 import { shuffleArray } from '@/lib/helper';
 import { Loader2 } from 'lucide-react';

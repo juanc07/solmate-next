@@ -1,6 +1,6 @@
 "use client"; // Designates this as a Client Component
 
-import React from "react";
+import React, { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -19,6 +19,7 @@ import {
   FormDescription,
 } from "@/components/ui/form";
 import { ITitleProps } from "@/lib/interfaces";
+import Spinner from "./Spinner";
 
 // Define form schema with Zod
 const FormSchema = z.object({
@@ -34,6 +35,7 @@ const FormSchema = z.object({
 type FormData = z.infer<typeof FormSchema>;
 
 const HorizontalContactForm: React.FC<ITitleProps> = ({ title }) => {
+  const [loading, setLoading] = useState(false); // Manage loading state
   const form = useForm<FormData>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
@@ -47,14 +49,8 @@ const HorizontalContactForm: React.FC<ITitleProps> = ({ title }) => {
   });
 
   const onSubmit = async (data: FormData) => {
+    setLoading(true); // Start loading
     try {
-      // Show a toast that the submission is in progress
-      toast({
-        title: "Submitting...",
-        description: "Your form is being submitted. Please wait.",
-      });
-
-      // Send form data to the API endpoint
       const response = await fetch("/api/send-email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -79,11 +75,24 @@ const HorizontalContactForm: React.FC<ITitleProps> = ({ title }) => {
         title: "Error",
         description: error.message || "An unexpected error occurred.",
       });
+    } finally {
+      setLoading(false); // Stop loading
     }
   };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900 px-4 py-8 transition-colors duration-300">
+      {loading && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 flex items-center space-x-4">
+            <Spinner />
+            <span className="text-lg font-semibold text-gray-700 dark:text-gray-300">
+              Sending message...
+            </span>
+          </div>
+        </div>
+      )}
+
       <h2 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-6">{title}</h2>
 
       <div className="bg-white dark:bg-gray-800 p-8 sm:p-12 rounded-lg shadow-lg max-w-4xl w-full transition-colors duration-300">
@@ -252,7 +261,10 @@ const HorizontalContactForm: React.FC<ITitleProps> = ({ title }) => {
             <div className="flex justify-center mt-8">
               <Button
                 type="submit"
-                className="bg-blue-600 dark:bg-blue-500 text-white h-12 px-6 rounded-md hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors shadow-md"
+                disabled={loading} // Disable button when loading
+                className={`bg-blue-600 dark:bg-blue-500 text-white h-12 px-6 rounded-md hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors shadow-md ${
+                  loading && "opacity-50 cursor-not-allowed"
+                }`}
               >
                 Send Message
               </Button>

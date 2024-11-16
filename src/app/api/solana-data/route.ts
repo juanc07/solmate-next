@@ -43,23 +43,7 @@ export async function GET(request: Request) {
 
     // Fetch SOL balance
     const balance = await connection.getBalance(publicKey);
-    const solBalance = balance / 1e9; // Convert lamports to SOL
-
-    // Fetch SPL Token accounts
-    /*const standardTokenAccounts = await connection.getParsedTokenAccountsByOwner(
-      publicKey,
-      { programId: new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA") }
-    );
-
-    console.log(`Found ${standardTokenAccounts.value.length} standard token accounts.`);
-
-    const tokens = standardTokenAccounts.value.map(({ account }) => {
-      const info = account.data.parsed.info;
-      const mint = info.mint;      
-      const balance = info.tokenAmount.uiAmount || 0;
-      return { mint, balance };
-    });
-    */
+    const solBalance = balance / 1e9; // Convert lamports to SOL    
 
     // get owner fungitable token using helius api
     const tokensFromAccountHelius: ITokenAccount[] = await getTokenAccounts(HELIUS_API_KEY_2, publicKeyParam, 1000);    

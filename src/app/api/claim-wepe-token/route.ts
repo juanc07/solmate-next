@@ -1,21 +1,32 @@
 import { NextRequest, NextResponse } from "next/server";
-import { 
-  Connection, 
-  PublicKey, 
-  Keypair, 
-  VersionedTransaction, 
-  TransactionMessage, 
-  clusterApiUrl 
+import {
+  Connection,
+  PublicKey,
+  Keypair,
+  VersionedTransaction,
+  TransactionMessage,
 } from "@solana/web3.js";
-import { createTransferInstruction, getAssociatedTokenAddress } from "@solana/spl-token";
+import {
+  createTransferInstruction,
+  createAssociatedTokenAccountInstruction,
+  getAccount,
+  getAssociatedTokenAddress,
+} from "@solana/spl-token";
 import { solmateSupabase } from "@/lib/supabaseClient";
+import { setSolanaEnvironment, getSolanaEndpoint, SolanaEnvironment } from "@/lib/config";
 
-const connection = new Connection(process.env.RPC_URL || clusterApiUrl("devnet"), "confirmed");
+const ENV = process.env.NEXT_PUBLIC_SOLANA_ENV || "mainnet-beta";
+setSolanaEnvironment(ENV as SolanaEnvironment);
+
+const connection = new Connection(getSolanaEndpoint(), "confirmed");
+
+// Faucet wallet configuration
 const faucetKeypair = Keypair.fromSecretKey(
   new Uint8Array(JSON.parse(process.env.PRIVATE_KEY!))
 );
 const MEME_TOKEN_MINT = new PublicKey("CmXRwQ7hGoErWgKemj3PgKQnqWdB4vFqtFPELaTwDdcx");
-const TOKEN_AMOUNT = 4000;
+const TOKEN_AMOUNT = 4000; // Amount in user-friendly units (not lamports)
+const TOKEN_DECIMALS = 6; // Adjust based on token's decimals
 
 export async function POST(req: NextRequest) {
   try {
@@ -27,14 +38,22 @@ export async function POST(req: NextRequest) {
     const recipientPublicKey = new PublicKey(recipient);
 
     // Check Supabase to prevent multiple claims
-    const { data: claimData } = await solmateSupabase
+    const { data: claimData, error: fetchError } = await solmateSupabase
       .from("claims")
       .select("*")
       .eq("public_key", recipientPublicKey.toString());
 
+    if (fetchError) {
+      console.error("Error fetching claim data from Supabase:", fetchError);
+      return NextResponse.json({ error: "Error verifying claim status." }, { status: 500 });
+    }
+
     if (claimData && claimData.length > 0) {
       return NextResponse.json({ error: "You have already claimed your tokens." }, { status: 400 });
     }
+
+    // Scale the token amount to match the token's decimals
+    const scaledTokenAmount = TOKEN_AMOUNT * Math.pow(10, TOKEN_DECIMALS);
 
     // Get the recipient's associated token account
     const recipientTokenAccount = await getAssociatedTokenAddress(
@@ -47,52 +66,70 @@ export async function POST(req: NextRequest) {
       faucetKeypair.publicKey
     );
 
-    // Create transfer instruction
+    // Ensure the faucet wallet has enough tokens
+    const senderAccountInfo = await getAccount(connection, senderTokenAccount);
+    if (senderAccountInfo.amount < scaledTokenAmount) {
+      return NextResponse.json(
+        { error: "Insufficient token balance in the faucet wallet." },
+        { status: 400 }
+      );
+    }
+
+    const instructions = [];
+
+    // Check if recipient token account exists, create it if necessary
+    try {
+      await getAccount(connection, recipientTokenAccount);
+    } catch {
+      console.log("Recipient token account not found. Adding creation instruction...");
+      const createAccountInstruction = createAssociatedTokenAccountInstruction(
+        recipientPublicKey, // Payer
+        recipientTokenAccount, // Associated Token Account
+        recipientPublicKey, // Owner
+        MEME_TOKEN_MINT // Mint
+      );
+      instructions.push(createAccountInstruction);
+    }
+
+    // Add transfer instruction
     const transferInstruction = createTransferInstruction(
       senderTokenAccount,
       recipientTokenAccount,
       faucetKeypair.publicKey,
-      TOKEN_AMOUNT
+      scaledTokenAmount
     );
+    instructions.push(transferInstruction);
 
-    // Create a transaction message
+    // Create the transaction message
     const message = new TransactionMessage({
-      payerKey: faucetKeypair.publicKey,
+      payerKey: recipientPublicKey, // User pays the fees
       recentBlockhash: (await connection.getLatestBlockhash()).blockhash,
-      instructions: [transferInstruction],
+      instructions,
     }).compileToV0Message();
 
-    // Create a VersionedTransaction
     const transaction = new VersionedTransaction(message);
 
-    // Simulate the transaction
-    const simulation = await connection.simulateTransaction(transaction, {
-      sigVerify: false,
-      replaceRecentBlockhash: true,
-    });
-
-    if (simulation.value.err) {
-      console.error("Simulation failed:", simulation.value.err);
-      return NextResponse.json({ error: "Transaction simulation failed." }, { status: 400 });
-    }
-
-    // If simulation succeeds, sign the transaction
+    // Sign the transaction with the faucet's private key for token transfer
     transaction.sign([faucetKeypair]);
 
-    // Send the transaction
-    const signature = await connection.sendTransaction(transaction);
-    await connection.confirmTransaction(signature, "confirmed");
-
-    // Record claim in Supabase
-    const { error } = await solmateSupabase
+    // Save the claim in Supabase
+    const { error: insertError } = await solmateSupabase
       .from("claims")
       .insert([{ public_key: recipientPublicKey.toString(), claimed: true }]);
 
-    if (error) throw error;
+    if (insertError) {
+      console.error("Error inserting claim data into Supabase:", insertError);
+      return NextResponse.json({ error: "Error saving claim status." }, { status: 500 });
+    }
 
-    return NextResponse.json({ message: `${TOKEN_AMOUNT} tokens sent to your wallet!` }, { status: 200 });
-  } catch (error) {
-    console.error("Transaction failed:", error);
-    return NextResponse.json({ error: "Failed to send tokens." }, { status: 500 });
+    // Return the partially signed transaction to the client
+    const serializedTransaction = transaction.serialize();
+    return NextResponse.json(
+      { transaction: Buffer.from(serializedTransaction).toString("base64") },
+      { status: 200 }
+    );
+  } catch (error: any) {
+    console.error("Transaction preparation failed:", error);
+    return NextResponse.json({ error: "Failed to prepare transaction." }, { status: 500 });
   }
 }

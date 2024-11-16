@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect, useCallback } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { WalletConnectOnlyButton } from "../WalletConnectOnlyButton";
@@ -162,14 +164,14 @@ const ClaimWepeContent = () => {
       </div>
 
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent>
+        <DialogContent className="bg-gray-100 dark:bg-gray-800 rounded-lg p-4 shadow-md max-w-md mx-auto w-full">
           <DialogHeader>
-            <DialogTitle>Claim Response</DialogTitle>
-            <DialogDescription>{message}</DialogDescription>
+            <DialogTitle className="text-gray-900 dark:text-gray-100">Claim Response</DialogTitle>
+            <DialogDescription className="text-gray-700 dark:text-gray-300">{message}</DialogDescription>
           </DialogHeader>
           <Button
             onClick={() => setShowDialog(false)}
-            className="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 mt-4"
+            className="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 mt-4 rounded-md"
           >
             Close
           </Button>

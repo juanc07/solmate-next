@@ -1,13 +1,13 @@
 "use client";
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { WalletConnectOnlyButton } from "./WalletConnectOnlyButton";
-import Spinner from './Spinner';
+import Spinner from "./Spinner";
 import { IToken } from "@/lib/interfaces/token";
 import { IJupiterToken } from "@/lib/interfaces/jupiterToken";
 import { solanaTokens } from "@/lib/solanaTokens";
-import { fetchAccountTokens } from '@/lib/swapTokenHelper';
-import TokenSelectionModal from './modal/TokenSelectionModal';
+import { fetchAccountTokens } from "@/lib/swapTokenHelper";
+import TokenSelectionModal from "./modal/TokenSelectionModal";
 
 const INITIAL_LOAD_COUNT = 200;
 
@@ -19,19 +19,21 @@ const SwapToken: React.FC = () => {
   const [filteredTokens, setFilteredTokens] = useState<IJupiterToken[]>([]);
   const [inputToken, setInputToken] = useState<IJupiterToken | null>(null);
   const [outputToken, setOutputToken] = useState<IJupiterToken | null>(null);
-  const [inputAmount, setInputAmount] = useState<string>('');
-  const [outputAmount, setOutputAmount] = useState<string>('');
+  const [inputAmount, setInputAmount] = useState<string>("");
+  const [outputAmount, setOutputAmount] = useState<string>("");
   const [progress, setProgress] = useState(0);
-  const [showModal, setShowModal] = useState<'input' | 'output' | null>(null);
+  const [showModal, setShowModal] = useState<"input" | "output" | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
-  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [searchTerm, setSearchTerm] = useState<string>("");
   const [scrollToToken, setScrollToToken] = useState<string | null>(null);
 
   const tokenRefs = useRef<{ [key: string]: React.RefObject<HTMLLIElement> }>({});
+  const isFetching = useRef(false); // Track ongoing fetch state
 
   useEffect(() => {
-    if (!connected) return;
+    if (!connected || isFetching.current) return;
 
+    isFetching.current = true;
     setLoading(true);
     setProgress(0);
 
@@ -39,7 +41,9 @@ const SwapToken: React.FC = () => {
       try {
         const [accountTokens, jupiterData] = await Promise.all([
           fetchAccountTokens(publicKey, setProgress),
-          fetch('https://api.jup.ag/tokens/v1', { cache: "no-store" }).then(res => res.json()),
+          fetch("https://api.jup.ag/tokens/v1", { cache: "no-store" }).then((res) =>
+            res.json()
+          ),
         ]);
 
         const jupiterTokens = Array.isArray(jupiterData)
@@ -48,11 +52,16 @@ const SwapToken: React.FC = () => {
 
         setJupiterTokens(jupiterTokens);
 
-        const uniqueAddresses = new Set();
+        const uniqueAddresses = new Set<string>();
         const matchedPopularTokens: IJupiterToken[] = [];
+        const matchedAccountTokens: IJupiterToken[] = [];
+        const remainingJupiterTokens: IJupiterToken[] = [];
 
+        // Match popular Solana tokens
         for (const sToken of solanaTokens) {
-          const match = jupiterTokens.find(jToken => jToken.address === sToken.mintAddress);
+          const match = jupiterTokens.find(
+            (jToken) => jToken.address === sToken.mintAddress
+          );
           if (match && !uniqueAddresses.has(match.address)) {
             uniqueAddresses.add(match.address);
             matchedPopularTokens.push({
@@ -63,9 +72,11 @@ const SwapToken: React.FC = () => {
           }
         }
 
-        const matchedAccountTokens: IJupiterToken[] = [];
+        // Match account tokens
         for (const accountToken of accountTokens) {
-          const match = jupiterTokens.find(jToken => jToken.address === accountToken.mint);
+          const match = jupiterTokens.find(
+            (jToken) => jToken.address === accountToken.mint
+          );
           if (match && !uniqueAddresses.has(match.address)) {
             uniqueAddresses.add(match.address);
             matchedAccountTokens.push({
@@ -76,7 +87,7 @@ const SwapToken: React.FC = () => {
           }
         }
 
-        const remainingJupiterTokens: IJupiterToken[] = [];
+        // Remaining tokens
         for (const jToken of jupiterTokens) {
           if (!uniqueAddresses.has(jToken.address)) {
             remainingJupiterTokens.push(jToken);
@@ -86,9 +97,9 @@ const SwapToken: React.FC = () => {
         const combinedTokens: IJupiterToken[] = [
           ...matchedPopularTokens,
           ...matchedAccountTokens,
-          ...remainingJupiterTokens.slice(0, INITIAL_LOAD_COUNT)
+          ...remainingJupiterTokens.slice(0, INITIAL_LOAD_COUNT),
         ];
-        
+
         setTokens(combinedTokens);
         setFilteredTokens(combinedTokens.slice(0, INITIAL_LOAD_COUNT));
       } catch (error) {
@@ -97,24 +108,27 @@ const SwapToken: React.FC = () => {
         setFilteredTokens([]);
       } finally {
         setLoading(false);
+        isFetching.current = false; // Mark fetch as complete
       }
     };
 
     loadTokens();
-  }, [publicKey]);
+  }, [connected, publicKey]);
 
   const handleSearch = () => {
     if (!searchTerm) {
       setFilteredTokens(tokens.slice(0, INITIAL_LOAD_COUNT));
     } else {
-      const matchedTokens = jupiterTokens.filter(token =>        
-        token.symbol.toLowerCase() === searchTerm.toLowerCase() ||
-        token.address.toLowerCase() === searchTerm.toLowerCase()
+      const matchedTokens = jupiterTokens.filter(
+        (token) =>
+          token.symbol.toLowerCase() === searchTerm.toLowerCase() ||
+          token.address.toLowerCase() === searchTerm.toLowerCase()
       );
 
-      setFilteredTokens(prevFilteredTokens => {
+      setFilteredTokens((prevFilteredTokens) => {
         const newTokens = matchedTokens.filter(
-          matchedToken => !prevFilteredTokens.some(token => token.address === matchedToken.address)
+          (matchedToken) =>
+            !prevFilteredTokens.some((token) => token.address === matchedToken.address)
         );
         return [...prevFilteredTokens, ...newTokens];
       });
@@ -125,7 +139,10 @@ const SwapToken: React.FC = () => {
 
   useEffect(() => {
     if (scrollToToken && tokenRefs.current[scrollToToken]?.current) {
-      tokenRefs.current[scrollToToken].current?.scrollIntoView({ behavior: "auto", block: "center" });
+      tokenRefs.current[scrollToToken].current?.scrollIntoView({
+        behavior: "auto",
+        block: "center",
+      });
       setScrollToToken(null);
     }
   }, [filteredTokens, scrollToToken]);
@@ -158,15 +175,15 @@ const SwapToken: React.FC = () => {
     }
   };
 
-  const openModal = (type: 'input' | 'output') => {
+  const openModal = (type: "input" | "output") => {
     setShowModal(type);
-    setSearchTerm('');
-    document.body.style.overflow = 'hidden';
+    setSearchTerm("");
+    document.body.style.overflow = "hidden";
   };
 
   const closeModal = () => {
     setShowModal(null);
-    document.body.style.overflow = 'auto';
+    document.body.style.overflow = "auto";
   };
 
   return (
@@ -176,9 +193,11 @@ const SwapToken: React.FC = () => {
       </h1>
 
       <div className="w-full max-w-lg p-6 bg-gray-100 dark:bg-gray-800 rounded-lg shadow-md relative z-10">
-        <label className="block text-gray-700 dark:text-gray-300 font-semibold mb-2">You're Selling</label>
+        <label className="block text-gray-700 dark:text-gray-300 font-semibold mb-2">
+          You're Selling
+        </label>
         <button
-          onClick={() => openModal('input')}
+          onClick={() => openModal("input")}
           disabled={!connected || loading}
           className="w-full p-2 mb-4 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-300 text-left disabled:opacity-50"
         >
@@ -194,9 +213,11 @@ const SwapToken: React.FC = () => {
           disabled={!connected || loading}
         />
 
-        <label className="block text-gray-700 dark:text-gray-300 font-semibold mb-2">You're Buying</label>
+        <label className="block text-gray-700 dark:text-gray-300 font-semibold mb-2">
+          You're Buying
+        </label>
         <button
-          onClick={() => openModal('output')}
+          onClick={() => openModal("output")}
           disabled={!connected || loading}
           className="w-full p-2 mb-4 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-300 text-left disabled:opacity-50"
         >
@@ -230,7 +251,9 @@ const SwapToken: React.FC = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-gray-800 rounded-lg p-6 flex items-center space-x-4">
             <Spinner />
-            <span className="text-lg font-semibold text-gray-700 dark:text-gray-300">Loading Token...</span>
+            <span className="text-lg font-semibold text-gray-700 dark:text-gray-300">
+              Loading Token...
+            </span>
           </div>
         </div>
       )}
@@ -244,7 +267,7 @@ const SwapToken: React.FC = () => {
           handleSearch={handleSearch}
           onClose={closeModal}
           onSelectToken={(token) => {
-            if (showModal === 'input') setInputToken(token);
+            if (showModal === "input") setInputToken(token);
             else setOutputToken(token);
             closeModal();
           }}

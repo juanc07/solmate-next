@@ -7,6 +7,7 @@ import { SolanaPriceHelper } from "@/lib/SolanaPriceHelper";
 import Image from "next/image";
 import { openDB, IDBPDatabase } from "idb";
 import { formatLargeNumber } from "@/lib/helper";
+import { Loader2 } from "lucide-react";
 
 interface Token {
   mint: string;
@@ -55,9 +56,9 @@ const fetchTokenDataWithCache = async (
 ): Promise<Token | null> => {
   const cachedToken = await getCachedToken(mint);
 
-  if (cachedToken && cachedToken.icon && cachedToken.icon.trim()) {    
+  if (cachedToken && cachedToken.icon && cachedToken.icon.trim()) {
     return cachedToken;
-  }  
+  }
 
   try {
     const response = await fetch(`/api/token/${mint}`, { signal });
@@ -105,7 +106,7 @@ const fetchTokens = async (
       if (tokenData) {
         const normalizedAmount = normalizeAmount(amount, tokenData.decimals);
         const { tokenAccountValue, tokenPrice } = await SolanaPriceHelper.convertTokenToUSDC(tokenData.symbol, mint, normalizedAmount);
-        tokens.push({ ...tokenData, balance: normalizedAmount, usdValue:tokenAccountValue });
+        tokens.push({ ...tokenData, balance: normalizedAmount, usdValue: tokenAccountValue });
       }
 
       setProgress(Math.round(((index + 1) / totalTokens) * 100));
@@ -182,8 +183,8 @@ const PortfolioSummarySection = () => {
       </h2>
 
       {loading ? (
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500"></div>
+        <div className="flex flex-col items-center justify-center h-64">
+          <Loader2 className="animate-spin text-violet-600 w-12 h-12" />
           <p className="mt-4 text-xl text-gray-500">Loading tokens... {progress}%</p>
         </div>
       ) : tokens.length > 0 ? (
@@ -200,7 +201,7 @@ const PortfolioSummarySection = () => {
                   layout="responsive"
                   width={32}
                   height={32}
-                  className="rounded-full w-full max-w-[32px] h-auto sm:max-w-[48px]"                    
+                  className="rounded-full w-full max-w-[32px] h-auto sm:max-w-[48px]"
                 />
                 <div className="flex-1">
                   <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white">

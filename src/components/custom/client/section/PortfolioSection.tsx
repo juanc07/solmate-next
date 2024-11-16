@@ -7,7 +7,7 @@ import { openDB, IDBPDatabase } from "idb";
 import { ITokenAccount } from "@/lib/interfaces/tokenAccount"; // Import the correct interface for Helius response
 import { IToken } from "@/lib/interfaces/token";
 import { normalizeAmount } from "@/lib/helper";
-
+import { Loader2 } from "lucide-react"; // ShadCN Loading Spinner
 
 const DB_NAME = "TokenCache";
 const STORE_NAME = "tokens";
@@ -41,7 +41,7 @@ const fetchTokenDataWithCache = async (
   signal: AbortSignal
 ): Promise<IToken | null> => {
   const cachedToken = await getCachedToken(mint);
-  
+
   // Check if the cached token exists and if the icon is valid (not null or empty)
   if (cachedToken && cachedToken.icon && cachedToken.icon.trim()) {
     return cachedToken;
@@ -94,8 +94,8 @@ const fetchTokens = async (
       const tokenData = await fetchTokenDataWithCache(mint, signal);
       if (tokenData) {
         const normalizedAmount = normalizeAmount(amount, tokenData.decimals);
-        const { tokenAccountValue, tokenPrice } = await SolanaPriceHelper.convertTokenToUSDC(tokenData.symbol, mint,normalizedAmount);        
-        tokens.push({ ...tokenData, balance: normalizedAmount, usdValue:tokenAccountValue });
+        const { tokenAccountValue, tokenPrice } = await SolanaPriceHelper.convertTokenToUSDC(tokenData.symbol, mint, normalizedAmount);
+        tokens.push({ ...tokenData, balance: normalizedAmount, usdValue: tokenAccountValue });
       }
 
       setProgress(Math.round(((index + 1) / totalTokens) * 100));
@@ -142,11 +142,9 @@ const PortfolioSection = ({ publicKey }: { publicKey: string }) => {
         Your Tokens
       </h2>
       {loading ? (
-        <div className="flex flex-col items-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500"></div>
-          <p className="mt-4 text-xl text-gray-500 text-center">
-            Loading tokens... {progress}%
-          </p>
+        <div className="flex flex-col items-center justify-center min-h-screen">
+          <Loader2 className="animate-spin text-violet-600 w-12 h-12" />
+          <p className="mt-4 text-xl text-gray-500">Loading tokens... {progress}%</p>
         </div>
       ) : tokens.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-y-4 gap-x-6">

@@ -6,6 +6,7 @@ import Sidebar from "@/components/custom/client/Sidebar";
 import PortfolioSummarySection from "@/components/custom/client/section/PortfolioSummarySection";
 import { useEffect } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
+import { Loader2 } from "lucide-react"; // ShadCN Loading Spinner
 
 const Dashboard = ({
   walletAddress,
@@ -58,7 +59,7 @@ const Dashboard = ({
       <div className="flex-1 flex flex-col overflow-hidden relative">
         {loading && (
           <div className="absolute inset-0 flex items-center justify-center bg-white dark:bg-black bg-opacity-80 z-10">
-            <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500 border-solid"></div>
+            <Loader2 className="animate-spin text-violet-600 w-16 h-16" />
             <p className="mt-4 text-lg text-gray-500">Loading data...</p>
           </div>
         )}
@@ -69,7 +70,7 @@ const Dashboard = ({
               solBalance={solBalance}
               usdEquivalent={displayUsdEquivalent}
             />
-            <PortfolioSummarySection/>
+            <PortfolioSummarySection />
           </main>
         )}
       </div>

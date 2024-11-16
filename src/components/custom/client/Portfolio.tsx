@@ -6,6 +6,7 @@ import Sidebar from "@/components/custom/client/Sidebar";
 import { useEffect, useCallback, useState } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import PortfolioSection from "@/components/custom/client/section/PortfolioSection";
+import { Loader2 } from "lucide-react";
 
 const Portfolio = ({
   walletAddress,
@@ -32,14 +33,14 @@ const Portfolio = ({
 
   useEffect(() => {
     if (!wallet || !wallet.adapter) return;
-  
+
     const handleDisconnect = () => {
       console.log("Wallet disconnected. Redirecting to home...");
       redirectToHome();
     };
-  
+
     wallet.adapter.on("disconnect", handleDisconnect);
-  
+
     return () => {
       wallet.adapter.off("disconnect", handleDisconnect);
     };
@@ -62,7 +63,7 @@ const Portfolio = ({
         <div className="flex-1 overflow-auto p-6 sm:p-8 md:p-10 lg:p-12 space-y-8">
           {loadingInfo ? (
             <div className="flex items-center justify-center h-full">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500"></div>
+              <Loader2 className="animate-spin text-blue-500 w-12 h-12" />
               <p className="ml-4 text-xl text-gray-500">Loading wallet info...</p>
             </div>
           ) : (

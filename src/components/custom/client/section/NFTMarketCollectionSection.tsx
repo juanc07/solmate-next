@@ -53,6 +53,7 @@ const NFTMarketCollectionSection = () => {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="animate-spin text-violet-600 w-16 h-16" />
+        <p className="mt-4 text-xl text-gray-500"> Loading Nfts...</p>
       </div>
     );
   }

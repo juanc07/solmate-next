@@ -126,7 +126,7 @@ const ClaimWepeContent = () => {
       <div className="w-full max-w-4xl px-4 py-12 md:py-16 bg-gray-100 dark:bg-gray-900 shadow-lg rounded-lg mt-[10vh] relative">
         {/* Reviewed by text */}
         <div className="absolute top-4 right-4 text-sm text-gray-600 dark:text-gray-300 bg-opacity-75 bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded shadow">
-        Currently under review by{" "}
+        Reviewed by{" "}
           <a
             href="https://blowfish.xyz"
             target="_blank"

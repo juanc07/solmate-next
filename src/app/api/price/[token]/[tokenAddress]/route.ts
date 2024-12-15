@@ -30,6 +30,7 @@ async function getPriceFromJupiter(tokenAddress: string): Promise<number | null>
 
 // Fetch price from CoinGecko API
 async function getPriceFromCoinGecko(token: string): Promise<number | null> {
+  const COIN_GECKO_API_KEY = process.env.COIN_GECKO_API_KEY || '';
   try {
     console.warn(`Falling back to CoinGecko API for ${token}`);
     const response = await fetch(
@@ -38,7 +39,7 @@ async function getPriceFromCoinGecko(token: string): Promise<number | null> {
         method: "GET", // Specify the request method (optional, defaults to GET)
         headers: {
           Accept: "application/json", // Set the Accept header
-          "x-cg-pro-api-key": "CG-2Q1hdsQ7FBFEVaxx3qU3Hrwd ", // Replace with your actual API key
+          "x-cg-pro-api-key": COIN_GECKO_API_KEY, // Replace with your actual API key
         },
       }
     );

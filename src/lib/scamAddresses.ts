@@ -3250,7 +3250,25 @@ export const knownScamAddresses: string[] = [
     "3vi935xjfMuVTYrgzL4SnbMnVw69qKNLm4KaxPSuTSHJ",
     "2gZmUR6xaigBxAxeQYLa8Bitoy3JjtQ9HzLALtP9Vo94",
     "2AJiMVkp8BBKSoF3AoFAmmwPKApx3VWEZQkyp6wf6sJV",
-    "HQ6BjZ2rzhPRfrc72ZabDenHaCbfDnNRMuoFDJhYQg8"
+    "HQ6BjZ2rzhPRfrc72ZabDenHaCbfDnNRMuoFDJhYQg8",
+    "GfDoizKfm4U6acHMmEuwmaYDLR2rXM9yC57nK8kgCCT8",
+    "GRTqX3rwkoZXGKbmNLvi8j1rfQ1QGQFnq93V9j3uvN3u",
+    "FH5TUDygk643EB1PxYDM7mRARieU9B4jqwmDhkkEYFRV",
+    "DSoiR5LYSERh4Vuwj8uMa3MU8gfcowA62Pd5WAXLA3MK",
+    "Czuz56Q1baN3PhT4wRwJuHEkwi7ztgxPxc9CM1775RfP",
+    "CunhD27t3bu6LNJB56NAHThQMccZtMxqZSH674RciiHB",
+    "9SnNYX2R3qBc3WEJZVfhU9K51fwb5ayj5hrHcVu5DT6u",
+    "961JrBK1iztDhFW4TwD8NMYWqgfHW5qX6nMVRaj33u7Y",
+    "8gbJWX2YserPxHeqgAEHMDb4TWGKHXQbssC1yHFjPH9S",
+    "7tX7DNy7UiQTkBrmYsKXEfe4zsWTkuqJm6pwpguFm7pj",
+    "7K7dUQdVgVGgfTtRiqCxbB9zz9sT18rdGpEZL535JEHY",
+    "78nN2fMms6z1kCdLGXEvUo8uDPGDL8jm491kPCnQEaeC",
+    "5a3biq35nRVh1vbsEWHNF79XQ6Dz2wBsH6HjoUEJFi1A",
+    "4bHDvMgxHcpi3NYrmCapngYpjHFtzp1Pg6aLpQUfHFdL",
+    "3aCchVndm4JALAy3oZAGfy81Ypc8BRmgb2jaFUin3tW5",
+    "38JU3ZD8UkggYRJDdWPRzyAVu88tSVFGc2CHiVW3DdKL",
+    "2k1WzsWdA6Md5PSzcuZTE2ZKfjbavLFukKFGyr5bQ3p7",
+    "2HXRkTWUyPCmZwgHKYDCPFh4WiPTpxv9TbEUgXk5fRDX"    
 ];
 
 export default knownScamAddresses;

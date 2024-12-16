@@ -75,7 +75,7 @@ export async function POST(req: Request) {
             const publicKey = new PublicKey(wallet);
   
             // Fetch transaction signatures
-            const transactions = await connection.getSignaturesForAddress(publicKey, { limit: 20 });
+            const transactions = await connection.getSignaturesForAddress(publicKey, { limit: 10 });
   
             // Process each transaction
             const activities = [];

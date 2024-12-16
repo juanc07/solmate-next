@@ -146,6 +146,7 @@ const WalletActivityDashboard: React.FC = () => {
                 <tr>
                   <th className="border-b p-2">Wallet</th>
                   <th className="border-b p-2">Token</th>
+                  <th className="border-b p-2">Mint Address</th>
                   <th className="border-b p-2">Type</th>
                   <th className="border-b p-2">Amount</th>
                   <th className="border-b p-2">Date</th>
@@ -158,6 +159,7 @@ const WalletActivityDashboard: React.FC = () => {
                     <tr key={`${d.wallet}-${idx}`}>
                       <td className="p-2 border-b">{d.wallet}</td>
                       <td className="p-2 border-b">{`${a.token} (${a.symbol})`}</td>
+                      <td className="p-2 border-b">{a.mint}</td>
                       <td className="p-2 border-b">{a.type}</td>
                       <td className="p-2 border-b">{a.amount}</td>
                       <td className="p-2 border-b">

@@ -59,8 +59,8 @@ const Navbar: React.FC = () => {
                 <Link href="/tokens" onClick={handleLinkClick} className={linkClass("/tokens")}>
                   Tokens
                 </Link>
-                <Link href="/wallets" onClick={handleLinkClick} className={linkClass("/wallets")}>
-                  Wallets
+                <Link href="/walletActivity" onClick={handleLinkClick} className={linkClass("/walletActivity")}>
+                  Wallet Activity
                 </Link>
                 <Link href="/nftMarket" onClick={handleLinkClick} className={linkClass("/nftMarket")}>
                   NFT
@@ -124,8 +124,8 @@ const Navbar: React.FC = () => {
               <Link href="/claimWepe" onClick={handleLinkClick} className={linkClass("/claimWepe")}>
                 <ArrowsRightLeftIcon className="h-6 w-6 mr-2" /> Claim WEPE
               </Link>
-              <Link href="/wallets" onClick={handleLinkClick} className={linkClass("/wallets")}>
-                <WalletIcon className="h-6 w-6 mr-2" /> Wallets
+              <Link href="/walletActivity" onClick={handleLinkClick} className={linkClass("/walletActivity")}>
+                <WalletIcon className="h-6 w-6 mr-2" /> Wallet Activity
               </Link>
               <Link href="/nftMarket" onClick={handleLinkClick} className={linkClass("/nftMarket")}>
                 <CubeIcon className="h-6 w-6 mr-2" /> NFT

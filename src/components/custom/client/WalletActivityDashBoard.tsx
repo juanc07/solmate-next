@@ -63,7 +63,7 @@ const WalletActivityDashboard: React.FC = () => {
       (sum, wallet) =>
         sum +
         wallet.activities
-          .filter((a) => `${a.token} (${a.symbol})` === label && a.type === "buy")
+          .filter((a) => `${a.token} (${a.symbol})` === label && a.type === "buy" && a.amount > 0)
           .reduce((total, a) => total + a.amount, 0),
       0
     )
@@ -74,7 +74,7 @@ const WalletActivityDashboard: React.FC = () => {
       (sum, wallet) =>
         sum +
         wallet.activities
-          .filter((a) => `${a.token} (${a.symbol})` === label && a.type === "sell")
+          .filter((a) => `${a.token} (${a.symbol})` === label && a.type === "sell" && a.amount > 0)
           .reduce((total, a) => total + a.amount, 0),
       0
     )
@@ -155,21 +155,23 @@ const WalletActivityDashboard: React.FC = () => {
               </thead>
               <tbody>
                 {data.map((d) =>
-                  d.activities.map((a, idx) => (
-                    <tr key={`${d.wallet}-${idx}`}>
-                      <td className="p-2 border-b">{d.wallet}</td>
-                      <td className="p-2 border-b">{`${a.token} (${a.symbol})`}</td>
-                      <td className="p-2 border-b">{a.mint}</td>
-                      <td className="p-2 border-b">{a.type}</td>
-                      <td className="p-2 border-b">{a.amount}</td>
-                      <td className="p-2 border-b">
-                        {a.timestamp ? new Date(a.timestamp).toLocaleDateString() : "N/A"}
-                      </td>
-                      <td className="p-2 border-b">
-                        {a.timestamp ? new Date(a.timestamp).toLocaleTimeString() : "N/A"}
-                      </td>
-                    </tr>
-                  ))
+                  d.activities
+                    .filter((a) => a.mint !== "So11111111111111111111111111111111111111112" && a.amount > 0)
+                    .map((a, idx) => (
+                      <tr key={`${d.wallet}-${idx}`}>
+                        <td className="p-2 border-b">{d.wallet}</td>
+                        <td className="p-2 border-b">{`${a.token} (${a.symbol})`}</td>
+                        <td className="p-2 border-b">{a.mint}</td>
+                        <td className="p-2 border-b">{a.type}</td>
+                        <td className="p-2 border-b">{a.amount}</td>
+                        <td className="p-2 border-b">
+                          {a.timestamp ? new Date(a.timestamp).toLocaleDateString() : "N/A"}
+                        </td>
+                        <td className="p-2 border-b">
+                          {a.timestamp ? new Date(a.timestamp).toLocaleTimeString() : "N/A"}
+                        </td>
+                      </tr>
+                    ))
                 )}
               </tbody>
             </table>

@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { SolanaPriceHelper } from "@/lib/SolanaPriceHelper";
 import Spinner from "../Spinner";
 import { VersionedTransaction } from "@solana/web3.js";
+import Image from "next/image";
 
 const WSOL_ID = "So11111111111111111111111111111111111111112";
 
@@ -125,11 +126,15 @@ const ClaimWepeContent = () => {
 
       <div className="w-full max-w-4xl px-4 py-12 md:py-16 bg-gray-100 dark:bg-gray-900 shadow-lg rounded-lg mt-[10vh] relative">
         <div className="flex flex-col items-center md:items-start md:flex-row">
-          <img
+          <Image
             src="/images/token/WEPE.jpg"
             alt="WEPE Token"
-            className="w-24 h-24 rounded-full shadow-md mb-4 md:mb-0 md:mr-6"
+            className="rounded-full shadow-md mb-4 md:mb-0 md:mr-6"
+            width={96}
+            height={96}
+            layout="intrinsic"
           />
+
           <h1 className="text-3xl font-extrabold text-purple-600 dark:text-purple-400 text-center md:text-left">
             WEPE Token Claim
           </h1>

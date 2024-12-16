@@ -7,6 +7,7 @@ import {
   CategoryScale,
   LinearScale,
   BarElement,
+  LogarithmicScale,
   Title,
   Tooltip,
   Legend,
@@ -24,17 +25,18 @@ import {
 } from "@/components/ui/dialog";
 import { Loader2 } from "lucide-react";
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+ChartJS.register(CategoryScale, LinearScale, BarElement, LogarithmicScale,Title, Tooltip, Legend);
 
 interface WalletActivity {
   wallet: string;
   activities: {
     timestamp: string | null;
-    token: string; // Token name
-    symbol: string; // Token symbol
-    mint: string; // Mint address
-    amount: number; // Amount of tokens purchased
-    type: "buy" | "sell"; // Activity type
+    token: string;
+    symbol: string;
+    mint: string;
+    amount: number;
+    type: "buy" | "sell";
+    decimals: number;
   }[];
 }
 
@@ -44,19 +46,19 @@ const WalletActivityDashboard: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [showDialog, setShowDialog] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [fetchPerformed, setFetchPerformed] = useState(false); // Tracks if fetch was performed
+  const [fetchPerformed, setFetchPerformed] = useState(false);
   const rowsPerPage = 10;
 
   const fetchActivities = async () => {
     if (wallets.length === 0 || wallets.every((w) => w.trim() === "")) {
-      setShowDialog(true); // Show dialog if no wallet addresses are entered
+      setShowDialog(true);
       return;
     }
 
     setLoading(true);
-    setData([]); // Clear data before fetching new activities
-    setCurrentPage(1); // Reset to the first page
-    setFetchPerformed(false); // Reset fetch performed state
+    setData([]);
+    setCurrentPage(1);
+    setFetchPerformed(false);
     try {
       const response = await fetch("/api/wallet-activities", {
         method: "POST",
@@ -69,19 +71,19 @@ const WalletActivityDashboard: React.FC = () => {
     } catch (error) {
       console.error(error);
     } finally {
-      setFetchPerformed(true); // Mark fetch as performed
+      setFetchPerformed(true);
       setLoading(false);
     }
   };
 
   const currentTableData = data.flatMap((wallet) =>
     wallet.activities
-      .filter(
-        (activity) =>
-          activity.mint !== "So11111111111111111111111111111111111111112" &&
-          activity.amount > 0
-      )
-      .map((activity) => ({ ...activity, wallet: wallet.wallet })) // Retain wallet address
+      .filter((activity) => activity.amount > 0)
+      .map((activity) => ({
+        ...activity,
+        wallet: wallet.wallet,
+        amount: activity.amount, // Adjust decimals        
+      }))
   );
 
   const paginatedData = currentTableData.slice(
@@ -99,23 +101,13 @@ const WalletActivityDashboard: React.FC = () => {
 
   const buyData = barChartLabels.map((label) =>
     currentTableData
-      .filter(
-        (a) =>
-          `${a.token} (${a.symbol})` === label &&
-          a.type === "buy" &&
-          a.amount > 0
-      )
+      .filter((a) => `${a.token} (${a.symbol})` === label && a.type === "buy")
       .reduce((sum, a) => sum + a.amount, 0)
   );
 
   const sellData = barChartLabels.map((label) =>
     currentTableData
-      .filter(
-        (a) =>
-          `${a.token} (${a.symbol})` === label &&
-          a.type === "sell" &&
-          a.amount > 0
-      )
+      .filter((a) => `${a.token} (${a.symbol})` === label && a.type === "sell")
       .reduce((sum, a) => sum + a.amount, 0)
   );
 
@@ -125,14 +117,14 @@ const WalletActivityDashboard: React.FC = () => {
       {
         label: "Buying Activity",
         data: buyData,
-        backgroundColor: "rgba(75, 192, 192, 0.5)", // Light green
+        backgroundColor: "rgba(75, 192, 192, 0.5)",
         borderColor: "rgba(75, 192, 192, 1)",
         borderWidth: 1,
       },
       {
         label: "Selling Activity",
         data: sellData,
-        backgroundColor: "rgba(255, 99, 132, 0.5)", // Light red
+        backgroundColor: "rgba(255, 99, 132, 0.5)",
         borderColor: "rgba(255, 99, 132, 1)",
         borderWidth: 1,
       },
@@ -187,6 +179,16 @@ const WalletActivityDashboard: React.FC = () => {
                       legend: { position: "top" },
                       title: { display: true, text: "Wallet Token Trends (Buying vs Selling)" },
                     },
+                    scales: {
+                      y: {
+                        type: "logarithmic", // Use a logarithmic scale
+                        min: 0.0001, // Small minimum value for better visibility of small data
+                        ticks: {
+                          callback: (value) =>
+                            Number(value).toLocaleString(undefined, { minimumFractionDigits: 6 }),
+                        },
+                      },
+                    },
                   }}
                 />
               </div>
@@ -215,7 +217,7 @@ const WalletActivityDashboard: React.FC = () => {
                           <td className="p-2 border-b">{`${a.token} (${a.symbol})`}</td>
                           <td className="p-2 border-b">{a.mint}</td>
                           <td className="p-2 border-b">{a.type}</td>
-                          <td className="p-2 border-b">{a.amount}</td>
+                          <td className="p-2 border-b">{a.amount.toFixed(6)}</td>
                           <td className="p-2 border-b">
                             {a.timestamp ? new Date(a.timestamp).toLocaleDateString() : "N/A"}
                           </td>

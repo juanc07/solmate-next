@@ -9,13 +9,13 @@ async function getTokenDetails(mint: string) {
       // Check Supabase for cached token details
       const { data: token, error: fetchError } = await solmateSupabase
         .from("token_details")
-        .select("name, symbol")
+        .select("name, symbol,decimals")
         .eq("mint", mint)
         .single();
   
       if (token) {
         // If token details are found in Supabase, return them
-        return { name: token.name, symbol: token.symbol };
+        return { name: token.name, symbol: token.symbol,decimals: token.decimals };
       }
   
       if (fetchError && fetchError.code !== "PGRST116") {
@@ -26,7 +26,7 @@ async function getTokenDetails(mint: string) {
       const response = await fetch(`https://tokens.jup.ag/token/${mint}`);
       if (!response.ok) {
         console.error(`Failed to fetch token details for ${mint}: ${response.statusText}`);
-        return { name: "Unknown Token", symbol: "UNKNOWN" };
+        return { name: "Unknown Token", symbol: "UNKNOWN", decimals: 1 };
       }
   
       const data = await response.json();
@@ -37,6 +37,7 @@ async function getTokenDetails(mint: string) {
           mint: mint,
           name: data.name,
           symbol: data.symbol,
+          decimals: data.decimals
         },
       ]);
   
@@ -45,10 +46,10 @@ async function getTokenDetails(mint: string) {
       }
   
       // Return the fetched token details
-      return { name: data.name, symbol: data.symbol };
+      return { name: data.name, symbol: data.symbol, decimals: data.decimals };
     } catch (error) {
       console.error(`Error fetching token details for ${mint}:`, error);
-      return { name: "Unknown Token", symbol: "UNKNOWN" };
+      return { name: "Unknown Token", symbol: "UNKNOWN",decimals: 1  };
     }
   }
   
@@ -74,7 +75,7 @@ export async function POST(req: Request) {
             const publicKey = new PublicKey(wallet);
   
             // Fetch transaction signatures
-            const transactions = await connection.getSignaturesForAddress(publicKey, { limit: 30 });
+            const transactions = await connection.getSignaturesForAddress(publicKey, { limit: 20 });
   
             // Process each transaction
             const activities = [];
@@ -102,6 +103,7 @@ export async function POST(req: Request) {
                             : null,
                           token: tokenInfo.name,
                           symbol: tokenInfo.symbol,
+                          decimals: tokenInfo.decimals,
                           mint: mint,
                           amount: Math.abs(amount), // Absolute value of the amount
                           type: amount > 0 ? "buy" : "sell", // Categorize buy/sell

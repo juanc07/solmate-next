@@ -44,6 +44,7 @@ const WalletActivityDashboard: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [showDialog, setShowDialog] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [fetchPerformed, setFetchPerformed] = useState(false); // Tracks if fetch was performed
   const rowsPerPage = 10;
 
   const fetchActivities = async () => {
@@ -55,6 +56,7 @@ const WalletActivityDashboard: React.FC = () => {
     setLoading(true);
     setData([]); // Clear data before fetching new activities
     setCurrentPage(1); // Reset to the first page
+    setFetchPerformed(false); // Reset fetch performed state
     try {
       const response = await fetch("/api/wallet-activities", {
         method: "POST",
@@ -67,6 +69,7 @@ const WalletActivityDashboard: React.FC = () => {
     } catch (error) {
       console.error(error);
     } finally {
+      setFetchPerformed(true); // Mark fetch as performed
       setLoading(false);
     }
   };
@@ -163,6 +166,12 @@ const WalletActivityDashboard: React.FC = () => {
             </Button>
           </div>
         </Card>
+
+        {fetchPerformed && currentTableData.length === 0 && (
+          <p className="text-center text-lg mt-8 text-gray-500 dark:text-gray-400">
+            No data found, please try again.
+          </p>
+        )}
 
         {currentTableData.length > 0 && (
           <div>

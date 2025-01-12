@@ -16,8 +16,7 @@ const SoulSparkInfo = () => {
                 alt="SoulSpark Agent"
                 width={1000} // Adjust based on your image's aspect ratio
                 height={600} // Adjust based on your image's aspect ratio
-                className="w-full h-full object-cover"
-                layout="responsive"
+                className="w-full h-full object-cover"                
               />
             </div>
             {/* Information */}

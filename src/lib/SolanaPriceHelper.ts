@@ -14,7 +14,7 @@ export class SolanaPriceHelper {
       const response = await fetch(`${this.LOCAL_API_URL}/${tokenId}/${tokenAddress}`);
       // Check if response is okay before parsing
       if (!response.ok) {
-        console.error(`Error fetching from local API: ${response.status} ${response.statusText}`);
+        console.log(`Error fetching from local API: ${response.status} ${response.statusText}`);
         return null;
       }
 
@@ -31,7 +31,7 @@ export class SolanaPriceHelper {
   public static async getTokenPriceInUSD(tokenId: string, tokenAddress: string): Promise<number> {
     const price = await this.fetchFromLocalApi(tokenId, tokenAddress); // Attempt local API proxy first    
     if (price === null) {
-      console.error(`Failed to fetch price for ${tokenId} from local API proxy.`);
+      console.log(`Failed to fetch price for ${tokenId} from local API proxy.`);
       return 0; // Return 0 if the local API proxy fails
     }
 

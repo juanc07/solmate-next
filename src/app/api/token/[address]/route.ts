@@ -6,7 +6,7 @@ export async function GET(
   request: Request,
   { params }: { params: { address: string } }
 ) {
-  const { address } = params;
+  const { address } = await params;
 
   try {
     const response = await axios.get(`https://tokens.jup.ag/token/${address}`);

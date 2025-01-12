@@ -52,7 +52,11 @@ export const fetchTokenDataWithCache = async (mint: string): Promise<IToken | nu
 
   try {
     const response = await fetch(`/api/token/${mint}`);
-    if (!response.ok) throw new Error(`Failed to fetch token data for mint ${mint}`);
+
+    if (!response.ok) {
+      console.log(`Failed to fetch token data for mint ${mint}`);
+      return null;
+    }
 
     const tokenData = await response.json();
     const token: IToken = {

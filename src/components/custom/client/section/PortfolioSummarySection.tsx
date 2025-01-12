@@ -62,7 +62,11 @@ const fetchTokenDataWithCache = async (
 
   try {
     const response = await fetch(`/api/token/${mint}`, { signal });
-    if (!response.ok) throw new Error("Failed to fetch token data");
+    
+    if (!response.ok){
+      console.log("Failed to fetch token data");
+      return null;
+    }
 
     const tokenData = await response.json();
 

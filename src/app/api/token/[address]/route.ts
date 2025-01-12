@@ -1,12 +1,14 @@
-import { NextResponse } from 'next/server';
+import {NextRequest, NextResponse } from 'next/server';
 import axios from 'axios';
 
 // 'GET' request handler
 export async function GET(
-  request: Request,
-  { params }: { params: { address: string } }
-) {
-  const { address } = await params;
+  request: NextRequest,
+  context: { params: Promise<{ address: string}> }  
+): Promise<NextResponse> {
+  const { address } = await context.params;
+
+  console.log(`check token address: ${address}`);
 
   try {
     const response = await axios.get(`https://tokens.jup.ag/token/${address}`);

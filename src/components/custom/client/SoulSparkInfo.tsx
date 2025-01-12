@@ -12,7 +12,7 @@ const SoulSparkInfo = () => {
             {/* Image */}
             <div className="w-full sm:w-1/2">
               <Image
-                src="/images/agents/soulSpark.webp" // Update with appropriate image path
+                src="/images/agents/soulspark.webp" // Update with appropriate image path
                 alt="SoulSpark Agent"
                 width={1000} // Adjust based on your image's aspect ratio
                 height={600} // Adjust based on your image's aspect ratio

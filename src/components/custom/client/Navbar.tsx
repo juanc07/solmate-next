@@ -56,8 +56,8 @@ const Navbar: React.FC = () => {
                 <Link href="/claimWepe" onClick={handleLinkClick} className={linkClass("/claimWepe")}>
                   Claim WEPE
                 </Link>
-                <Link href="/tokens" onClick={handleLinkClick} className={linkClass("/tokens")}>
-                  Tokens
+                <Link href="/soulSpark" onClick={handleLinkClick} className={linkClass("/soulSpark")}>
+                  SoulSpark
                 </Link>
                 <Link href="/walletActivity" onClick={handleLinkClick} className={linkClass("/walletActivity")}>
                   Wallet Activity
@@ -123,6 +123,9 @@ const Navbar: React.FC = () => {
               </Link>
               <Link href="/claimWepe" onClick={handleLinkClick} className={linkClass("/claimWepe")}>
                 <ArrowsRightLeftIcon className="h-6 w-6 mr-2" /> Claim WEPE
+              </Link>
+              <Link href="/soulSpark" onClick={handleLinkClick} className={linkClass("/soulSpark")}>
+                <ArrowsRightLeftIcon className="h-6 w-6 mr-2" /> SoulSpark
               </Link>
               <Link href="/walletActivity" onClick={handleLinkClick} className={linkClass("/walletActivity")}>
                 <WalletIcon className="h-6 w-6 mr-2" /> Wallet Activity

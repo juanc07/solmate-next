@@ -91,7 +91,7 @@ const SoulSparkInfo = () => {
                   </a>
                 </p>
                 <p className="text-base sm:text-lg mb-2 leading-6">
-                  <strong>solsscan.io:</strong>{" "}
+                  <strong>solscan.io:</strong>{" "}
                   <a
                     href="https://solscan.io/token/7MC4AEcirmnN6qDD1fDddBs7Mb52vaztCaHUcYuipump"
                     target="_blank"
@@ -102,7 +102,7 @@ const SoulSparkInfo = () => {
                   </a>
                 </p>
                 <p className="text-base sm:text-lg mb-2 leading-6">
-                  <strong>Soul Spark AI Locked Token:</strong>{" "}
+                  <strong>Locked Token:</strong>{" "}
                   <a
                     href="https://app.streamflow.finance/contract/solana/mainnet/3gZm3KTyjTZU57Ap3dos7YrdhtCnNv8mxu3ejnezRds1"
                     target="_blank"

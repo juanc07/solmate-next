@@ -36,9 +36,6 @@ const SoulSparkInfo = () => {
                   <strong>Token Ticker:</strong> Spark
                 </p>
                 <p className="text-base sm:text-lg mb-2 leading-6">
-                  <strong>PumpFun:</strong> https://pump.fun/coin/7MC4AEcirmnN6qDD1fDddBs7Mb52vaztCaHUcYuipump
-                </p>
-                <p className="text-base sm:text-lg mb-2 leading-6">
                   <strong>Purpose:</strong> The first AI Agent of the Solmate
                   platform, aimed at enhancing and expanding the capabilities of
                   Solmate for the Solana community. Powered By Phala Cloud Network Tee,
@@ -91,6 +88,28 @@ const SoulSparkInfo = () => {
                     className="text-blue-600 dark:text-blue-400 hover:underline"
                   >
                     Join our Discord Channel
+                  </a>
+                </p>
+                <p className="text-base sm:text-lg mb-2 leading-6">
+                  <strong>solsscan.io:</strong>{" "}
+                  <a
+                    href="https://solscan.io/token/7MC4AEcirmnN6qDD1fDddBs7Mb52vaztCaHUcYuipump"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 dark:text-blue-400 hover:underline"
+                  >
+                    Link
+                  </a>
+                </p>
+                <p className="text-base sm:text-lg mb-2 leading-6">
+                  <strong>Soul Spark AI Locked Token:</strong>{" "}
+                  <a
+                    href="https://app.streamflow.finance/contract/solana/mainnet/3gZm3KTyjTZU57Ap3dos7YrdhtCnNv8mxu3ejnezRds1"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 dark:text-blue-400 hover:underline"
+                  >
+                    Link
                   </a>
                 </p>
                 <p className="text-base sm:text-lg mt-4 leading-6">

@@ -27,7 +27,7 @@ const SoulSparkInfo = () => {
               </h1>
               <div>
                 <p className="text-base sm:text-lg mb-2 leading-6">
-                  <strong>Contract Address (CA):</strong> 
+                  <strong>Contract Address (CA):</strong> 7MC4AEcirmnN6qDD1fDddBs7Mb52vaztCaHUcYuipump
                 </p>
                 <p className="text-base sm:text-lg mb-2 leading-6">
                   <strong>Token Name:</strong> Soul Spark AI
@@ -36,7 +36,7 @@ const SoulSparkInfo = () => {
                   <strong>Token Ticker:</strong> Spark
                 </p>
                 <p className="text-base sm:text-lg mb-2 leading-6">
-                  <strong>PumpFun:</strong> Soon...
+                  <strong>PumpFun:</strong> https://pump.fun/coin/7MC4AEcirmnN6qDD1fDddBs7Mb52vaztCaHUcYuipump
                 </p>
                 <p className="text-base sm:text-lg mb-2 leading-6">
                   <strong>Purpose:</strong> The first AI Agent of the Solmate

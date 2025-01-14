@@ -27,13 +27,13 @@ const SoulSparkInfo = () => {
               </h1>
               <div>
                 <p className="text-base sm:text-lg mb-2 leading-6">
-                  <strong>Contract Address (CA):</strong> Coming Soon...
+                  <strong>Contract Address (CA):</strong> 
                 </p>
                 <p className="text-base sm:text-lg mb-2 leading-6">
                   <strong>Token Name:</strong> Soul Spark AI
                 </p>
                 <p className="text-base sm:text-lg mb-2 leading-6">
-                  <strong>Token Ticker:</strong> SSA
+                  <strong>Token Ticker:</strong> Spark
                 </p>
                 <p className="text-base sm:text-lg mb-2 leading-6">
                   <strong>PumpFun:</strong> Soon...

@@ -112,11 +112,20 @@ const SoulSparkInfo = () => {
                     Link
                   </a>
                 </p>
+                <p className="text-base sm:text-lg mb-2 leading-6">
+                  <strong>Stake And Earn your Spark Token:</strong>{" "}
+                  <a
+                    href="https://m3m3.meteora.ag/farms/Gj7kug9JDKaWfvYDxzDc1GPNSvZ7x1Z6ctSAtq4LtvvG"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 dark:text-blue-400 hover:underline"
+                  >
+                    Link
+                  </a>
+                </p>
                 <p className="text-base sm:text-lg mt-4 leading-6">
                   <strong>Launched Summary:</strong> The Dev wallet in pump.fun accumulated 10% of the token supply.
-                  8% out of that 10% is locked via Streamflow for one whole year to increase trust and transparency within the community.
-                  The remaining 2% will be used for development and marketing purposes. Whatever price action we end up with, we will keep
-                  building and move forward. Those who believe will be rewarded once all of our plans are executed. For now, we believe, and we want you to hold onto that belief.
+                  8% out of that 10% is locked via Streamflow for one whole year to increase trust and transparency within the community. 1% is in the Meteora liquidity pool so that holders of Spark token can stake and earn. The remaining 1% will be used for development and marketing purposes. Whatever price action we end up with, we will keep building and move forward. Those who believe will be rewarded once all of our plans are executed. For now, we believe, and we want you to hold onto that belief.
                 </p>
                 <p className="text-base sm:text-lg mt-4 leading-6">
                   <strong>Why We Launched the Token:</strong> The funds that we will

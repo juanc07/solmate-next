@@ -113,7 +113,13 @@ const SoulSparkInfo = () => {
                   </a>
                 </p>
                 <p className="text-base sm:text-lg mt-4 leading-6">
-                  <strong>Why We Want To Launch the Token:</strong> The funds that we will
+                  <strong>Launched Summary:</strong> The Dev wallet in pump.fun accumulated 10% of the token supply.
+                  8% out of that 10% is locked via Streamflow for one whole year to increase trust and transparency within the community.
+                  The remaining 2% will be used for development and marketing purposes. Whatever price action we end up with, we will keep
+                  building and move forward. Those who believe will be rewarded once all of our plans are executed. For now, we believe, and we want you to hold onto that belief.
+                </p>
+                <p className="text-base sm:text-lg mt-4 leading-6">
+                  <strong>Why We Launched the Token:</strong> The funds that we will
                   collect or earn from the launch of Soul Spark AI on
                   pump.fun will be used to develop the Solmate platform. Our
                   goal is to make Solmate Platform self-sustaining, allowing us to create

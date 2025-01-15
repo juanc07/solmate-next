@@ -98,7 +98,7 @@ const SoulSparkInfo = () => {
                     rel="noopener noreferrer"
                     className="text-blue-600 dark:text-blue-400 hover:underline"
                   >
-                    Link
+                    View
                   </a>
                 </p>
                 <p className="text-base sm:text-lg mb-2 leading-6">

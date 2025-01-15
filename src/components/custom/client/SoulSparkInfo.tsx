@@ -109,7 +109,7 @@ const SoulSparkInfo = () => {
                     rel="noopener noreferrer"
                     className="text-blue-600 dark:text-blue-400 hover:underline"
                   >
-                    Link
+                    View
                   </a>
                 </p>
                 <p className="text-base sm:text-lg mb-2 leading-6">
@@ -120,7 +120,7 @@ const SoulSparkInfo = () => {
                     rel="noopener noreferrer"
                     className="text-blue-600 dark:text-blue-400 hover:underline"
                   >
-                    Link
+                    Stake
                   </a>
                 </p>
                 <p className="text-base sm:text-lg mb-2 leading-6">
@@ -131,7 +131,18 @@ const SoulSparkInfo = () => {
                     rel="noopener noreferrer"
                     className="text-blue-600 dark:text-blue-400 hover:underline"
                   >
-                    Link
+                    Swap
+                  </a>
+                </p>
+                <p className="text-base sm:text-lg mb-2 leading-6">
+                  <strong>Vote Spark Token in CoinMarketCap:</strong>{" "}
+                  <a
+                    href="https://coinmarketcap.com/dexscan/solana/7E7qXLvZ8TH7EZZLvn7M2nU3LsevaxswTCvTqpsKCusQ/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 dark:text-blue-400 hover:underline"
+                  >
+                    Vote
                   </a>
                 </p>
                 <p className="text-base sm:text-lg mt-4 leading-6">

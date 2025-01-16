@@ -113,9 +113,20 @@ const SoulSparkInfo = () => {
                   </a>
                 </p>
                 <p className="text-base sm:text-lg mb-2 leading-6">
-                  <strong>Locked Token:</strong>{" "}
+                  <strong>Steamflow Locked Token:</strong>{" "}
                   <a
                     href="https://app.streamflow.finance/contract/solana/mainnet/3gZm3KTyjTZU57Ap3dos7YrdhtCnNv8mxu3ejnezRds1"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 dark:text-blue-400 hover:underline"
+                  >
+                    View
+                  </a>
+                </p>
+                <p className="text-base sm:text-lg mb-2 leading-6">
+                  <strong>Meteora Liquidity Pool:</strong>{" "}
+                  <a
+                    href="https://app.meteora.ag/pools/Gj7kug9JDKaWfvYDxzDc1GPNSvZ7x1Z6ctSAtq4LtvvG"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-600 dark:text-blue-400 hover:underline"

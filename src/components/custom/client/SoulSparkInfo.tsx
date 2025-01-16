@@ -211,6 +211,9 @@ const SoulSparkInfo = () => {
               <p>
                 <strong>Why We Launched:</strong> Funds from the launch will be used to develop the Solmate platform, aiming to make it self-sustaining and enhance the Solana community with exciting tools and features.
               </p>
+              <p>
+                <strong>Note:</strong> Our project is not endorsed by Eliza Labs and will never be endorsed by Eliza Labs. This project is purely experimental in nature. Please proceed with this understanding.
+              </p>
             </div>
           </CardContent>
         </Card>

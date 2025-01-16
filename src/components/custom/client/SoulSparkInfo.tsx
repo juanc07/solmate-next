@@ -91,6 +91,17 @@ const SoulSparkInfo = () => {
                   </a>
                 </p>
                 <p className="text-base sm:text-lg mb-2 leading-6">
+                  <strong>Rugcheck:</strong>{" "}
+                  <a
+                    href="https://rugcheck.xyz/tokens/7MC4AEcirmnN6qDD1fDddBs7Mb52vaztCaHUcYuipump"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 dark:text-blue-400 hover:underline"
+                  >
+                    View
+                  </a>
+                </p>
+                <p className="text-base sm:text-lg mb-2 leading-6">
                   <strong>Dexscreener:</strong>{" "}
                   <a
                     href="https://dexscreener.com/solana/7MC4AEcirmnN6qDD1fDddBs7Mb52vaztCaHUcYuipump"
